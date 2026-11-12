@@ -1,0 +1,53 @@
+<style>
+  /* 1. IMPORT FONT POPPINS DARI GOOGLE FONTS */
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+  /* Mengurung tema ungu supaya tidak kacau Bootstrap asal */
+  #modul-matriks-ungu {
+    --purple-50: #F4F0FC; --purple-100: #E6D9F7; --purple-300: #B78FE0;
+    --purple-500: #8845C9; --purple-700: #592A8E; --purple-900: #2A1053; 
+    --text-main: #1E293B; --text-muted: #64748B; --surface-white: #FFFFFF;
+    --border-color: #E2E8F0; --badge-green-bg: #DCFCE7; --badge-green-text: #166534;
+    --shadow-sm: 0 1px 2px rgba(42, 16, 83, 0.05);
+    --shadow-md: 0 4px 12px rgba(42, 16, 83, 0.08);
+    --radius-sm: 6px; --radius-md: 8px; --radius-lg: 12px;
+    
+    /* 2. PAKAIKAN POPPINS DI SINI */
+    font-family: 'Poppins', sans-serif !important;
+    
+    color: var(--text-main);
+  }
+
+  #modul-matriks-ungu .page-header { display: flex; justify-content: space-between; align-items: center; padding: 24px; background: var(--surface-white); border-radius: var(--radius-lg); margin-bottom: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--purple-100); }
+  #modul-matriks-ungu .page-header h2 { color: var(--purple-900); font-size: 1.25rem; margin: 0; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  #modul-matriks-ungu .btn-group-ungu { display: flex; border: 1px solid var(--purple-300); border-radius: var(--radius-md); overflow: hidden; }
+  #modul-matriks-ungu .btn-toggle { background: var(--surface-white); color: var(--purple-700); border: none; padding: 8px 20px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease; }
+  #modul-matriks-ungu .btn-toggle:not(:last-child) { border-right: 1px solid var(--purple-300); }
+  #modul-matriks-ungu .btn-toggle.active { background: linear-gradient(135deg, var(--purple-500), var(--purple-700)); color: white; }
+
+  #modul-matriks-ungu .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  #modul-matriks-ungu .sum-card { background: var(--surface-white); border: 1px solid var(--purple-100); border-radius: var(--radius-lg); padding: 20px; display: flex; align-items: center; gap: 16px; box-shadow: var(--shadow-sm); transition: transform 0.2s; }
+  #modul-matriks-ungu .sum-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--purple-300); }
+  #modul-matriks-ungu .sum-icon-box { background: var(--purple-50); color: var(--purple-500); font-size: 1.5rem; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); flex-shrink: 0; }
+  #modul-matriks-ungu .sum-info h4 { color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin: 0 0 4px 0; }
+  #modul-matriks-ungu .sum-info h2 { color: var(--purple-900); font-size: 1.5rem; font-weight: 700; margin: 0; }
+
+  #modul-matriks-ungu .table-card { background: var(--surface-white); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--purple-100); overflow: hidden; }
+  #modul-matriks-ungu table { width: 100%; border-collapse: collapse; text-align: left; margin: 0; }
+  #modul-matriks-ungu th { background-color: #F8FAFC; color: var(--text-muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; padding: 16px 24px; border-bottom: 1px solid var(--border-color); }
+  #modul-matriks-ungu td { padding: 16px 24px; border-bottom: 1px solid var(--border-color); vertical-align: top; }
+  
+  #modul-matriks-ungu .td-title { font-weight: 700; color: var(--purple-900); font-size: 0.95rem; margin-bottom: 4px; text-transform: uppercase; }
+  #modul-matriks-ungu .td-subtitle { color: var(--text-muted); font-size: 0.85rem; }
+  #modul-matriks-ungu .badge-status { display: inline-block; background: var(--badge-green-bg); color: var(--badge-green-text); padding: 4px 10px; border-radius: 50px; font-size: 0.7rem; font-weight: 700; margin-top: 6px; }
+
+  @media (max-width: 768px) {
+    #modul-matriks-ungu .summary-grid { grid-template-columns: 1fr 1fr; }
+    #modul-matriks-ungu .page-header { flex-direction: column; gap: 16px; align-items: flex-start; }
+    #modul-matriks-ungu table thead { display: none; }
+    #modul-matriks-ungu table, #modul-matriks-ungu tbody, #modul-matriks-ungu tr, #modul-matriks-ungu td { display: block; width: 100%; }
+    #modul-matriks-ungu table tr { margin-bottom: 16px; border: 1px solid var(--purple-100); border-radius: var(--radius-lg); padding: 16px; }
+    #modul-matriks-ungu table td { padding: 0 0 12px 0; border: none; }
+    #modul-matriks-ungu td::before { content: attr(data-label); display: block; font-size: 0.7rem; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
+  }
+</style>

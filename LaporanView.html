@@ -1,0 +1,317 @@
+<style>
+  /* GAYA KHAS MODUL LAPORAN */
+  .card-laporan-filter {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid var(--purple-100);
+  }
+  .input-moden {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    font-size: 0.88rem !important;
+    transition: all 0.2s ease-in-out !important;
+    background-color: #ffffff !important;
+  }
+  .input-moden:focus {
+    border-color: var(--purple-500) !important;
+    box-shadow: 0 0 0 3px rgba(136, 69, 201, 0.15) !important;
+    outline: none !important;
+  }
+  .btn-ungu {
+    background: var(--purple-700);
+    color: white;
+    border: none;
+    font-weight: 600;
+    padding: 10px 24px;
+    border-radius: 50px;
+    transition: 0.2s;
+  }
+  .btn-ungu:hover {
+    background: var(--purple-900);
+    color: white;
+  }
+  .btn-reset-merah {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    font-weight: 600;
+    padding: 10px 24px;
+    border-radius: 50px;
+    transition: 0.2s;
+  }
+  .btn-reset-merah:hover {
+    background: #fee2e2;
+    color: #b91c1c;
+    border-color: #fca5a5;
+  }
+  .accordion-button:not(.collapsed) {
+    color: var(--purple-900) !important;
+    background-color: var(--purple-50) !important;
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,.125);
+  }
+
+  /* KEKEBALAN WARNA UNGU (Kalis Sidebar) */
+  .btn-toggle.active-ungu { 
+    background: var(--purple-700) !important; 
+    color: #ffffff !important; 
+    border-color: var(--purple-700) !important; 
+    box-shadow: 0 4px 6px -1px rgba(89, 42, 142, 0.2) !important; 
+  }
+</style>
+
+<div id="modul-matriks-ungu" class="w-100 animate__animated animate__fadeIn pb-4">
+  <!-- PANGGIL STYLE GLOBAL -->
+  <?!= include('StyleGlobal'); ?>
+
+  <!-- HEADER MODUL DISERAGAMKAN DENGAN PROFILSEKOLAH (page-header) -->
+  <div class="page-header">
+    <div class="d-flex align-items-center gap-3">
+      <div class="sum-icon-box" style="width: 52px; height: 52px; border-radius: 50%; background: var(--purple-50); display: flex; align-items: center; justify-content: center;">
+        <i class="fa-solid fa-file-pdf" style="color: #dc2626; font-size: 1.4rem;"></i>
+      </div>
+      <div>
+        <h2 style="margin: 0; padding: 0; border: none;">Pusat Cetakan Laporan & Dokumen Rasmi</h2>
+        <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600; margin-top: 4px;">
+          Jana dan paparkan dokumen rasmi peperiksaan bagi senarai pusat & petugas.
+        </div>
+      </div>
+    </div>
+
+    <!-- TOGGLE TAHAP PEPERIKSAAN -->
+    <div class="btn-group-ungu">
+      <input type="radio" class="btn-check" name="radioTahapLaporan" id="btnLaporanTahap4" value="MATRIKS PEMBELAJARAN TAHUN 4" checked onchange="setToggleActive(this)">
+      <label class="btn-toggle active-ungu" for="btnLaporanTahap4" style="cursor:pointer;"><i class="fa-solid fa-child-reaching me-1"></i> TAHUN 4</label>
+
+      <input type="radio" class="btn-check" name="radioTahapLaporan" id="btnLaporanTahap3" value="MATRIKS PEMBELAJARAN TINGKATAN 3" onchange="setToggleActive(this)">
+      <label class="btn-toggle" for="btnLaporanTahap3" style="cursor:pointer;"><i class="fa-solid fa-user-graduate me-1"></i> TINGKATAN 3</label>
+    </div>
+  </div>
+
+  <!-- KAWASAN KANDUNGAN LAPORAN (ACCORDION) -->
+  <div class="accordion" id="accordionLaporanSistem">
+    
+    <!-- ITEM: BORANG SPP2 -->
+    <div class="accordion-item shadow-sm border-0 mb-3" style="border-radius: 12px; overflow: hidden;">
+      <h2 class="accordion-header" id="headingSpp2">
+        <button class="accordion-button collapsed fw-bold py-3 px-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSpp2" aria-expanded="false" aria-controls="collapseSpp2" style="font-size: 0.95rem;">
+          <i class="fa-solid fa-file-contract me-3" style="color: var(--purple-700);"></i> Laporan Borang SPP2 - Senarai Petugas Peperiksaan
+        </button>
+      </h2>
+      <div id="collapseSpp2" class="accordion-collapse collapse" aria-labelledby="headingSpp2" data-bs-parent="#accordionLaporanSistem">
+        <div class="accordion-body bg-white p-4">
+          <div class="card-laporan-filter p-4 shadow-sm">
+            <h6 class="fw-bold mb-3" style="color: var(--purple-900); font-size: 0.85rem;"><i class="fa-solid fa-filter me-2" style="color: var(--purple-500);"></i>Tetapan Laporan</h6>
+            
+            <!-- GRID DROPDOWN DAERAH -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label text-muted fw-bold small mb-1">DAERAH / PPD</label>
+                <select id="selectDaerahLaporan" class="form-select input-moden text-dark fw-bold">
+                  <option value="">-- Sila Pilih Daerah --</option>
+                </select>
+                <div class="form-text small mt-2" id="txtNotaDaerah" style="font-size: 0.75rem;">Senarai petugas akan dijana mengikut daerah dipilih.</div>
+              </div>
+            </div>
+
+            <!-- BUTANG TINDAKAN -->
+            <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top border-secondary border-opacity-10">
+              <button type="button" class="btn btn-reset-merah px-4 py-2 shadow-sm" onclick="setSemulaBorang()">
+                <i class="fa-solid fa-rotate-right me-2"></i>Set Semula
+              </button>
+              <button type="button" id="btnPaparPDF" class="btn btn-ungu px-4 py-2 shadow-sm" onclick="prosesPaparLaporan()">
+                <i class="fa-solid fa-file-pdf me-2"></i>Papar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- END ITEM: BORANG SPP2 -->
+
+    <!-- ITEM: PENYELIA KAWASAN (PK) -->
+    <div class="accordion-item shadow-sm border-0 mb-3" style="border-radius: 12px; overflow: hidden;">
+      <h2 class="accordion-header" id="headingPk">
+        <button class="accordion-button collapsed fw-bold py-3 px-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePk" aria-expanded="false" aria-controls="collapsePk" style="font-size: 0.95rem;">
+          <i class="fa-solid fa-user-shield me-3" style="color: var(--purple-700);"></i> Laporan Cetakan Pukal - Surat Penyelia Kawasan (PK)
+        </button>
+      </h2>
+      <div id="collapsePk" class="accordion-collapse collapse" aria-labelledby="headingPk" data-bs-parent="#accordionLaporanSistem">
+        <div class="accordion-body bg-white p-4">
+          <div class="card-laporan-filter p-4 shadow-sm">
+            <h6 class="fw-bold mb-3" style="color: var(--purple-900); font-size: 0.85rem;"><i class="fa-solid fa-filter me-2" style="color: var(--purple-500);"></i>Tetapan Cetakan PK</h6>
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label text-muted fw-bold small mb-1">DAERAH / PPD</label>
+                <select id="selectDaerahPk" class="form-select input-moden text-dark fw-bold">
+                  <option value="">-- Sila Pilih Daerah --</option>
+                </select>
+                <div class="form-text small mt-2" style="font-size: 0.75rem;">Sistem akan menjana semua surat PK bagi daerah yang dipilih ke dalam satu fail PDF.</div>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top border-secondary border-opacity-10">
+              <button type="button" class="btn btn-reset-merah px-4 py-2 shadow-sm" onclick="setSemulaBorangPk()">
+                <i class="fa-solid fa-rotate-right me-2"></i>Set Semula
+              </button>
+              <button type="button" id="btnPaparPK" class="btn btn-ungu px-4 py-2 shadow-sm" onclick="prosesPaparPK()">
+                <i class="fa-solid fa-file-pdf me-2"></i>Papar Surat PK
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- END ITEM: PENYELIA KAWASAN (PK) -->
+
+    <!-- ITEM: KETUA PENTAKSIR (KPN & KPKw) -->
+    <div class="accordion-item shadow-sm border-0 mb-3" style="border-radius: 12px; overflow: hidden;">
+      <h2 class="accordion-header" id="headingKpn">
+        <button class="accordion-button collapsed fw-bold py-3 px-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapseKpn" aria-expanded="false" aria-controls="collapseKpn" style="font-size: 0.95rem;" onclick="semakSembunyiKpn()">
+          <i class="fa-solid fa-user-tie me-3" style="color: var(--purple-700);"></i> Laporan Cetakan Pukal - Ketua Pentaksir (KPN & KPKw)
+        </button>
+      </h2>
+      <div id="collapseKpn" class="accordion-collapse collapse" aria-labelledby="headingKpn" data-bs-parent="#accordionLaporanSistem">
+        <div class="accordion-body bg-white p-4">
+          <div class="card-laporan-filter p-4 shadow-sm">
+            <h6 class="fw-bold mb-3" style="color: var(--purple-900); font-size: 0.85rem;"><i class="fa-solid fa-filter me-2" style="color: var(--purple-500);"></i>Tetapan Cetakan Pentaksir</h6>
+            
+            <div class="mb-4 bg-light p-3 rounded-3 border">
+              <label class="form-label text-muted fw-bold small mb-2">KATEGORI JAWATAN LANTIKAN</label>
+              <div class="d-flex gap-4">
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="radioKategoriPentaksir" id="radioKpkw" value="KPKW" checked onchange="togglePenapisPentaksir()">
+                  <label class="form-check-label fw-bold text-dark" for="radioKpkw" style="cursor:pointer;">Ketua Pentaksir Kawasan (KPKw)</label>
+                </div>
+                <div class="form-check form-check-inline" id="wrapperKpn">
+                  <input class="form-check-input" type="radio" name="radioKategoriPentaksir" id="radioKpn" value="KPN" onchange="togglePenapisPentaksir()">
+                  <label class="form-check-label fw-bold text-dark" for="radioKpn" style="cursor:pointer;">Ketua Pentaksir Negeri (KPN)</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label text-muted fw-bold small mb-1">MATA PELAJARAN</label>
+                <select id="selectMpPentaksir" class="form-select input-moden text-dark fw-bold">
+                  <option value="SEMUA">-- SEMUA MATA PELAJARAN --</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3" id="boxDaerahPentaksir">
+                <label class="form-label text-muted fw-bold small mb-1">DAERAH / PPD</label>
+                <select id="selectDaerahPentaksir" class="form-select input-moden text-dark fw-bold">
+                  <option value="">-- Sila Pilih Daerah --</option>
+                </select>
+                <div class="form-text small mt-2" style="font-size: 0.75rem;">Wajib dipilih untuk jawatan KPKw.</div>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top border-secondary border-opacity-10">
+              <button type="button" class="btn btn-reset-merah px-4 py-2 shadow-sm" onclick="setSemulaBorangPentaksir()">
+                <i class="fa-solid fa-rotate-right me-2"></i>Set Semula
+              </button>
+              <button type="button" id="btnPaparPentaksir" class="btn btn-ungu px-4 py-2 shadow-sm" onclick="prosesPaparPentaksir()">
+                <i class="fa-solid fa-file-pdf me-2"></i>Papar Surat Pentaksir
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- END ITEM: KETUA PENTAKSIR (KPN & KPKw) -->
+
+    <!-- ITEM: EKSPORT DATA KPMP (EXCEL) -->
+    <div class="accordion-item shadow-sm border-0 mb-3" style="border-radius: 12px; overflow: hidden;">
+      <h2 class="accordion-header" id="headingKpmp">
+        <button class="accordion-button collapsed fw-bold py-3 px-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapseKpmp" aria-expanded="false" aria-controls="collapseKpmp" style="font-size: 0.95rem;">
+          <i class="fa-solid fa-file-excel me-3" style="color: #10b981;"></i> Laporan Eksport Excel - Maklumat Ketua Panitia (KPMP)
+        </button>
+      </h2>
+      <div id="collapseKpmp" class="accordion-collapse collapse" aria-labelledby="headingKpmp" data-bs-parent="#accordionLaporanSistem">
+        <div class="accordion-body bg-white p-4">
+          <div class="card-laporan-filter p-4 shadow-sm">
+            <h6 class="fw-bold mb-3" style="color: #065f46; font-size: 0.85rem;"><i class="fa-solid fa-filter me-2" style="color: #10b981;"></i>Tetapan Muat Turun Data Mentah</h6>
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label text-muted fw-bold small mb-1">DAERAH / PPD</label>
+                <select id="selectDaerahKpmp" class="form-select input-moden text-dark fw-bold">
+                  <option value="">-- Sila Pilih Daerah --</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label text-muted fw-bold small mb-1">MATA PELAJARAN</label>
+                <select id="selectMpKpmp" class="form-select input-moden text-dark fw-bold">
+                  <option value="SEMUA">-- SEMUA MATA PELAJARAN --</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top border-secondary border-opacity-10">
+              <button type="button" class="btn btn-reset-merah px-4 py-2 shadow-sm" onclick="$('#selectDaerahKpmp').val((typeof G_USER !== 'undefined' && G_USER.role === 'PPD') ? (G_USER.kod_daerah || G_USER.ppd) : ''); $('#selectMpKpmp').val('SEMUA');">
+                <i class="fa-solid fa-rotate-right me-2"></i>Set Semula
+              </button>
+              <button type="button" id="btnEksportKpmp" class="btn px-4 py-2 shadow-sm fw-bold" style="background-color: #10b981; color: white; border-radius: 50px; transition: 0.2s;" onclick="prosesEksportKpmp()">
+                <i class="fa-solid fa-download me-2"></i>Muat Turun Excel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- END ITEM: EKSPORT DATA KPMP -->
+
+  </div>
+</div>
+
+<script>
+  // ==========================================================
+  // SUPER-SKRIP V2: KAWALAN WARNA BUTANG (KEBAL SPA)
+  // ==========================================================
+  function setToggleActive(elem) {
+    var group = elem.closest('.btn-group-ungu');
+    
+    if (group) {
+      group.querySelectorAll('.btn-toggle').forEach(function(b) {
+        b.classList.remove('active', 'active-ungu');
+      });
+    }
+
+    if (elem.tagName.toLowerCase() === 'input') {
+      var label = document.querySelector('label[for="' + elem.id + '"]');
+      if (label) {
+        label.classList.add('active-ungu');
+      }
+    } else {
+      elem.classList.add('active-ungu');
+    }
+  }
+
+  // ==========================================================
+  // LOGIK UI TAMBAHAN: SEMAKAN KETIKA ACCORDION DIKLIK
+  // ==========================================================
+  function semakSembunyiKpn() {
+    // Pastikan G_USER dah wujud (selepas login)
+    if (typeof G_USER !== 'undefined' && G_USER) {
+      var peranan = (G_USER.role || "").toUpperCase();
+      var wrapKpn = document.getElementById('wrapperKpn');
+      
+      if (wrapKpn) {
+        // Jika PPD atau SEKOLAH, ghaibkan terus KPN dan tick KPKw
+        if (peranan === 'PPD' || peranan === 'SEKOLAH') {
+          wrapKpn.style.display = 'none';
+          
+          var radioKpkw = document.getElementById('radioKpkw');
+          if (radioKpkw) radioKpkw.checked = true;
+        } else {
+          // Jika JPN / ADMIN, pastikan ia kekal ada
+          wrapKpn.style.display = 'inline-block';
+        }
+      }
+    }
+  }
+</script>
+
+<!-- MEMANGGIL SKRIP DARI FAIL ASING -->
+<?!= typeof include === 'function' ? include('ScriptLaporan') : ''; ?>

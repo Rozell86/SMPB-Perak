@@ -1,0 +1,336 @@
+<script>
+  window.isLaporanInit = false;
+
+  // ==========================================
+  // AUTO-LOAD SCRIPT
+  // ==========================================
+  $(function() {
+    setTimeout(function() {
+      if (typeof initLaporanView === 'function' && !window.isLaporanInit) {
+        window.isLaporanInit = true;
+        initLaporanView();
+      }
+    }, 100);
+  });
+
+  // ==========================================================
+  // INISIALISASI MODUL LAPORAN 
+  // ==========================================================
+  function initLaporanView() {
+    muatSenaraiDaerahLaporan();
+    muatSenaraiMpLaporan(); // Menguruskan laci KPN/KPKw dan KPMP serentak
+    
+    // PENTING: Muat semula senarai subjek apabila butang Tahap ditekan
+    $('input[name="radioTahapLaporan"]').on('change', function() {
+      muatSenaraiMpLaporan();
+    });
+  }
+
+  // ==========================================================
+  // BINA DROPDOWN DAERAH (UNTUK KEEMPAT-EMPAT LACI)
+  // ==========================================================
+  function muatSenaraiDaerahLaporan() {
+    var $select1 =$('#selectDaerahLaporan');
+    var $select2 =$('#selectDaerahPk');
+    var $select3 =$('#selectDaerahPentaksir');
+    var $select4 =$('#selectDaerahKpmp'); // Laci KPMP
+
+    var loadingText = '<option value="">-- Memuatkan Senarai Daerah... --</option>';
+    $select1.empty().append(loadingText);$select2.empty().append(loadingText); 
+    $select3.empty().append(loadingText);$select4.empty().append(loadingText); 
+
+    google.script.run
+      .withSuccessHandler(function(senaraiPpd) {
+        var defaultOption = '<option value="">-- Sila Pilih Daerah --</option>';
+        $select1.empty().append(defaultOption);$select2.empty().append(defaultOption); 
+        $select3.empty().append(defaultOption);$select4.empty().append(defaultOption); 
+
+        var peranan = (G_USER && G_USER.role) ? G_USER.role.toString().toUpperCase() : "";
+        var ppdUser = (G_USER && G_USER.ppd) ? G_USER.ppd : (G_USER.kod_daerah ? G_USER.kod_daerah : "");
+
+        if (peranan === 'JPN' || peranan === 'ADMIN') {
+          var optionSemua = '<option value="SEMUA">SEMUA DAERAH (KESELURUHAN NEGERI)</option>';
+          $select1.append(optionSemua);$select2.append(optionSemua); 
+          $select3.append(optionSemua);$select4.append(optionSemua); 
+        }
+
+        if (senaraiPpd && senaraiPpd.length > 0) {
+          senaraiPpd.forEach(function(daerah) {
+            var opt = `<option value="${daerah.kod}">${daerah.kod} - ${daerah.nama}</option>`;
+            $select1.append(opt);$select2.append(opt); 
+            $select3.append(opt);$select4.append(opt); 
+          });
+        }
+
+        // Kunci jika pengguna adalah akaun PPD
+        if (peranan === 'PPD' && ppdUser !== "") {
+          $select1.val(ppdUser).prop('disabled', true); 
+          $select2.val(ppdUser).prop('disabled', true);$select3.val(ppdUser).prop('disabled', true); 
+          $select4.val(ppdUser).prop('disabled', true);$('#txtNotaDaerah').html('<span class="text-success fw-bold"><i class="fa-solid fa-lock me-1"></i>Akaun PPD dikunci.</span>');
+        }
+      })
+      .withFailureHandler(function(err) {
+        console.error("Gagal muat daerah:", err);
+      })
+      .dapatkanSenaraiDaerahUntukLaporan();
+  }
+
+  // ==========================================================
+  // BINA DROPDOWN MATA PELAJARAN (UNTUK LACI KPN/KPKW & KPMP)
+  // ==========================================================
+  function muatSenaraiMpLaporan() {
+    var $selectMpPentaksir =$('#selectMpPentaksir');
+    var $selectMpKpmp =$('#selectMpKpmp');
+
+    var loadingText = '<option value="SEMUA">-- Memuatkan Subjek... --</option>';
+    $selectMpPentaksir.empty().append(loadingText);$selectMpKpmp.empty().append(loadingText);
+
+    // Ambil nilai Tahap semasa (Tahun 4 atau Tingkatan 3) untuk dihantar ke backend
+    var jenisPeperiksaan = $('input[name="radioTahapLaporan"]:checked').val();
+
+    google.script.run
+      .withSuccessHandler(function(senaraiMp) {
+        var defaultOpt = '<option value="SEMUA">-- SEMUA MATA PELAJARAN --</option>';
+        $selectMpPentaksir.empty().append(defaultOpt);$selectMpKpmp.empty().append(defaultOpt);
+
+        if (senaraiMp && senaraiMp.length > 0) {
+          senaraiMp.forEach(function(mp) {
+            var opt = `<option value="${mp.kod}">${mp.kod} - ${mp.nama}</option>`;
+            $selectMpPentaksir.append(opt);$selectMpKpmp.append(opt);
+          });
+        }
+      })
+      .dapatkanSenaraiMpLaporanPukal(jenisPeperiksaan);
+  }
+
+  // ==========================================================
+  // FUNGSI TOGGLE PENAPIS KPN / KPKw
+  // ==========================================================
+  function togglePenapisPentaksir() {
+    var kategori = $('input[name="radioKategoriPentaksir"]:checked').val();
+    if (kategori === 'KPN') {
+      $('#boxDaerahPentaksir').hide();
+    } else {
+      $('#boxDaerahPentaksir').show();
+    }
+  }
+
+  // ==========================================================
+  // FUNGSI SET SEMULA (RESET)
+  // ==========================================================
+  function setSemulaBorang() {
+    if ((G_USER && G_USER.role && G_USER.role.toUpperCase() !== 'PPD')) $('#selectDaerahLaporan').val('');
+  }
+
+  function setSemulaBorangPk() {
+    if ((G_USER && G_USER.role && G_USER.role.toUpperCase() !== 'PPD')) $('#selectDaerahPk').val('');
+  }
+
+  function setSemulaBorangPentaksir() {
+    $('#selectMpPentaksir').val('SEMUA');
+    if ((G_USER && G_USER.role && G_USER.role.toUpperCase() !== 'PPD')) $('#selectDaerahPentaksir').val('');
+    $('#radioKpkw').prop('checked', true);
+    togglePenapisPentaksir();
+  }
+
+  // ==========================================================
+  // FUNGSI BANTUAN: BUKA TAB LOADING & TUKAR BLOB
+  // ==========================================================
+  function bukaTabLoadingPdf(tajukSurat) {
+    var previewWindow = window.open('about:blank', '_blank');
+    if (previewWindow) {
+      previewWindow.document.write(`
+        <html style="background:#e5e7eb; font-family:sans-serif; text-align:center; padding-top:20%;">
+          <body>
+            <h2><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg></h2>
+            <h3 style="color:#374151;">Sistem Sedang Menjana ${tajukSurat}...</h3>
+            <p style="color:#6b7280;">Sila tunggu seketika. Jangan tutup tetingkap ini.</p>
+            <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
+          </body>
+        </html>
+      `);
+    }
+    return previewWindow;
+  }
+
+  function renderBlobDiTab(previewWindow, base64Data) {
+    var byteCharacters = atob(base64Data);
+    var byteNumbers = new Array(byteCharacters.length);
+    for (var i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    var byteArray = new Uint8Array(byteNumbers);
+    var blob = new Blob([byteArray], { type: 'application/pdf' });
+    previewWindow.location.href = URL.createObjectURL(blob);
+  }
+
+  // ==========================================================
+  // LACI 1: PAPAR SPP2
+  // ==========================================================
+  function prosesPaparLaporan() {
+    var jenisPeperiksaan = $('input[name="radioTahapLaporan"]:checked').val();
+    var kodDaerah = $('#selectDaerahLaporan').val();
+    var tahunSesi = (typeof G_TAHUN_AKTIF !== 'undefined') ? G_TAHUN_AKTIF : new Date().getFullYear().toString();
+
+    if (!kodDaerah) { Swal.fire('Perhatian', 'Sila pilih daerah terlebih dahulu!', 'warning'); return; }
+
+    var $btnPapar =$('#btnPaparPDF');
+    var originalBtnHtml = $btnPapar.html();$btnPapar.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-2"></i>Menjana...');
+
+    var previewWindow = bukaTabLoadingPdf("Laporan SPP2");
+    if (!previewWindow) {
+      $btnPapar.prop('disabled', false).html(originalBtnHtml);
+      Swal.fire('Perhatian', 'Pop-up telah dihalang oleh pelayar (browser) anda.', 'warning');
+      return;
+    }
+
+    Swal.fire({ title: 'Menjana Dokumen...', html: 'Menyusun SPP2...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        Swal.close(); $btnPapar.prop('disabled', false).html(originalBtnHtml);
+        if (res.success) { renderBlobDiTab(previewWindow, res.pdfBase64); } 
+        else { previewWindow.close(); Swal.fire('Ralat Penjanaan', res.message, 'error'); }
+      })
+      .withFailureHandler(function(err) {
+        Swal.close(); $btnPapar.prop('disabled', false).html(originalBtnHtml);
+        previewWindow.close(); Swal.fire('Ralat Sistem', err.message, 'error');
+      })
+      .janaBorangSPP2PDF(kodDaerah, jenisPeperiksaan, tahunSesi);
+  }
+
+  // ==========================================================
+  // LACI 2: PAPAR PUKAL PK
+  // ==========================================================
+  function prosesPaparPK() {
+    var jenisPeperiksaan = $('input[name="radioTahapLaporan"]:checked').val();
+    var kodDaerah = $('#selectDaerahPk').val();
+    var tahunSesi = (typeof G_TAHUN_AKTIF !== 'undefined') ? G_TAHUN_AKTIF : new Date().getFullYear().toString();
+
+    if (!kodDaerah) { Swal.fire('Perhatian', 'Sila pilih daerah terlebih dahulu!', 'warning'); return; }
+
+    var $btnPapar =$('#btnPaparPK');
+    var originalBtnHtml = $btnPapar.html();$btnPapar.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-2"></i>Menjana PK...');
+
+    var previewWindow = bukaTabLoadingPdf("Surat PK Pukal");
+    if (!previewWindow) {
+      $btnPapar.prop('disabled', false).html(originalBtnHtml);
+      Swal.fire('Perhatian', 'Pop-up dihalang. Sila benarkan pop-up.', 'warning');
+      return;
+    }
+
+    Swal.fire({ title: 'Menjana Surat PK...', html: 'Menggabungkan surat untuk daerah yang dipilih...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        Swal.close(); $btnPapar.prop('disabled', false).html(originalBtnHtml);
+        if (res.status === "SUCCESS") { renderBlobDiTab(previewWindow, res.base64); } 
+        else { previewWindow.close(); Swal.fire('Ralat Penjanaan', res.message, 'error'); }
+      })
+      .withFailureHandler(function(err) {
+        Swal.close(); $btnPapar.prop('disabled', false).html(originalBtnHtml);
+        previewWindow.close(); Swal.fire('Ralat Pelayan', err.message, 'error');
+      })
+      .janaSuratPukalPK_Turbo(kodDaerah, jenisPeperiksaan, tahunSesi);
+  }
+
+  // ==========================================================
+  // LACI 3: PAPAR PUKAL KPN / KPKw
+  // ==========================================================
+  function prosesPaparPentaksir() {
+    var jenisPeperiksaan = $('input[name="radioTahapLaporan"]:checked').val();
+    var kategori = $('input[name="radioKategoriPentaksir"]:checked').val();
+    var kodMp = $('#selectMpPentaksir').val();
+    var kodDaerah = $('#selectDaerahPentaksir').val();
+    var tahunSesi = (typeof G_TAHUN_AKTIF !== 'undefined') ? G_TAHUN_AKTIF : new Date().getFullYear().toString();
+
+    if (kategori === 'KPKW' && !kodDaerah) { 
+      Swal.fire('Perhatian', 'Sila pilih daerah untuk cetakan KPKw!', 'warning'); return; 
+    }
+
+    var $btnPapar =$('#btnPaparPentaksir');
+    var originalBtnHtml = $btnPapar.html();$btnPapar.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-2"></i>Menjana...');
+
+    var previewWindow = bukaTabLoadingPdf("Surat " + kategori);
+    if (!previewWindow) {
+      $btnPapar.prop('disabled', false).html(originalBtnHtml);
+      Swal.fire('Perhatian', 'Pop-up dihalang. Sila benarkan pop-up.', 'warning');
+      return;
+    }
+
+    Swal.fire({ title: `Menjana Surat ${kategori}...`, html: 'Menyatukan senarai pentaksir...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        Swal.close(); $btnPapar.prop('disabled', false).html(originalBtnHtml);
+        if (res.status === "SUCCESS") { renderBlobDiTab(previewWindow, res.base64); } 
+        else { previewWindow.close(); Swal.fire('Tiada Rekod / Ralat', res.message, 'error'); }
+      })
+      .withFailureHandler(function(err) {
+        Swal.close(); $btnPapar.prop('disabled', false).html(originalBtnHtml);
+        previewWindow.close(); Swal.fire('Ralat Pelayan', err.message, 'error');
+      })
+      .janaSuratPukalPentaksir_Turbo(kategori, kodMp, kodDaerah, jenisPeperiksaan, tahunSesi);
+  }
+
+  // ==========================================================
+  // LACI 4: PROSES MUAT TURUN PANTAS (KPMP) - ENJIN CSV TURBO
+  // ==========================================================
+  function prosesEksportKpmp() {
+    var kodDaerah = $('#selectDaerahKpmp').val();
+    var kodMp = $('#selectMpKpmp').val();
+
+    if (!kodDaerah) { Swal.fire('Perhatian', 'Sila pilih daerah terlebih dahulu!', 'warning'); return; }
+
+    var $btnEksport =$('#btnEksportKpmp');
+    var originalBtnHtml = $btnEksport.html();$btnEksport.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-2"></i>Mengeksport...');
+
+    Swal.fire({ title: 'Menjana Data...', html: 'Mengumpul padanan maklumat penuh KPMP...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        Swal.close(); $btnEksport.prop('disabled', false).html(originalBtnHtml);
+        if (res.status === "SUCCESS") {
+          var tajukMp = kodMp === "SEMUA" ? "SEMUA_SUBJEK" : kodMp;
+          janaDanMuatTurunCSVKpmp(res.data, `Senarai_KPMP_${kodDaerah}_${tajukMp}.csv`);
+        } else {
+          Swal.fire('Tiada Rekod', res.message, 'error');
+        }
+      })
+      .withFailureHandler(function(err) {
+        Swal.close(); $btnEksport.prop('disabled', false).html(originalBtnHtml);
+        Swal.fire('Ralat Pelayan', err.message, 'error');
+      })
+      .muatTurunDataKPMP(kodDaerah, kodMp);
+  }
+
+  function janaDanMuatTurunCSVKpmp(arrayData, namaFail) {
+    // Proses cantuman data kepada string (sangat pantas)
+    var kandunganCSV = arrayData.map(function(row) {
+      return row.map(function(item) {
+        var str = (item === null || item === undefined) ? "" : item.toString();
+        // Pelindung koma supaya lajur tak berterabur
+        if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+          str = '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+      }).join(',');
+    }).join('\n');
+
+    // \uFEFF ialah mantera BOM supaya Excel buka fail ni dengan sempurna
+    var blob = new Blob(["\uFEFF" + kandunganCSV], { type: 'text/csv;charset=utf-8;' }); 
+    var link = document.createElement("a");
+    if (link.download !== undefined) {
+      var url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", namaFail);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+    
+    // Papar notifikasi ringkas berjaya
+    Swal.fire({ icon: 'success', title: 'Berjaya!', text: 'Fail berjaya dimuat turun.', confirmButtonColor: '#10b981', timer: 2000 });
+  }
+</script>

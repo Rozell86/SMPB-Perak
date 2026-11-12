@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Roboto:wght@400;700&display=swap');
+
+    @page { 
+      size: A4 landscape; 
+      margin: 8mm; 
+    }
+    
+    * { 
+      box-sizing: border-box; 
+      -webkit-print-color-adjust: exact; 
+    }
+    
+    body { 
+      font-family: Arial, Helvetica, sans-serif; 
+      font-size: 12px; 
+      color: #000; 
+      margin: 0; 
+      padding: 0; 
+    }
+
+    /* KAD CETAKAN - SATU KAD = SATU MUKA SURAT A4 */
+    .report-card {
+      background-color: #ffffff; 
+      width: 100%; 
+      min-height: 95vh;
+      padding: 24px 28px; 
+      border: 1.5px solid #000000;
+      display: flex; 
+      flex-direction: column; 
+      justify-content: space-between;
+      page-break-after: always;
+    }
+    
+    .report-card:last-child { 
+      page-break-after: auto; 
+    }
+
+    /* BAR ATAS */
+    .top-header-bar { 
+      display: flex; 
+      justify-content: space-between; 
+      font-weight: bold; 
+      font-size: 13px; 
+      margin-bottom: 8px; 
+    }
+
+    /* TAJUK TENGAH */
+    .header-center { 
+      text-align: center; 
+      font-weight: bold; 
+      margin-bottom: 20px; 
+      line-height: 1.2; 
+    }
+    .header-center .divider { font-size: 14px; font-weight: normal; margin-bottom: 1px; }
+    .header-center .title-line { font-size: 12.5px; letter-spacing: 0.2px; line-height: 1.15; }
+    .header-center .sub-line { font-size: 12px; margin-top: 4px; line-height: 1.35; }
+
+    /* MAKLUMAT SEKOLAH */
+    .info-container { font-weight: bold; margin-bottom: 18px; line-height: 1.6; }
+    .info-table { width: 100%; border-collapse: collapse; }
+    .info-table td { padding: 2px 0; vertical-align: top; }
+    .underline-text { text-decoration: underline; }
+
+    /* JADUAL PETUGAS */
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .data-table th, .data-table td { border: 1px solid #000000; padding: 5px 7px; font-size: 11px; vertical-align: middle; }
+    .data-table th { text-align: center; font-weight: bold; background-color: #ffffff; }
+    .text-center { text-align: center; }
+
+    /* FOOTER */
+    .footer-section { margin-top: 30px; font-size: 10.5px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  
+  <!-- KOD KANDUNGAN DARI CODE.GS AKAN DISUNTIK DI BAWAH -->
+  <?!= htmlCards ?>
+
+</body>
+</html>

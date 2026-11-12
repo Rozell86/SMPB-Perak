@@ -1,0 +1,1492 @@
+<div class="w-100 animate__animated animate__fadeIn">
+  
+  <!-- HEADER UTAMA MODUL -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-3 border-bottom pb-2">
+    <div class="mb-3 mb-md-0">
+      <h4 class="fw-bold text-dark mb-0"><i class="fa-solid fa-satellite-dish text-primary me-2"></i>Pusat Operasi Matrik Bersepadu</h4>
+      <div class="text-muted small fw-bold mt-1">Pengurusan Bilik Kebal, Penyelia Kawasan (PK) & Ketua Pengawas (KP)</div>
+    </div>
+    
+    <div class="d-flex align-items-center gap-2">
+      <!-- SUIS MENU TAHAP (MEMENGARUHI KETIGA-TIGA TAB) -->
+      <div class="btn-group shadow-sm bg-white p-1 border border-primary border-opacity-25" style="border-radius: 6px;" role="group">
+        <input type="radio" class="btn-check" name="btnradioTahapOps" id="btnTahap4Ops" autocomplete="off" checked onchange="tukarTahapUtama('RENDAH')">
+        <label class="btn btn-outline-primary fw-bold fs-6 py-1 px-3 border-0 rounded-1" for="btnTahap4Ops"><i class="fa-solid fa-child-reaching me-2"></i>TAHUN 4</label>
+
+        <input type="radio" class="btn-check" name="btnradioTahapOps" id="btnTing3Ops" autocomplete="off" onchange="tukarTahapUtama('MENENGAH')">
+        <label class="btn btn-outline-primary fw-bold fs-6 py-1 px-3 border-0 rounded-1" for="btnTing3Ops"><i class="fa-solid fa-user-graduate me-2"></i>TINGKATAN 3</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV TABS (3 TAB OPERASI BERSEPADU) -->
+  <ul class="nav nav-tabs nav-fill mb-3 shadow-sm bg-white border border-secondary border-opacity-10 rounded-top" id="opsTab" role="tablist" style="font-size: 0.95rem;">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active fw-bold py-3 text-dark border-top-0 border-start-0" id="tab-pemantauan-btn" data-bs-toggle="tab" data-bs-target="#tab-pemantauan" type="button" role="tab">
+        <i class="fa-solid fa-desktop text-primary me-2"></i>1. Pemantauan & Tagging Operasi
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link fw-bold py-3 text-dark border-top-0" id="tab-pk-btn" data-bs-toggle="tab" data-bs-target="#tab-pk" type="button" role="tab">
+        <i class="fa-solid fa-user-ninja text-danger me-2"></i>2. Penyelia Kawasan (PK)
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link fw-bold py-3 text-dark border-top-0 border-end-0" id="tab-kp-btn" data-bs-toggle="tab" data-bs-target="#tab-kp" type="button" role="tab">
+        <i class="fa-solid fa-user-shield text-success me-2"></i>3. Senarai Ketua Pengawas (KP)
+      </button>
+    </li>
+  </ul>
+
+  <!-- KANDUNGAN TAB -->
+  <div class="tab-content" id="opsTabContent">
+    
+    <!-- ========================================================= -->
+    <!-- TAB 1: PEMANTAUAN & TAGGING OPERASI -->
+    <!-- ========================================================= -->
+    <div class="tab-pane fade show active" id="tab-pemantauan" role="tabpanel">
+      <div class="card p-4 shadow-sm border-0 bg-white" style="border-radius:6px; width: 100%;">
+        <div class="row g-2 mb-3">
+          <div class="col-xl-4 col-md-5 ms-auto">
+            <div class="input-group input-group-sm shadow-sm">
+              <span class="input-group-text bg-primary text-white border-0"><i class="fa-solid fa-magnifying-glass"></i></span>
+              <input type="text" id="cariOperasiInput" class="form-control border-primary" placeholder="Cari Kod / Nama Sekolah / Daerah..." onkeyup="tapisJadualOperasi()">
+            </div>
+          </div>
+        </div>
+        
+        <div class="table-responsive w-100">
+          <table class="table table-hover table-bordered table-striped align-middle w-100">
+            <thead class="table-dark small">
+              <tr>
+                <th style="width: 35%;">Maklumat Sekolah & Daerah</th>
+                <th class="text-center" style="width: 15%;">Bilik Kebal</th>
+                <th class="text-center" style="width: 15%;">Penyelia Kawasan</th>
+                <th style="width: 20%;">Ketua Pengawas (KP)</th>
+                <th class="text-center">Status</th>
+                <th class="text-center">Tindakan</th>
+              </tr>
+            </thead>
+            <tbody id="tblReportOperasiBody">
+              <tr><td colspan="6" class="text-center text-muted py-4">Memuatkan data pemantauan operasi...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center mt-3 bg-light p-2 rounded-1 small fw-bold">
+          <div id="infoPageOperasi">Memuatkan info halaman...</div>
+          <div class="btn-group btn-group-sm shadow-sm">
+            <button class="btn btn-dark" onclick="tukarHalamanOps(-1)" id="btnPrevOperasi"><i class="fa-solid fa-chevron-left me-1"></i>Sebelum</button>
+            <button class="btn btn-dark" onclick="tukarHalamanOps(1)" id="btnNextOperasi">Seterusnya<i class="fa-solid fa-chevron-right ms-1"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- TAB 2: PENYELIA KAWASAN (PK) -->
+    <!-- ========================================================= -->
+    <div class="tab-pane fade" id="tab-pk" role="tabpanel">
+      <div class="card p-4 shadow-sm border-0 bg-white" style="border-radius:6px; width: 100%;">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
+          <h5 class="fw-bold text-primary mb-0"><i class="fa-solid fa-users me-2"></i>Senarai Penyelia Kawasan Berdaftar</h5>
+          
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <button type="button" class="btn btn-sm btn-success fw-bold px-3 shadow-sm rounded-1" onclick="eksportJadualKeExcel('tblPkUtama', 'Senarai_Penyelia_Kawasan_' + G_TAHAP_SEMASA)"><i class="fa-solid fa-file-excel me-2"></i>Muat Turun Excel</button>
+            <div class="input-group input-group-sm shadow-sm" style="width: 230px;">
+              <span class="input-group-text bg-primary text-white border-0"><i class="fa-solid fa-magnifying-glass"></i></span>
+              <input type="text" id="cariPkInput" class="form-control border-primary" placeholder="Cari Nama / KP / Sekolah..." onkeyup="tapisJadualPk()">
+            </div>
+            <button id="btnSalinBulk" class="btn btn-warning btn-sm fw-bold shadow-sm rounded-1 px-3 d-none animate__animated animate__fadeIn" onclick="bukaModalSalinBulk()">
+              <i class="fa-solid fa-copy me-2"></i>Salin Terpilih (<span id="lblCountSelected">0</span>)
+            </button>
+            <button class="btn btn-primary btn-sm fw-bold shadow-sm rounded-1 px-3" onclick="bukaModalPk(null)">
+              <i class="fa-solid fa-plus me-2"></i>Tambah PK Baru
+            </button>
+          </div>
+        </div>
+        
+        <div class="table-responsive w-100">
+          <table id="tblPkUtama" class="table table-hover table-bordered table-striped align-middle w-100">
+            <thead class="table-dark small">
+              <tr>
+                <th class="text-center" style="width: 4%;">
+                  <input class="form-check-input" type="checkbox" id="chkSelectAll" onclick="toggSelectAll(this)" style="cursor: pointer;" title="Pilih Semua">
+                </th>
+                <th class="text-center" style="width: 8%;">Sesi</th>
+                <th style="width: 28%;">Daerah & Sekolah Asal</th>
+                <th style="width: 25%;">Nama Penyelia & Jawatan</th>
+                <th style="width: 25%;">Maklumat Perhubungan & Alamat</th>
+                <th class="text-center" style="width: 10%;">Tindakan</th>
+              </tr>
+            </thead>
+            <tbody id="tblReportPkBody">
+              <tr><td colspan="6" class="text-center text-muted py-4">Memuatkan data penyelia kawasan...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- TAB 3: SENARAI KETUA PENGAWAS (KP) DENGAN KAD STATISTIK -->
+    <!-- ========================================================= -->
+    <div class="tab-pane fade" id="tab-kp" role="tabpanel">
+      <div class="card p-4 shadow-sm border-0 bg-white" style="border-radius:6px; width: 100%;">
+        
+        <!-- 🌟 KAD STATISTIK DASHBOARD (LIVE) -->
+        <div class="row g-2 mb-4" id="kpStatistikCards">
+          <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm bg-primary bg-opacity-10 rounded-1 h-100">
+              <div class="card-body p-3 d-flex align-items-center">
+                <div class="fs-2 text-primary me-3"><i class="fa-solid fa-users"></i></div>
+                <div><div class="small fw-bold text-muted mb-1 text-uppercase" style="font-size:0.7rem;">Calon KP</div><h4 class="fw-bold mb-0 text-primary" id="stat_kp_total">0</h4></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm bg-success bg-opacity-10 rounded-1 h-100">
+              <div class="card-body p-3 d-flex align-items-center">
+                <div class="fs-2 text-success me-3"><i class="fa-solid fa-check-double"></i></div>
+                <div><div class="small fw-bold text-muted mb-1 text-uppercase" style="font-size:0.7rem;">Disahkan</div><h4 class="fw-bold mb-0 text-success" id="stat_kp_disahkan">0</h4></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm bg-warning bg-opacity-10 rounded-1 h-100">
+              <div class="card-body p-3 d-flex align-items-center">
+                <div class="fs-2 text-warning text-dark me-3"><i class="fa-solid fa-hourglass-half"></i></div>
+                <div><div class="small fw-bold text-muted mb-1 text-uppercase" style="font-size:0.7rem;">Cadangan (Kosong)</div><h4 class="fw-bold mb-0 text-dark" id="stat_kp_cadangan">0</h4></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm bg-danger bg-opacity-10 rounded-1 h-100">
+              <div class="card-body p-3 d-flex align-items-center">
+                <div class="fs-2 text-danger me-3"><i class="fa-solid fa-school-flag"></i></div>
+                <div><div class="small fw-bold text-muted mb-1 text-uppercase" style="font-size:0.7rem;">Sekolah SKM</div><h4 class="fw-bold mb-0 text-danger" id="stat_kp_skm">0</h4></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
+          <h5 class="fw-bold text-success mb-0"><i class="fa-solid fa-user-shield me-2"></i>Senarai Calon Ketua Pengawas Peperiksaan</h5>
+          
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <button type="button" class="btn btn-sm btn-success fw-bold px-3 shadow-sm rounded-1" style="background-color: #198754;" onclick="eksportJadualKeExcel('tblKpOpsUtama', 'Senarai_Ketua_Pengawas_' + G_TAHAP_SEMASA)"><i class="fa-solid fa-file-excel me-2"></i>Muat Turun</button>
+            <div class="input-group input-group-sm shadow-sm" style="width: 240px;">
+              <span class="input-group-text bg-success text-white border-0"><i class="fa-solid fa-magnifying-glass"></i></span>
+              <input type="text" id="cariKpOpsInput" class="form-control border-success" placeholder="Cari Nama / KP / Sekolah..." onkeyup="tapisJadualKpOps()">
+            </div>
+            <!-- Butang Tambah KP dikeluarkan mengikut SOP PPD -->
+          </div>
+        </div>
+        
+        <div class="table-responsive w-100">
+          <table id="tblKpOpsUtama" class="table table-hover table-bordered table-striped align-middle w-100">
+            <thead class="table-dark small">
+              <tr>
+                <th class="text-center" style="width: 5%;">Sesi</th>
+                <th style="width: 35%;">Maklumat Calon, Sekolah Asal & Alamat</th>
+                <th style="width: 45%;"><i class="fa-solid fa-check-double text-warning me-1"></i>Cadangan & Penempatan PPD (Muktamad)</th>
+                <th class="text-center" style="width: 15%;">Tindakan</th>
+              </tr>
+            </thead>
+            <tbody id="tblReportKpOpsBody">
+              <tr><td colspan="4" class="text-center text-muted py-4">Memuatkan data ketua pengawas...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- MODAL-MODAL SISTEM OPERASI BERSEPADU -->
+<!-- ========================================================= -->
+
+<!-- 1. MODAL KEMASKINI OPERASI (BILIK KEBAL / PK / KP SEKOLAH) -->
+<div class="modal fade" id="modalKemaskiniOps" data-bs-backdrop="static" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <form id="formKemaskiniOps" onsubmit="event.preventDefault(); simpanKemaskiniOperasi();">
+      <div class="modal-content shadow-lg border-0" style="border-radius: 6px;">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-satellite-dish me-2"></i>Kemaskini Operasi Matrik</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 bg-light text-dark">
+          <input type="hidden" id="ops_kod_sekolah">
+          
+          <div class="alert alert-primary border-primary border-start border-4 fw-bold shadow-sm mb-4 rounded-1 d-flex justify-content-between align-items-center">
+            <div><i class="fa-solid fa-school me-2"></i>Sekolah: <span id="ops_nama_sekolah" class="text-uppercase text-dark"></span></div>
+            <span class="badge bg-white text-primary px-2 py-1 shadow-sm border border-primary"><i class="fa-regular fa-calendar me-1"></i>SESI <span id="ops_paparan_tahun"></span></span>
+          </div>
+
+          <div class="card border-0 shadow-sm mb-3 rounded-1">
+            <div class="card-header bg-white fw-bold text-dark border-bottom-0 pt-3 pb-0">
+               <i class="fa-solid fa-vault text-secondary me-2"></i>1. Penetapan Bilik Kebal
+            </div>
+            <div class="card-body">
+              <select id="ops_bilik_kebal" class="form-select border-secondary fw-bold rounded-1">
+                <option value="">-- Sila Pilih Bilik Kebal --</option>
+              </select>
+            </div>
+           </div>
+
+          <div class="card border-0 shadow-sm mb-3 rounded-1">
+            <div class="card-header bg-white fw-bold text-dark border-bottom-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+              <div><i class="fa-solid fa-user-shield text-secondary me-2"></i>2. Lantikan Penyelia Kawasan (PK)</div>
+              <span class="badge bg-warning text-dark small"><i class="fa-solid fa-circle-info me-1"></i>Maksimum 5 Sekolah</span>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-12">
+                  <label class="small fw-bold text-muted mb-1">Penyelia Kawasan 1</label>
+                  <select id="ops_pk1" class="form-select border-secondary rounded-1">
+                    <option value="">-- Pilih Penyelia 1 --</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label class="small fw-bold text-muted mb-1">Penyelia Kawasan 2</label>
+                  <select id="ops_pk2" class="form-select border-secondary rounded-1">
+                    <option value="">-- Pilih Penyelia 2 --</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm mb-2 rounded-1">
+            <div class="card-header bg-white fw-bold text-dark border-bottom-0 pt-3 pb-0">
+              <i class="fa-solid fa-user-tie text-secondary me-2"></i>3. Penetapan Ketua Pengawas (KP)
+            </div>
+            <div class="card-body">
+              <label class="small fw-bold text-muted mb-1">Pilih Calon Ketua Pengawas (Berdasarkan Daerah)</label>
+              <select id="ops_pilih_kp" class="form-select border-success fw-bold mb-3 shadow-sm rounded-1" onchange="paparInfoKPPilihan()">
+                <option value="">-- Tiada KP Ditetapkan --</option>
+               </select>
+
+              <div id="kawasan_info_kp" class="p-3 bg-light border rounded-1 mb-3 d-none"></div>
+              
+              <div class="form-check form-switch fs-5 d-none" id="kawasan_sahkan_kp">
+                <input class="form-check-input" type="checkbox" id="chkSahkanKp" style="cursor: pointer;">
+                <label class="form-check-label fw-bold text-success ms-2" for="chkSahkanKp" style="font-size: 1rem; cursor: pointer;">
+                  SAHKAN Lantikan Ketua Pengawas Ini
+                </label>
+              </div>
+            </div>
+          </div>
+
+         </div>
+        <div class="modal-footer bg-white">
+          <button type="button" class="btn btn-secondary btn-sm px-3 fw-bold rounded-1" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold rounded-1"><i class="fa-solid fa-floppy-disk me-2"></i>Simpan Operasi</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 2. MODAL TAMBAH / KEMASKINI PENYELIA KAWASAN (PK) -->
+<div class="modal fade" id="modalPk" data-bs-backdrop="static" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 950px;">
+    <form id="formPk" onsubmit="event.preventDefault(); simpanDataPk();">
+      <div class="modal-content shadow-lg border-0" style="border-radius: 6px;">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold" id="pkModalTitle"><i class="fa-solid fa-user-ninja me-2"></i>Tambah Penyelia Kawasan</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 bg-light text-dark">
+          <input type="hidden" id="txtPkRow">
+          
+          <div class="row g-3 mb-3 border-bottom pb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Tahun Penugasan</label>
+              <input type="text" id="txtPkTahun" class="form-control form-control-sm fw-bold text-primary rounded-1" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Matrik Pembelajaran & Tahap</label>
+              <input type="text" id="txtPkTahap" class="form-control form-control-sm fw-bold rounded-1" readonly>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3 border-bottom pb-3">
+            <div class="col-12">
+              <label class="form-label small fw-bold text-danger">Sekolah Asal Calon</label>
+              <input type="text" id="txtPkSekAsal" class="form-control border-danger rounded-1 shadow-sm fw-bold" list="listPkSekAsal" placeholder="Taip Kod atau Nama Sekolah di sini..." required autocomplete="off" onfocus="this.select()">
+              <datalist id="listPkSekAsal"></datalist>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold text-danger">Jawatan & Peranan Khusus</label>
+              <select id="txtPkJawatan" class="form-select border-danger rounded-1 shadow-sm fw-bold" required>
+                <option value="">-- Pilih Peranan Penyelia Kawasan --</option>
+                <option value="PEMEGANG KUNCI LUAR">PEMEGANG KUNCI LUAR</option>
+                <option value="PEMEGANG KUNCI DALAM">PEMEGANG KUNCI DALAM</option>
+                <option value="PEMEGANG TATAKIRA">PEMEGANG TATAKIRA</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3 mt-1">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Nama Penuh Penyelia</label>
+              <input type="text" id="txtPkNama" class="form-control form-control-sm text-uppercase rounded-1" required placeholder="NAMA GURU">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">No. Kad Pengenalan</label>
+              <input type="text" id="txtPkKp" class="form-control form-control-sm rounded-1" required maxlength="14" placeholder="Contoh: 800101-08-1234">
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">No. Telefon</label>
+              <input type="text" id="txtPkTel" class="form-control form-control-sm rounded-1" required placeholder="012-3456789">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Emel Delima / Rasmi</label>
+              <input type="email" id="txtPkEmel" class="form-control form-control-sm rounded-1" required>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label small fw-bold text-primary"><i class="fa-solid fa-house me-1"></i>Alamat Rumah / Kediaman Semasa</label>
+              <textarea id="txtPkAlamat" class="form-control form-control-sm rounded-1 text-uppercase" rows="2" placeholder="NO. RUMAH, JALAN, TAMAN / KAMPUNG, POSKOD, BANDAR, NEGERI..."></textarea>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer bg-white">
+          <button type="button" class="btn btn-secondary btn-sm px-3 fw-bold rounded-1" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold rounded-1"><i class="fa-solid fa-floppy-disk me-2"></i>Simpan Data</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 3. MODAL KEMASKINI / PROFIL KETUA PENGAWAS (KP) -->
+<div class="modal fade" id="modalKpOps" data-bs-backdrop="static" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 950px;">
+    <form id="formKpOps" onsubmit="event.preventDefault(); simpanDataKpOps();">
+      <div class="modal-content shadow-lg border-0" style="border-radius: 6px;">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title fw-bold" id="kpOpsModalTitle"><i class="fa-solid fa-user-shield me-2"></i>Profil Ketua Pengawas Peperiksaan</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 bg-light text-dark">
+          <input type="hidden" id="txtKpOpsRow">
+          
+          <div class="row g-3 mb-3 border-bottom pb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Tahun Penugasan</label>
+              <input type="text" id="txtKpOpsTahun" class="form-control form-control-sm fw-bold text-success rounded-1" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Matrik Pembelajaran & Tahap</label>
+              <input type="text" id="txtKpOpsTahap" class="form-control form-control-sm fw-bold rounded-1" readonly>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3 border-bottom pb-3">
+            <div class="col-md-6" id="divSekAsal">
+              <label class="form-label small fw-bold text-danger">Sekolah Asal Calon</label>
+              <input type="text" id="txtKpOpsSekAsal" class="form-control border-danger rounded-1 shadow-sm fw-bold" list="listPkSekAsal" placeholder="Taip Kod atau Nama Sekolah di sini..." required autocomplete="off" onfocus="this.select()">
+            </div>
+            
+            <div class="col-md-6" id="divSekCadangan">
+              <label class="form-label small fw-bold text-warning text-dark"><i class="fa-solid fa-lightbulb me-1 text-warning"></i>Sekolah Cadangan (Oleh Sekolah)</label>
+              <input type="text" id="txtKpOpsSekCadangan" class="form-control border-warning rounded-1 shadow-sm fw-bold bg-white text-uppercase" readonly disabled placeholder="Tiada Rekod Cadangan...">
+            </div>
+            
+            <div class="col-12 mt-3">
+              <label class="form-label small fw-bold text-success"><i class="fa-solid fa-school-flag me-1"></i>Sekolah Tetap / Pusat (Maklumat Sahaja)</label>
+              <input type="text" id="txtKpOpsSekTetap" class="form-control border-success rounded-1 shadow-sm fw-bold text-uppercase bg-light" readonly disabled placeholder="Sila uruskan penempatan di dropdown Jadual Utama">
+            </div>
+            
+            <div class="col-12 mt-2">
+              <label class="form-label small fw-bold">Status Penetapan</label>
+              <select id="txtKpOpsStatus" class="form-select fw-bold rounded-1 shadow-sm border-success bg-light" disabled required>
+                <option value="CADANGAN">CADANGAN (Belum Muktamad)</option>
+                <option value="DISAHKAN">DISAHKAN (Lantikan Muktamad)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3 mt-1">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Nama Penuh Guru / Calon</label>
+              <input type="text" id="txtKpOpsNama" class="form-control form-control-sm text-uppercase rounded-1" required placeholder="NAMA GURU">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">No. Kad Pengenalan</label>
+              <input type="text" id="txtKpOpsNoKp" class="form-control form-control-sm rounded-1" required maxlength="14" placeholder="Contoh: 800101-08-1234">
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">No. Telefon</label>
+              <input type="text" id="txtKpOpsTel" class="form-control form-control-sm rounded-1" required placeholder="012-3456789">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Emel Delima / Rasmi</label>
+              <input type="email" id="txtKpOpsEmel" class="form-control form-control-sm rounded-1" required>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label small fw-bold text-primary"><i class="fa-solid fa-house me-1"></i>Alamat Rumah / Kediaman Semasa</label>
+              <textarea id="txtKpOpsAlamat" class="form-control form-control-sm rounded-1 text-uppercase" rows="2" placeholder="NO. RUMAH, JALAN, TAMAN / KAMPUNG, POSKOD, BANDAR, NEGERI..."></textarea>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer bg-white">
+          <button type="button" class="btn btn-secondary btn-sm px-3 fw-bold rounded-1" data-bs-dismiss="modal">Tutup</button>
+          <button type="submit" class="btn btn-success btn-sm px-4 fw-bold rounded-1"><i class="fa-solid fa-floppy-disk me-2"></i>Simpan Kemaskini KP</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// =========================================================
+// PEMBOLEHUBAH GLOBAL PUSAT OPERASI
+// =========================================================
+var BACKEND_DATA = null;
+var G_TAHAP_SEMASA = 'RENDAH';
+var HAD_REKOD_OPS = 20;
+var HAL_SEKASA_OPS = 1;
+var DATA_TAPIS_SEMASA_OPS = [];
+var DATA_TAPIS_SEMASA_PK = [];
+var DATA_TAPIS_SEMASA_KP_OPS = [];
+
+function initOperasiPeperiksaan() {
+  muatDataLaporanPegawaiOps();
+  aktifkanInputMaskPk();
+  aktifkanInputMaskKpOps();
+}
+
+function tukarTahapUtama(tahap) {
+  G_TAHAP_SEMASA = tahap;
+  saringDataIkutTahapOps();
+}
+
+function muatDataLaporanPegawaiOps() {
+  var roleSemasa = G_USER.role;
+  var kodDaerahSemasa = G_USER.kod_daerah ? G_USER.kod_daerah : G_USER.username;
+  
+  google.script.run.withSuccessHandler(function(respon) {
+    if (respon && respon.status === "SUCCESS") {
+      BACKEND_DATA = respon.data;
+      tukarTahapUtama('RENDAH');
+    } else {
+      Swal.fire('Ralat Backend', 'Gagal memproses data laporan.', 'error');
+    }
+  }).mendapatkanDataPPD_JPN(roleSemasa, kodDaerahSemasa, kodDaerahSemasa); 
+}
+
+function saringDataIkutTahapOps() {
+  if (!BACKEND_DATA) return;
+  var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+  var tahapSurat = G_TAHAP_SEMASA === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+
+  janaDatalistSekolahLengkap();
+
+  var sekTapis = BACKEND_DATA.senaraiSekolah.filter(s => s.kategori_sekolah.toUpperCase() === G_TAHAP_SEMASA);
+  DATA_TAPIS_SEMASA_OPS = [...sekTapis];
+  HAL_SEKASA_OPS = 1;
+  $('#cariOperasiInput').val('');
+  renderJadualOperasi();
+
+  DATA_TAPIS_SEMASA_PK = (BACKEND_DATA.senaraiPk || []).filter(p => p.tahun === tahunSemasa && p.matrik_tahap === tahapSurat);
+  $('#cariPkInput').val('');
+  renderJadualPk();
+
+  DATA_TAPIS_SEMASA_KP_OPS = (BACKEND_DATA.senaraiKp || []).filter(k => k.tahun === tahunSemasa && k.matrik_tahap === tahapSurat);
+  $('#cariKpOpsInput').val('');
+  renderJadualKpOps();
+}
+
+function janaDatalistSekolahLengkap() {
+  var htmlSek = '';
+  var sortedSek = [...BACKEND_DATA.senaraiSekolah].sort((a,b) => a.kod.localeCompare(b.kod));
+  sortedSek.forEach(s => { 
+    htmlSek += '<option value="' + s.kod + ' - ' + s.nama.toUpperCase() + '"></option>'; 
+  });
+  document.getElementById('listPkSekAsal').innerHTML = htmlSek;
+}
+
+function dapatkanNamaDaerahSebenarOps(kodPpd, kodSekolah) {
+  if (!BACKEND_DATA) return kodPpd || "-";
+  
+  if (kodSekolah && BACKEND_DATA.senaraiSekolah) {
+    var sekObj = BACKEND_DATA.senaraiSekolah.find(s => s.kod === kodSekolah);
+    if (sekObj) {
+      var ppdSek = sekObj.ppd || sekObj.daerah || "";
+      if (BACKEND_DATA.senaraiDaerah) {
+        var dSek = BACKEND_DATA.senaraiDaerah.find(x => (x.ppd && x.ppd.toUpperCase() === ppdSek.toUpperCase()) || (x.kod && x.kod.toUpperCase() === ppdSek.toUpperCase()) || (x.nama && x.nama.toUpperCase() === ppdSek.toUpperCase()));
+        if (dSek && dSek.nama) return dSek.nama.toUpperCase();
+      }
+      if (sekObj.daerah && sekObj.daerah !== "") return sekObj.daerah.toUpperCase();
+      if (sekObj.ppd && sekObj.ppd !== "") return sekObj.ppd.toUpperCase();
+    }
+  }
+
+  if (kodPpd && kodPpd !== "SEMUA" && BACKEND_DATA.senaraiDaerah) {
+    var d = BACKEND_DATA.senaraiDaerah.find(x => (x.ppd && x.ppd.toUpperCase() === kodPpd.toUpperCase()) || (x.kod && x.kod.toUpperCase() === kodPpd.toUpperCase()) || (x.nama && x.nama.toUpperCase() === kodPpd.toUpperCase()));
+    if (d && d.nama) return d.nama.toUpperCase();
+  }
+  
+  return (kodPpd === "SEMUA" || !kodPpd) ? "NEGERI PERAK" : kodPpd.toUpperCase();
+}
+
+// =========================================================
+// LOGIK TAB 1: PEMANTAUAN OPERASI
+// =========================================================
+function renderJadualOperasi() {
+  var data = DATA_TAPIS_SEMASA_OPS;
+  var total = data.length;
+  var mula = (HAL_SEKASA_OPS - 1) * HAD_REKOD_OPS;
+  var tamat = Math.min(mula + HAD_REKOD_OPS, total);
+  var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString(); 
+  var tahapSurat = G_TAHAP_SEMASA === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+  var htmlOps = '';
+  
+  if (total === 0) {
+    htmlOps = '<tr><td colspan="6" class="text-center text-muted py-4">Tiada rekod dikesan untuk kategori ini.</td></tr>';
+    $('#infoPageOperasi').text('Memandangkan tiada data: 0 hingga 0 daripada 0');
+  } else {
+    var segmenData = data.slice(mula, tamat);
+    segmenData.forEach((sek) => {
+      var namaDaerahPaparan = dapatkanNamaDaerahSebenarOps(sek.ppd, sek.kod);
+      var ops = (BACKEND_DATA.senaraiMatrik || []).find(m => m.kod_sekolah === sek.kod && m.tahun == tahunSemasa && m.matrik_tahap === tahapSurat);
+      
+      var bilikKebalId = ops ? ops.id_bilik_kebal : "";
+      var namaBilikKebal = "<span class='badge bg-danger bg-opacity-10 text-danger border border-danger rounded-1'>Belum Tag</span>";
+      if (bilikKebalId && bilikKebalId !== "") {
+        var bk = (BACKEND_DATA.senaraiBilikKebal || []).find(b => b.id_bilik_kebal === bilikKebalId);
+        namaBilikKebal = bk ? `<span class="fw-bold text-dark small">${bk.nama_bilik_kebal}</span>` : bilikKebalId;
+      }
+
+      var pkCount = 0;
+      if (ops) {
+        if (ops.no_kp_pk1 && ops.no_kp_pk1 !== "") pkCount++;
+        if (ops.no_kp_pk2 && ops.no_kp_pk2 !== "") pkCount++;
+      }
+      var pkDisplay = "";
+      if (pkCount === 2) pkDisplay = "<span class='badge bg-success rounded-1'>2 / 2 LENGKAP</span>";
+      else if (pkCount === 1) pkDisplay = "<span class='badge bg-warning text-dark rounded-1'>1 / 2 SAHAJA</span>";
+      else pkDisplay = "<span class='badge bg-danger rounded-1'>0 / 2 KOSONG</span>";
+
+      // =======================================================
+      // KEMASKINI LOGIK: Hierarki Sekolah Tetap vs Cadangan
+      // =======================================================
+      var kp = (BACKEND_DATA.senaraiKp || []).find(k => {
+        // Tapis tahun dan tahap dahulu
+        if (k.tahun != tahunSemasa || k.matrik_tahap !== tahapSurat) return false;
+        
+        // Cari kod sekolah mana yang sedang "Aktif" untuk KP ini
+        // Jika DISAHKAN dan kod_sek_tetap wujud, itulah kod aktifnya. 
+        // Jika tidak, guna kod_sek_cadangan.
+        var kodAktif = (k.status_penetapan === 'DISAHKAN' && k.kod_sek_tetap && k.kod_sek_tetap.trim() !== "") 
+                       ? k.kod_sek_tetap 
+                       : (k.kod_sek_cadangan || "");
+                       
+        return kodAktif === sek.kod; // Hanya padankan dengan kod aktif sahaja
+      });
+
+      var namaKp = "<span class='badge bg-danger bg-opacity-10 text-danger border border-danger rounded-1'>Belum Ditetapkan</span>";
+      var statusKpLengkap = false;
+      if (kp) {
+        if (kp.status_penetapan === 'DISAHKAN') {
+          namaKp = `<div class="fw-bold text-success text-uppercase small">${kp.nama_guru}</div><div class="small text-muted mt-1"><i class="fa-regular fa-id-card me-1"></i>${kp.no_kp}</div>`;
+          statusKpLengkap = true;
+        } else {
+          namaKp = `<div class="fw-bold text-warning text-dark text-uppercase small">${kp.nama_guru} (CADANGAN)</div><div class="small text-muted mt-1"><i class="fa-regular fa-id-card me-1"></i>${kp.no_kp}</div>`;
+        }
+      }
+
+// (Logik sedia ada di atasnya kekal sama...)
+      var statusOps = "BELUM SELESAI";
+      var badgeOps = "bg-danger";
+      if (pkCount === 2 && bilikKebalId !== "" && statusKpLengkap) {
+        statusOps = "SELESAI"; badgeOps = "bg-success";
+      } else if (pkCount > 0 || bilikKebalId !== "" || kp) {
+        statusOps = "PROSES"; badgeOps = "bg-warning text-dark";
+      }
+
+      // KEMASKINI: Wujudkan butang cetak pusat hanya jika SELESAI
+      var butangCetakPusat = "";
+      if (statusOps === "SELESAI") {
+        butangCetakPusat = `<button class="btn btn-sm btn-outline-purple py-1 px-2 fw-bold rounded-1 shadow-sm" onclick="cetakSuratPusat('${sek.kod}', '${tahunSemasa}', '${tahapSurat}')" title="Cetak Surat 3 Petugas Pusat Ini" style="color: #6f42c1; border-color: #6f42c1;"><i class="fa-solid fa-print"></i></button>`;
+      }
+
+      htmlOps += `<tr>
+        <td>
+          <div class="mb-1">
+            <span class="badge bg-secondary text-uppercase rounded-1">${namaDaerahPaparan}</span>
+            <span class="badge bg-primary ms-1 rounded-1">${sek.kod}</span>
+          </div>
+          <div class="fw-bold text-uppercase text-dark small">${sek.nama}</div>
+        </td>
+        <td class="text-center align-middle">${namaBilikKebal}</td>
+        <td class="text-center align-middle">${pkDisplay}</td>
+        <td class="align-middle">${namaKp}</td>
+        <td class="text-center align-middle"><span class="badge ${badgeOps} shadow-sm px-2 py-1 rounded-1">${statusOps}</span></td>
+        <td class="text-center align-middle">
+          <div class="d-flex justify-content-center align-items-center gap-1">
+            <button class="btn btn-sm btn-outline-primary py-1 px-3 fw-bold rounded-1" onclick="bukaModalKemaskiniOperasi('${sek.kod}')"><i class="fa-solid fa-pen-to-square me-1"></i>Tindakan</button>
+            ${butangCetakPusat}
+          </div>
+        </td>
+      </tr>`;
+    });
+
+    $('#infoPageOperasi').text(`Memandangkan rekod: ${mula + 1} hingga ${tamat} daripada ${total}`);
+  }
+  
+  $('#tblReportOperasiBody').html(htmlOps);
+  $('#btnPrevOperasi').prop('disabled', HAL_SEKASA_OPS === 1);
+  $('#btnNextOperasi').prop('disabled', tamat >= total);
+}
+
+function tukarHalamanOps(arah) {
+  HAL_SEKASA_OPS += arah;
+  renderJadualOperasi();
+}
+
+function tapisJadualOperasi() {
+  var nilaiCarian = $('#cariOperasiInput').val().toLowerCase().trim();
+  var sekTapis = BACKEND_DATA.senaraiSekolah.filter(s => s.kategori_sekolah === G_TAHAP_SEMASA);
+  if (nilaiCarian === "") DATA_TAPIS_SEMASA_OPS = [...sekTapis];
+  else {
+    DATA_TAPIS_SEMASA_OPS = sekTapis.filter(s => (s.kod.toLowerCase().indexOf(nilaiCarian) > -1 || s.nama.toLowerCase().indexOf(nilaiCarian) > -1 || dapatkanNamaDaerahSebenarOps(s.ppd, s.kod).toLowerCase().indexOf(nilaiCarian) > -1));
+  }
+  HAL_SEKASA_OPS = 1; renderJadualOperasi();
+}
+
+function bukaModalKemaskiniOperasi(kodSekolah) {
+  var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString(); 
+  var tahapSurat = G_TAHAP_SEMASA === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+  var sek = BACKEND_DATA.senaraiSekolah.find(s => s.kod === kodSekolah);
+  if (!sek) return;
+
+  $('#ops_kod_sekolah').val(kodSekolah);
+  $('#ops_nama_sekolah').text(kodSekolah + " - " + sek.nama);
+  $('#ops_paparan_tahun').text(tahunSemasa);
+  
+  var htmlBk = '<option value="">-- Sila Pilih Bilik Kebal --</option>';
+  var bkDaerahSama = (BACKEND_DATA.senaraiBilikKebal || []).filter(b => b.daerah && b.daerah.toUpperCase() === sek.ppd.toUpperCase());
+  bkDaerahSama.forEach(b => { htmlBk += `<option value="${b.id_bilik_kebal}">${b.id_bilik_kebal} - ${b.nama_bilik_kebal}</option>`; });
+  $('#ops_bilik_kebal').html(htmlBk);
+  
+  var ops = (BACKEND_DATA.senaraiMatrik || []).find(m => m.kod_sekolah === kodSekolah && m.tahun === tahunSemasa && m.matrik_tahap === tahapSurat);
+  if (ops) $('#ops_bilik_kebal').val(ops.id_bilik_kebal); else $('#ops_bilik_kebal').val(""); 
+
+  var pkKiraanTerkini = {};
+  (BACKEND_DATA.senaraiMatrik || []).forEach(m => {
+    if (m.tahun === tahunSemasa) {
+      if (m.no_kp_pk1) pkKiraanTerkini[m.no_kp_pk1] = (pkKiraanTerkini[m.no_kp_pk1] || 0) + 1;
+      if (m.no_kp_pk2) pkKiraanTerkini[m.no_kp_pk2] = (pkKiraanTerkini[m.no_kp_pk2] || 0) + 1;
+    }
+  });
+
+  var htmlPk = '<option value="">-- Pilih Penyelia --</option>';
+  var pkSemuaDaerahSama = (BACKEND_DATA.senaraiPk || []).filter(p => p.daerah && p.daerah.toUpperCase() === sek.ppd.toUpperCase() && p.tahun === tahunSemasa); 
+  pkSemuaDaerahSama.forEach(p => { 
+    var kuotaGuna = pkKiraanTerkini[p.no_kp] || 0;
+    var teksKuota = `[${kuotaGuna}/5]`;
+    var disabledTeks = "";
+    if (kuotaGuna >= 5 && (!ops || (ops.no_kp_pk1 !== p.no_kp && ops.no_kp_pk2 !== p.no_kp))) {
+      disabledTeks = "disabled"; teksKuota = "[5/5 - PENUH]";
+    }
+    htmlPk += `<option value="${p.no_kp}" ${disabledTeks}>${p.nama_pk} (${p.jawatan_pk}) ${teksKuota}</option>`; 
+  });
+  
+  $('#ops_pk1').html(htmlPk); $('#ops_pk2').html(htmlPk);
+  if (ops) { $('#ops_pk1').val(ops.no_kp_pk1 || ""); $('#ops_pk2').val(ops.no_kp_pk2 || ""); } 
+  else { $('#ops_pk1').val(""); $('#ops_pk2').val(""); }
+
+  var kpPilihanHtml = '<option value="">-- Tiada KP Ditetapkan --</option>';
+  var kpDalamDaerah = (BACKEND_DATA.senaraiKp || []).filter(k => {
+     var sekAsal = BACKEND_DATA.senaraiSekolah.find(s => s.kod === k.kod_sek_asal);
+     return sekAsal && sekAsal.ppd === sek.ppd && k.matrik_tahap === tahapSurat && k.tahun === tahunSemasa;
+  });
+  var kpSemasa = kpDalamDaerah.find(k => (k.kod_sek_tetap === kodSekolah || (k.kod_sek_tetap === "" && k.kod_sek_cadangan === kodSekolah)));
+  
+  kpDalamDaerah.forEach(k => {
+    var isSelected = (kpSemasa && kpSemasa.no_kp === k.no_kp) ? "selected" : "";
+    var disabledTeks = "";
+    var sekAsalObj = BACKEND_DATA.senaraiSekolah.find(s => s.kod === k.kod_sek_asal);
+    var namaSekAsal = sekAsalObj ? sekAsalObj.nama.toUpperCase() : "TIDAK DIKETAHUI";
+    var teksKp = `${k.nama_guru} (Asal: ${k.kod_sek_asal} - ${namaSekAsal})`;
+
+    if (k.status_penetapan === 'DISAHKAN' && k.kod_sek_tetap !== kodSekolah) {
+       disabledTeks = "disabled";
+       var sekTetapObj = BACKEND_DATA.senaraiSekolah.find(s => s.kod === k.kod_sek_tetap);
+       var namaSekTetap = sekTetapObj ? sekTetapObj.nama.toUpperCase() : "";
+       teksKp = `⛔ ${k.nama_guru} [DISAHKAN DI ${k.kod_sek_tetap} - ${namaSekTetap}]`;
+    }
+    kpPilihanHtml += `<option value="${k.no_kp}" ${isSelected} ${disabledTeks}>${teksKp}</option>`;
+  });
+  $('#ops_pilih_kp').html(kpPilihanHtml);
+
+  paparInfoKPPilihan();
+  if (kpSemasa && kpSemasa.status_penetapan === 'DISAHKAN') $('#chkSahkanKp').prop('checked', true); else $('#chkSahkanKp').prop('checked', false);
+
+  var modalOps = new bootstrap.Modal(document.getElementById('modalKemaskiniOps'));
+  modalOps.show();
+}
+
+function paparInfoKPPilihan() {
+  var noKpDipilih = $('#ops_pilih_kp').val();
+  if (noKpDipilih === "") {
+    $('#kawasan_info_kp').addClass('d-none'); $('#kawasan_sahkan_kp').addClass('d-none'); return;
+  }
+  var kp = BACKEND_DATA.senaraiKp.find(k => k.no_kp === noKpDipilih);
+  if (kp) {
+    var rekodSekAsal = BACKEND_DATA.senaraiSekolah.find(s => s.kod === kp.kod_sek_asal);
+    var namaSekAsal = rekodSekAsal ? rekodSekAsal.nama.toUpperCase() : "";
+    var paparanSekAsal = namaSekAsal ? (kp.kod_sek_asal + " - " + namaSekAsal) : kp.kod_sek_asal;
+    var htmlKp = `
+      <div class="row text-uppercase small">
+        <div class="col-md-6 mb-2"><span class="text-muted fw-bold">NO. KP:</span> <br><b class="text-dark">${kp.no_kp}</b></div>
+        <div class="col-md-6 mb-2"><span class="text-muted fw-bold">STATUS KINI:</span> <br><span class="badge ${kp.status_penetapan === 'DISAHKAN' ? 'bg-success' : 'bg-warning text-dark'}">${kp.status_penetapan}</span></div>
+        <div class="col-12 mb-2"><span class="text-primary fw-bold"><i class="fa-solid fa-school me-1"></i>SEKOLAH ASAL:</span> <br><b class="text-dark">${paparanSekAsal}</b></div>
+        <div class="col-12 mt-2 pt-2 border-top"><span class="text-primary fw-bold"><i class="fa-solid fa-house me-1"></i>ALAMAT RUMAH:</span> <br><span class="text-dark fw-semibold">${kp.alamat_rumah || "TIADA REKOD"}</span></div>
+      </div>
+    `;
+    $('#kawasan_info_kp').html(htmlKp).removeClass('d-none'); $('#kawasan_sahkan_kp').removeClass('d-none');
+  }
+}
+
+function simpanKemaskiniOperasi() {
+  var kodSekolah = $('#ops_kod_sekolah').val();
+  var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString(); 
+  var tahapSurat = G_TAHAP_SEMASA === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+  var d = {
+    tahun: tahunSemasa,
+    kod_sekolah: kodSekolah,
+    tahap: tahapSurat, 
+    daerah: (BACKEND_DATA.senaraiSekolah.find(s => s.kod === kodSekolah) || {}).ppd,
+    id_bilik_kebal: $('#ops_bilik_kebal').val(),
+    no_kp_pk1: $('#ops_pk1').val(),
+    no_kp_pk2: $('#ops_pk2').val(),
+    no_kp_kp: $('#ops_pilih_kp').val(), 
+    status_kp: $('#chkSahkanKp').is(':checked') ? 'DISAHKAN' : 'CADANGAN'
+  };
+
+  Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (res.status === "SUCCESS") {
+        Swal.fire('Berjaya', 'Maklumat Operasi Matrik Disimpan!', 'success');
+        $('#modalKemaskiniOps').modal('hide'); 
+        muatDataLaporanPegawaiOps(); 
+      } else { Swal.fire('Gagal', res.message, 'error'); }
+    }).simpanDataOperasiPPD(d);
+}
+
+// =========================================================
+// LOGIK TAB 2: PENYELIA KAWASAN (PK)
+// =========================================================
+function renderJadualPk() {
+  var data = DATA_TAPIS_SEMASA_PK; 
+  var htmlPk = '';
+  $('#chkSelectAll').prop('checked', false);
+  
+  if (data.length === 0) {
+    htmlPk = '<tr><td colspan="6" class="text-center text-muted py-4">Tiada rekod Penyelia Kawasan dikesan untuk tahap ini pada tahun dipilih.</td></tr>';
+  } else {
+    data.forEach((p) => {
+      var infoSek = BACKEND_DATA.senaraiSekolah.find(s => s.kod === p.kod_sek_asal); 
+      var namaSekAsal = infoSek ? infoSek.nama.toUpperCase() : "TIDAK DIKETAHUI";
+      var alamatPaparan = p.alamat_rumah ? p.alamat_rumah.toUpperCase() : "TIADA REKOD ALAMAT";
+      var badgeAlamat = p.alamat_rumah ? 
+        `<div class="small text-dark fw-semibold mt-1 pt-1 border-top" style="font-size: 0.78rem; line-height: 1.2;"><i class="fa-solid fa-house me-1 text-primary"></i>${alamatPaparan}</div>` : 
+        `<div class="small text-muted mt-1 pt-1 border-top fst-italic" style="font-size: 0.75rem;"><i class="fa-solid fa-house-circle-xmark me-1 text-danger opacity-75"></i>Tiada Alamat</div>`;
+
+      var namaDaerahPaparan = dapatkanNamaDaerahSebenarOps(p.daerah, p.kod_sek_asal);
+
+      htmlPk += `<tr>
+        <td class="text-center align-middle">
+          <input class="form-check-input chk-pk-row" type="checkbox" value="${p.rowNum}" onchange="semakStatusButangSalin()" style="cursor: pointer;">
+        </td>
+        <td class="text-center align-middle">
+          <span class="badge bg-dark bg-opacity-10 text-dark border border-secondary rounded-1 fs-6">${p.tahun}</span>
+        </td>
+        <td class="align-middle">
+          <div class="mb-1">
+            <span class="badge bg-secondary text-uppercase rounded-1">${namaDaerahPaparan}</span>
+            <span class="badge bg-danger ms-1 rounded-1">${p.kod_sek_asal}</span>
+          </div>
+          <div class="text-dark fw-bold small text-uppercase" style="font-size: 0.85rem;">${namaSekAsal}</div>
+        </td>
+        <td class="align-middle">
+          <div class="fw-bold text-dark text-uppercase mb-1" style="font-size: 0.95rem;">${p.nama_pk}</div>
+          <span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-1 small py-1 px-2">${p.jawatan_pk}</span>
+        </td>
+        <td class="align-middle">
+          <div class="small text-muted fw-medium"><i class="fa-regular fa-id-card me-2 opacity-75"></i>${p.no_kp} &nbsp;|&nbsp; <i class="fa-solid fa-phone me-1 opacity-75"></i>${p.no_tel}</div>
+          ${badgeAlamat}
+        </td>
+        <td class="text-center align-middle">
+          <button class="btn btn-sm btn-outline-purple py-1 px-2 fw-bold mb-1 w-100 rounded-1" style="color: #6f42c1; border-color: #6f42c1;" onclick="cetakSuratPk('${p.no_kp}', '${p.tahun}', '${p.matrik_tahap}')" title="Cetak Surat Lantikan"><i class="fa-solid fa-print me-1"></i>Cetak</button>
+          <button class="btn btn-sm btn-outline-primary py-1 px-2 fw-bold mb-1 w-100 rounded-1" onclick="bukaModalPk(${p.rowNum})" title="Kemaskini"><i class="fa-solid fa-pen-to-square"></i></button>
+          <button class="btn btn-sm btn-outline-danger py-1 px-2 fw-bold w-100 rounded-1" onclick="padamRekodPk(${p.rowNum})" title="Padam"><i class="fa-solid fa-trash"></i></button>
+        </td>
+      </tr>`;
+    });
+  }
+  $('#tblReportPkBody').html(htmlPk);
+  semakStatusButangSalin(); 
+}
+
+function tapisJadualPk() {
+  var nilaiCarian = $('#cariPkInput').val().toLowerCase().trim();
+  var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+  var tahapSurat = G_TAHAP_SEMASA === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+  var senaraiTapis = (BACKEND_DATA.senaraiPk || []).filter(p => p.tahun === tahunSemasa && p.matrik_tahap === tahapSurat);
+
+  if (nilaiCarian === "") {
+    DATA_TAPIS_SEMASA_PK = [...senaraiTapis];
+  } else {
+    DATA_TAPIS_SEMASA_PK = senaraiTapis.filter(p => {
+      var infoSek = BACKEND_DATA.senaraiSekolah.find(s => s.kod === p.kod_sek_asal);
+      var namaSek = infoSek ? infoSek.nama.toLowerCase() : "";
+      return (
+        p.nama_pk.toLowerCase().indexOf(nilaiCarian) > -1 ||
+        p.no_kp.toLowerCase().indexOf(nilaiCarian) > -1 ||
+        p.kod_sek_asal.toLowerCase().indexOf(nilaiCarian) > -1 ||
+        namaSek.indexOf(nilaiCarian) > -1 ||
+        p.jawatan_pk.toLowerCase().indexOf(nilaiCarian) > -1
+      );
+    });
+  }
+  renderJadualPk();
+}
+
+function toggSelectAll(elem) {
+  var isChecked = $(elem).is(':checked');
+  $('.chk-pk-row').prop('checked', isChecked);
+  semakStatusButangSalin();
+}
+
+function semakStatusButangSalin() {
+  var count = $('.chk-pk-row:checked').length;
+  $('#lblCountSelected').text(count);
+  if (count > 0) $('#btnSalinBulk').removeClass('d-none');
+  else { $('#btnSalinBulk').addClass('d-none'); $('#chkSelectAll').prop('checked', false); }
+}
+
+function bukaModalSalinBulk() {
+  var count = $('.chk-pk-row:checked').length;
+  if (count === 0) return;
+  var tahunKini = parseInt(window.G_TAHUN_AKTIF || new Date().getFullYear());
+  var tahunHadapan = (tahunKini + 1).toString();
+  var optionsTahun = {};
+  for (var y = tahunKini; y <= tahunKini + 3; y++) optionsTahun[y] = "Sesi " + y;
+  
+  Swal.fire({
+    title: 'Salin PK Terpilih',
+    html: `Anda akan menyalin <b>${count} rekod Penyelia Kawasan</b> yang dipilih.<br><br>Sila pilih <b>Tahun Sesi Tujuan</b>:`,
+    icon: 'question', input: 'select', inputOptions: optionsTahun, inputValue: tahunHadapan,
+    showCancelButton: true, confirmButtonColor: '#ffc107', confirmButtonText: '<i class="fa-solid fa-copy me-2"></i>Salin Sekarang!',
+    cancelButtonText: 'Batal', customClass: { confirmButton: 'text-dark fw-bold' }
+  }).then((result) => { if (result.isConfirmed) laksanakanSalinanBulk(result.value); });
+}
+
+function laksanakanSalinanBulk(tahunSasar) {
+  var senaraiRow = [];
+  $('.chk-pk-row:checked').each(function() { senaraiRow.push($(this).val()); });
+  Swal.fire({ title: 'Sedang Menyalin...', text: 'Sistem sedang memproses salinan data ke sesi ' + tahunSasar + '.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+  var kodDaerahSemasa = G_USER.kod_daerah ? G_USER.kod_daerah : G_USER.username;
+  
+  google.script.run.withSuccessHandler(function(res) {
+    if (res.status === "SUCCESS") {
+      Swal.fire({ title: 'Salinan Berjaya!', text: res.message, icon: 'success', confirmButtonColor: '#0d6efd' }).then(() => {
+        if ($("#globalFilterTahun option[value='" + tahunSasar + "']").length > 0) {
+          $('#globalFilterTahun').val(tahunSasar); tukarTahunGlobal();
+        } else saringDataIkutTahapOps();
+      });
+    } else Swal.fire('Gagal!', res.message, 'error');
+  }).salinDataPkKeTahun(kodDaerahSemasa, senaraiRow, tahunSasar);
+}
+
+function bukaModalPk(rowNum) {
+  $('#formPk')[0].reset();
+  $('#txtPkTahun').val(window.G_TAHUN_AKTIF || new Date().getFullYear().toString()); 
+  $('#txtPkRow').val(rowNum || "");
+  var tahapSurat = G_TAHAP_SEMASA === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+  $('#txtPkTahap').val(tahapSurat);
+  
+  if (rowNum) {
+    $('#pkModalTitle').html('<i class="fa-solid fa-user-pen me-2"></i>Kemaskini Penyelia Kawasan');
+    var p = DATA_TAPIS_SEMASA_PK.find(x => x.rowNum === rowNum);
+    if (p) { 
+      var infoSek = BACKEND_DATA.senaraiSekolah.find(s => s.kod === p.kod_sek_asal);
+      var valSek = infoSek ? `${p.kod_sek_asal} - ${infoSek.nama.toUpperCase()}` : p.kod_sek_asal;
+      $('#txtPkSekAsal').val(valSek); $('#txtPkJawatan').val(p.jawatan_pk); $('#txtPkNama').val(p.nama_pk); 
+      $('#txtPkKp').val(p.no_kp); $('#txtPkTel').val(p.no_tel); $('#txtPkEmel').val(p.emel); $('#txtPkAlamat').val(p.alamat_rumah || "");
+    }
+  } else $('#pkModalTitle').html('<i class="fa-solid fa-user-ninja me-2"></i>Tambah Penyelia Kawasan');
+  
+  var myModal = new bootstrap.Modal(document.getElementById('modalPk'));
+  myModal.show();
+}
+
+function simpanDataPk() {
+  var rawSekolah = $('#txtPkSekAsal').val() || "";
+  var kodSekAsal = rawSekolah.indexOf(" - ") > -1 ? rawSekolah.split(" - ")[0].trim() : rawSekolah.trim();
+  var d = {
+    tahun: $('#txtPkTahun').val(), kod_sek_asal: kodSekAsal, matrik_tahap: $('#txtPkTahap').val(), 
+    jawatan_pk: $('#txtPkJawatan').val(), nama_pk: $('#txtPkNama').val(), no_kp: $('#txtPkKp').val(), 
+    no_tel: $('#txtPkTel').val(), emel: $('#txtPkEmel').val(), alamat_rumah: $('#txtPkAlamat').val()
+  };
+  Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+  google.script.run.withSuccessHandler(function(res) { 
+    if (res.status === "SUCCESS") { Swal.fire('Berjaya', 'Maklumat Disimpan!', 'success'); $('#modalPk').modal('hide'); muatDataLaporanPegawaiOps(); } 
+    else Swal.fire('Gagal', res.message, 'error'); 
+  }).urusDataPkPPD(G_USER.kod_daerah ? G_USER.kod_daerah : G_USER.username, d, $('#txtPkRow').val());
+}
+
+function padamRekodPk(rowNum) {
+  Swal.fire({ title: 'Anda Pasti?', text: "Rekod Penyelia Kawasan ini akan dipadamkan!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#858796', confirmButtonText: 'Ya, Padam!', cancelButtonText: 'Batal' })
+  .then((r) => {
+    if (r.isConfirmed) { 
+      Swal.fire({title:'Memadam...', allowOutsideClick: false, didOpen:()=>{Swal.showLoading();}}); 
+      google.script.run.withSuccessHandler(()=>{ Swal.fire('Dipadam!', 'Rekod berjaya dibuang.', 'success'); muatDataLaporanPegawaiOps(); }).padamRekod('tbpk', rowNum); 
+    }
+  });
+}
+
+// =========================================================
+// LOGIK TAB 3: SENARAI KETUA PENGAWAS (KP)
+// =========================================================
+function renderJadualKpOps() {
+  var data = DATA_TAPIS_SEMASA_KP_OPS;
+  var htmlKp = '';
+  
+  // 🌟 JALANKAN ENJIN KIRAAN DASHBOARD
+  var total = data.length;
+  var disahkan = data.filter(k => k.status_penetapan === 'DISAHKAN').length;
+  var cadangan = total - disahkan;
+  
+  var skmCount = 0;
+  if(BACKEND_DATA && BACKEND_DATA.senaraiSekolah) {
+     var sekTahapIni = BACKEND_DATA.senaraiSekolah.filter(s => s.kategori_sekolah === G_TAHAP_SEMASA);
+     skmCount = sekTahapIni.filter(s => parseInt(s.jum_calon || 0) > 0 && parseInt(s.jum_calon || 0) < 20).length;
+  }
+  $('#stat_kp_total').text(total); $('#stat_kp_disahkan').text(disahkan);
+  $('#stat_kp_cadangan').text(cadangan); $('#stat_kp_skm').text(skmCount);
+  
+  // 🌟 KIRAAN KUOTA KP TERKINI (Untuk Paparan 1/1 dalam Dropdown)
+  var kpKiraanTerkini = {};
+  data.forEach(kpItem => {
+    var kod = (kpItem.kod_sek_tetap && kpItem.kod_sek_tetap.trim() !== "") ? kpItem.kod_sek_tetap : (kpItem.kod_sek_cadangan || "");
+    if (kod !== "") {
+      kpKiraanTerkini[kod] = (kpKiraanTerkini[kod] || 0) + 1;
+    }
+  });
+
+  if (total === 0) {
+    htmlKp = '<tr><td colspan="4" class="text-center text-muted py-4">Tiada rekod calon Ketua Pengawas dikesan untuk tahap dan sesi ini.</td></tr>';
+  } else {
+    data.forEach((k) => {
+      var infoSekAsal = BACKEND_DATA.senaraiSekolah.find(s => s.kod === k.kod_sek_asal); 
+      var namaSekAsal = infoSekAsal ? infoSekAsal.nama.toUpperCase() : "TIDAK DIKETAHUI";
+      var namaDaerahPaparan = dapatkanNamaDaerahSebenarOps(infoSekAsal ? infoSekAsal.ppd : "", k.kod_sek_asal);
+      var rowNumAsal = BACKEND_DATA.senaraiKp.indexOf(k) + 2; 
+
+      var isSkmAsal = (infoSekAsal && parseInt(infoSekAsal.jum_calon || 0) > 0 && parseInt(infoSekAsal.jum_calon || 0) < 20);
+      var labelSkmAsal = isSkmAsal ? ` <span class="badge bg-danger rounded-1 ms-1">SKM</span>` : "";
+
+      var alamatPaparan = k.alamat_rumah ? k.alamat_rumah.toUpperCase() : "TIADA REKOD ALAMAT";
+      var badgeAlamat = k.alamat_rumah ? 
+        `<div class="small text-dark fw-semibold mt-1 pt-1 border-top" style="font-size: 0.75rem; line-height: 1.3;"><i class="fa-solid fa-house me-1 text-primary"></i>${alamatPaparan}</div>` : 
+        `<div class="small text-muted mt-1 pt-1 border-top fst-italic" style="font-size: 0.75rem;"><i class="fa-solid fa-house-circle-xmark me-1 text-danger opacity-75"></i>Tiada Alamat Rumah</div>`;
+
+      var infoCadang = BACKEND_DATA.senaraiSekolah.find(s => s.kod === k.kod_sek_cadangan);
+      var namaCadang = infoCadang ? infoCadang.nama.toUpperCase() : "";
+      var paparanCadangan = k.kod_sek_cadangan ? 
+        `<div class="d-flex align-items-center gap-1 mb-2 p-1.5 bg-light border rounded-1" style="font-size: 0.78rem;">
+           <span class="text-muted fw-bold"><i class="fa-solid fa-lightbulb text-warning me-1"></i>Cadangan:</span>
+           <span class="badge bg-info text-dark">${k.kod_sek_cadangan}</span>
+           <span class="text-dark fw-bold text-truncate" style="max-width: 250px;" title="${namaCadang}">${namaCadang}</span>
+         </div>` : 
+        `<div class="mb-2 small text-muted fst-italic"><i class="fa-solid fa-lightbulb text-warning me-1"></i>Tiada Sekolah Dicadangkan</div>`;
+
+      var ppdCalon = infoSekAsal ? (infoSekAsal.ppd || infoSekAsal.daerah) : "";
+      var sekDaerahSama = BACKEND_DATA.senaraiSekolah.filter(s => {
+        var ppdS = s.ppd || s.daerah || "";
+        if (isSkmAsal) return ppdS.toUpperCase() === ppdCalon.toUpperCase();
+        return ppdS.toUpperCase() === ppdCalon.toUpperCase() && s.kod.toUpperCase() !== k.kod_sek_asal.toUpperCase();
+      });
+      
+      var kodTerpilih = (k.kod_sek_tetap && k.kod_sek_tetap.trim() !== "") ? k.kod_sek_tetap : (k.kod_sek_cadangan || "");
+      var optionsHtml = `<option value="">-- Pilih Pusat Penugasan (Muktamad) --</option>`;
+      
+      sekDaerahSama.forEach(s => {
+        if (parseInt(s.jum_calon || 0) > 0 && parseInt(s.jum_calon || 0) < 20) return; // Tapisan SKM
+        
+        var isSelected = (s.kod === kodTerpilih) ? "selected" : "";
+        var kuotaGuna = kpKiraanTerkini[s.kod] || 0;
+        var teksKuota = `[${kuotaGuna}/1]`;
+        var disabledTeks = "";
+        
+        // Kunci (disable) pilihan jika sekolah dah dipilih oleh orang lain
+        if (kuotaGuna >= 1 && s.kod !== kodTerpilih) {
+            disabledTeks = "disabled";
+            teksKuota = "[1/1 - PENUH]";
+        }
+
+        optionsHtml += `<option value="${s.kod}" ${isSelected} ${disabledTeks}>${s.kod} - ${s.nama.toUpperCase()} ${teksKuota}</option>`;
+      });
+
+      var warnaBorder = k.status_penetapan === 'DISAHKAN' ? 'border-success bg-success bg-opacity-10' : 'border-warning';
+      var modeKunci = k.status_penetapan === 'DISAHKAN' ? 'disabled' : '';
+
+      var selectInline = `
+        <div class="input-group input-group-sm mb-1 shadow-sm">
+          <select id="sel_inline_${rowNumAsal}" class="form-select fw-bold small ${warnaBorder}" style="font-size:0.85rem;" ${modeKunci} onchange="simpanAutosaveKpOps(${rowNumAsal}, '${k.kod_sek_asal}', '${k.no_kp}', this.value)">
+            ${optionsHtml}
+          </select>
+        </div>
+        <div class="mb-1">
+          <span class="badge ${k.status_penetapan === 'DISAHKAN' ? 'bg-success' : 'bg-warning text-dark'} small">${k.status_penetapan}</span>
+        </div>
+      `;
+
+      var butangAksiUtama = '';
+      if (k.status_penetapan === 'DISAHKAN') {
+         butangAksiUtama = `<button class="btn btn-sm btn-outline-danger py-1 px-2 fw-bold mb-1 w-100 rounded-1 shadow-sm" style="font-size:0.78rem;" onclick="batalPengesahanKpOps(${rowNumAsal}, '${k.no_kp}')" title="Batal Pengesahan (Buka Semula Mod Edit)"><i class="fa-solid fa-unlock me-1"></i>Buka Kunci</button>`;
+      }
+
+      var butangCetak = `<button class="btn btn-sm btn-outline-purple py-1 px-2 fw-bold mb-1 w-100 rounded-1" style="color: #6f42c1; border-color: #6f42c1; font-size:0.78rem;" onclick="cetakSuratKp('${k.no_kp}', '${k.tahun}', '${k.matrik_tahap}', '${k.status_penetapan}')" title="Cetak Surat"><i class="fa-solid fa-print me-1"></i>Cetak</button>`;
+
+      htmlKp += `<tr>
+        <td class="text-center align-middle">
+          <span class="badge bg-dark bg-opacity-10 text-dark border border-secondary rounded-1 fs-6">${k.tahun}</span>
+        </td>
+        <td class="align-middle">
+          <div class="mb-1">
+            <span class="badge bg-secondary text-uppercase rounded-1">${namaDaerahPaparan}</span>
+            <span class="badge bg-danger ms-1 rounded-1">${k.kod_sek_asal}</span>${labelSkmAsal}
+          </div>
+          <div class="text-dark fw-bold small text-uppercase mb-1" style="font-size: 0.88rem;">${k.nama_guru}</div>
+          <div class="small text-muted fw-medium"><i class="fa-regular fa-id-card me-1 opacity-75"></i>${k.no_kp} &nbsp;|&nbsp; <i class="fa-solid fa-phone me-1 opacity-75"></i>${k.no_tel || "-"}</div>
+          <div class="small text-muted fst-italic mt-1" style="font-size:0.75rem;"><i class="fa-solid fa-school me-1"></i>Asal: ${namaSekAsal}</div>
+          ${badgeAlamat}
+        </td>
+        <td class="align-middle">
+          ${paparanCadangan}
+          ${selectInline}
+        </td>
+        <td class="text-center align-middle">
+          ${butangAksiUtama}
+          ${butangCetak}
+          <div class="d-flex gap-1 mt-1">
+            <button class="btn btn-xs btn-outline-primary py-1 w-50 rounded-1 fw-bold" style="font-size:0.72rem;" onclick="bukaModalKpOps(${rowNumAsal}, '${k.no_kp}')" title="Info Profil"><i class="fa-solid fa-user me-1"></i> Profil</button>
+            <button class="btn btn-xs btn-outline-danger py-1 w-50 rounded-1 fw-bold" style="font-size:0.72rem;" onclick="padamRekodKpOps(${rowNumAsal})" title="Padam"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </td>
+      </tr>`;
+    });
+  }
+  $('#tblReportKpOpsBody').html(htmlKp);
+}
+
+function batalPengesahanKpOps(rowNum, noKp) {
+  Swal.fire({
+      title: 'Batal Pengesahan?',
+      text: "Mod Read-Only akan dimatikan. Adakah anda pasti mahu membatalkan penempatan rasmi ini?",
+      icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#6c757d', confirmButtonText: 'Ya, Batal Sah!'
+  }).then((result) => {
+      if (result.isConfirmed) {
+          Swal.fire({title: 'Membatalkan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+          google.script.run
+          .withSuccessHandler(function(res) {
+              if (res.status === "SUCCESS") {
+                  var kpObj = BACKEND_DATA.senaraiKp.find(x => x.no_kp === noKp);
+                  if (kpObj) { kpObj.kod_sek_tetap = ""; kpObj.status_penetapan = 'CADANGAN'; }
+                  renderJadualKpOps();
+                  renderJadualOperasi();
+                  Swal.fire('Dibatalkan!', 'Pengesahan telah terbatal. Dropdown kini aktif semula.', 'success');
+              } else { Swal.fire('Gagal', res.message, 'error'); }
+          })
+          .simpanPenempatanInlineKp(rowNum, "", "CADANGAN", ""); 
+      }
+  });
+}
+
+function bukaModalKpOps(rowNum, noKp) {
+  $('#formKpOps')[0].reset();
+  $('#txtKpOpsTahun').val(window.G_TAHUN_AKTIF || new Date().getFullYear().toString()); 
+  $('#txtKpOpsRow').val(rowNum || "");
+  var tahapSurat = G_TAHAP_SEMASA === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+  $('#txtKpOpsTahap').val(tahapSurat);
+  
+  if (rowNum && noKp) {
+    $('#kpOpsModalTitle').html('<i class="fa-solid fa-user-check me-2"></i>Profil Ketua Pengawas Peperiksaan');
+    $('#divSekCadangan').removeClass('d-none');
+    $('#divSekAsal').removeClass('col-12').addClass('col-md-6'); 
+    
+    var k = (BACKEND_DATA.senaraiKp || []).find(x => x.no_kp === noKp && x.tahun === $('#txtKpOpsTahun').val());
+    if (k) { 
+      var infoSek = BACKEND_DATA.senaraiSekolah.find(s => s.kod === k.kod_sek_asal);
+      var valSek = infoSek ? `${k.kod_sek_asal} - ${infoSek.nama.toUpperCase()}` : k.kod_sek_asal;
+      $('#txtKpOpsSekAsal').val(valSek); 
+      var infoCadang = BACKEND_DATA.senaraiSekolah.find(s => s.kod === k.kod_sek_cadangan);
+      var valCadang = infoCadang ? `${k.kod_sek_cadangan} - ${infoCadang.nama.toUpperCase()}` : k.kod_sek_cadangan;
+      $('#txtKpOpsSekCadangan').val(valCadang || ""); 
+      var infoTetap = BACKEND_DATA.senaraiSekolah.find(s => s.kod === k.kod_sek_tetap);
+      var valTetap = infoTetap ? `${k.kod_sek_tetap} - ${infoTetap.nama.toUpperCase()}` : k.kod_sek_tetap;
+      $('#txtKpOpsSekTetap').val(valTetap || ""); 
+      $('#txtKpOpsStatus').val(k.status_penetapan || "CADANGAN");
+      $('#txtKpOpsNama').val(k.nama_guru); $('#txtKpOpsNoKp').val(k.no_kp); $('#txtKpOpsTel').val(k.no_tel || ""); 
+      $('#txtKpOpsEmel').val(k.emel || ""); $('#txtKpOpsAlamat').val(k.alamat_rumah || "");
+    }
+  }
+  
+  var myModal = new bootstrap.Modal(document.getElementById('modalKpOps'));
+  myModal.show();
+}
+
+function simpanDataKpOps() {
+  var rawSekAsal = $('#txtKpOpsSekAsal').val() || "";
+  var kodSekAsal = rawSekAsal.indexOf(" - ") > -1 ? rawSekAsal.split(" - ")[0].trim() : rawSekAsal.trim();
+  var rawSekCadangan = $('#txtKpOpsSekCadangan').val() || "";
+  var kodSekCadangan = rawSekCadangan.indexOf(" - ") > -1 ? rawSekCadangan.split(" - ")[0].trim() : rawSekCadangan.trim();
+  var rawSekTetap = $('#txtKpOpsSekTetap').val() || "";
+  var kodSekTetap = rawSekTetap.indexOf(" - ") > -1 ? rawSekTetap.split(" - ")[0].trim() : rawSekTetap.trim();
+
+  var d = {
+    tahun: $('#txtKpOpsTahun').val(), kod_sek_asal: kodSekAsal, matrik_tahap: $('#txtKpOpsTahap').val(), 
+    kod_sek_cadangan: kodSekCadangan, kod_sek_tetap: kodSekTetap, status_penetapan: $('#txtKpOpsStatus').val(),
+    nama_guru: $('#txtKpOpsNama').val(), no_kp: $('#txtKpOpsNoKp').val(), no_tel: $('#txtKpOpsTel').val(), 
+    emel: $('#txtKpOpsEmel').val(), alamat_rumah: $('#txtKpOpsAlamat').val()
+  };
+  
+  Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+  var kodDaerahSemasa = G_USER.kod_daerah ? G_USER.kod_daerah : G_USER.username;
+
+  google.script.run.withSuccessHandler(function(res) { 
+    if (res.status === "SUCCESS") { Swal.fire('Berjaya', 'Maklumat Ketua Pengawas Disimpan!', 'success'); $('#modalKpOps').modal('hide'); muatDataLaporanPegawaiOps(); } 
+    else Swal.fire('Gagal', res.message, 'error'); 
+  }).urusDataKpPPD(kodDaerahSemasa, d, $('#txtKpOpsRow').val());
+}
+
+function padamRekodKpOps(rowNum) {
+  Swal.fire({ title: 'Anda Pasti?', text: "Rekod Ketua Pengawas ini akan dipadamkan daripada pangkalan data!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#858796', confirmButtonText: 'Ya, Padam!', cancelButtonText: 'Batal' })
+  .then((r) => {
+    if (r.isConfirmed) { 
+      Swal.fire({title:'Memadam...', allowOutsideClick: false, didOpen:()=>{Swal.showLoading();}}); 
+      google.script.run.withSuccessHandler(()=>{ Swal.fire('Dipadam!', 'Rekod berjaya dibuang.', 'success'); muatDataLaporanPegawaiOps(); }).padamRekod('tbkp', rowNum); 
+    }
+  });
+}
+
+function tapisJadualKpOps() {
+  var nilaiCarian = $('#cariKpOpsInput').val().toLowerCase().trim();
+  var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+  var tahapSurat = G_TAHAP_SEMASA === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+  var senaraiTapis = (BACKEND_DATA.senaraiKp || []).filter(k => k.tahun === tahunSemasa && k.matrik_tahap === tahapSurat);
+
+  if (nilaiCarian === "") {
+    DATA_TAPIS_SEMASA_KP_OPS = [...senaraiTapis];
+  } else {
+    DATA_TAPIS_SEMASA_KP_OPS = senaraiTapis.filter(k => {
+      var infoSek = BACKEND_DATA.senaraiSekolah.find(s => s.kod === k.kod_sek_asal);
+      var namaSek = infoSek ? infoSek.nama.toLowerCase() : "";
+      return (
+        k.nama_guru.toLowerCase().indexOf(nilaiCarian) > -1 ||
+        k.no_kp.toLowerCase().indexOf(nilaiCarian) > -1 ||
+        k.kod_sek_asal.toLowerCase().indexOf(nilaiCarian) > -1 ||
+        namaSek.indexOf(nilaiCarian) > -1
+      );
+    });
+  }
+  renderJadualKpOps();
+}
+
+// ==========================================================
+// FUNGSI EKSPORT JADUAL KE EXCEL (.XLSX) - VERSI KOD & NAMA DAERAH + AUTO-FIT
+// ==========================================================
+function eksportJadualKeExcel(elementId, namaFail) {
+  if (typeof XLSX === 'undefined') {
+    Swal.fire('Ralat Library', 'Sila pastikan library SheetJS telah dimasukkan ke dalam Index.html!', 'error');
+    return;
+  }
+
+  var dataExcel = [];
+  
+  if (elementId === 'tblPkUtama') {
+    if (!DATA_TAPIS_SEMASA_PK || DATA_TAPIS_SEMASA_PK.length === 0) {
+      Swal.fire('Perhatian', 'Tiada data Penyelia Kawasan untuk dieksport!', 'warning'); return;
+    }
+    DATA_TAPIS_SEMASA_PK.forEach(function(p, idx) {
+      var infoSek = BACKEND_DATA.senaraiSekolah.find(s => s.kod === p.kod_sek_asal) || {};
+      
+      // Dapatkan Kod dan Nama Daerah Sebenar
+      var kodDaerah = p.daerah || infoSek.ppd || "";
+      var namaDaerah = dapatkanNamaDaerahSebenarOps(kodDaerah, p.kod_sek_asal);
+
+      dataExcel.push({
+        "Bil.": idx + 1, 
+        "Sesi": p.tahun || "", 
+        "Kod Daerah": kodDaerah,                 // Lajur Baru (Kod)
+        "Nama Daerah": namaDaerah,               // Lajur Baru (Nama Penuh)
+        "Kod Sekolah Asal": p.kod_sek_asal || "", 
+        "Nama Sekolah Asal": infoSek.nama || "-",
+        "Nama Penyelia": p.nama_pk || "", 
+        "Jawatan / Peranan": p.jawatan_pk || "",
+        "No. Kad Pengenalan": p.no_kp || "", 
+        "No. Telefon": p.no_tel || "",
+        "Emel": p.emel || "", 
+        "Alamat Rumah": p.alamat_rumah || ""
+      });
+    });
+  }
+  else if (elementId === 'tblKpOpsUtama') {
+    if (!DATA_TAPIS_SEMASA_KP_OPS || DATA_TAPIS_SEMASA_KP_OPS.length === 0) {
+      Swal.fire('Perhatian', 'Tiada data Ketua Pengawas untuk dieksport!', 'warning'); return;
+    }
+    DATA_TAPIS_SEMASA_KP_OPS.forEach(function(k, idx) {
+      var infoSekAsal = BACKEND_DATA.senaraiSekolah.find(s => s.kod === k.kod_sek_asal) || {};
+      var kodPusat = k.status_penetapan === 'DISAHKAN' ? (k.kod_sek_tetap || "") : (k.kod_sek_cadangan || "");
+      var infoSekPusat = BACKEND_DATA.senaraiSekolah.find(s => s.kod === kodPusat) || {};
+      
+      // Dapatkan Kod dan Nama Daerah Sebenar
+      var kodDaerah = infoSekAsal.ppd || "";
+      var namaDaerah = dapatkanNamaDaerahSebenarOps(kodDaerah, k.kod_sek_asal);
+
+      dataExcel.push({
+        "Bil.": idx + 1, 
+        "Sesi": k.tahun || "", 
+        "Kod Daerah Asal": kodDaerah,              // Lajur Baru (Kod)
+        "Nama Daerah Asal": namaDaerah,            // Lajur Baru (Nama Penuh)
+        "Kod Sekolah Asal": k.kod_sek_asal || "", 
+        "Nama Sekolah Asal": infoSekAsal.nama || "-",
+        "Nama Guru": k.nama_guru || "", 
+        "No. Kad Pengenalan": k.no_kp || "",
+        "No. Telefon": k.no_tel || "", 
+        "Emel": k.emel || "", 
+        "Alamat Rumah": k.alamat_rumah || "",
+        "Status Penetapan": k.status_penetapan || "", 
+        "Kod Pusat Penugasan": kodPusat || "-",
+        "Nama Pusat Penugasan": infoSekPusat.nama || "-"
+      });
+    });
+  } else {
+    Swal.fire('Perhatian', 'Jadual tidak disokong!', 'warning'); return;
+  }
+  
+  if (dataExcel.length === 0) { Swal.fire('Perhatian', 'Tiada data untuk dieksport!', 'warning'); return; }
+  
+  var ws = XLSX.utils.json_to_sheet(dataExcel);
+  
+  // Logik Auto-Fit Lebar Kolum (Column Width)
+  var objectKeys = Object.keys(dataExcel[0]);
+  
+  var colWidths = objectKeys.map(key => {
+    var maxLength = key.length; 
+    
+    dataExcel.forEach(row => {
+      var cellValue = row[key] ? row[key].toString() : "";
+      if (cellValue.length > maxLength) {
+        maxLength = cellValue.length; 
+      }
+    });
+    
+    return { wch: maxLength + 3 }; 
+  });
+  
+  ws['!cols'] = colWidths;
+
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Data_Eksport");
+  
+  var tarikh = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `${namaFail}_${tarikh}.xlsx`);
+}
+
+// =========================================================
+// ALATAN SOKONGAN (INPUT MASKS)
+// =========================================================
+function aktifkanInputMaskPk() {
+  $('#txtPkKp, #txtPkTel').on('input', function() { 
+    var v = $(this).val().replace(/\D/g, ''); 
+    if ($(this).attr('id') === 'txtPkKp') { 
+      if (v.length > 12) v = v.substring(0, 12); 
+      $(this).val(v.length > 8 ? v.substring(0,6) + '-' + v.substring(6,8) + '-' + v.substring(8,12) : v.length > 6 ? v.substring(0,6) + '-' + v.substring(6,8) : v); 
+    } else { 
+      if (v.length > 11) v = v.substring(0,11); 
+      var c = (!v.startsWith('01') && ['03','04','05','06','07','09'].some(k => v.startsWith(k))) ? 2 : 3; 
+      $(this).val(v.length > c ? v.substring(0,c) + '-' + v.substring(c,v.length) : v); 
+    } 
+  });
+}
+
+function aktifkanInputMaskKpOps() {
+  $('#txtKpOpsNoKp, #txtKpOpsTel').on('input', function() { 
+    var v = $(this).val().replace(/\D/g, ''); 
+    if ($(this).attr('id') === 'txtKpOpsNoKp') { 
+      if (v.length > 12) v = v.substring(0, 12); 
+      $(this).val(v.length > 8 ? v.substring(0,6) + '-' + v.substring(6,8) + '-' + v.substring(8,12) : v.length > 6 ? v.substring(0,6) + '-' + v.substring(6,8) : v); 
+    } else { 
+      if (v.length > 11) v = v.substring(0,11); 
+      var c = (!v.startsWith('01') && ['03','04','05','06','07','09'].some(k => v.startsWith(k))) ? 2 : 3; 
+      $(this).val(v.length > c ? v.substring(0,c) + '-' + v.substring(c,v.length) : v); 
+    } 
+  });
+}
+
+// =========================================================================
+// FUNGSI MAGIS: PREVIEW PDF KALIS POP-UP BLOCKER
+// =========================================================================
+function cetakSuratPk(noKp, tahun, tahap) { lancarProsesCetak('PK', noKp, tahun, tahap); }
+function cetakSuratKp(noKp, tahun, tahap, statusSemasa) {
+  if (statusSemasa && statusSemasa.toString().toUpperCase() !== 'DISAHKAN') {
+    Swal.fire({ title: '⛔ Lantikan Belum Disahkan!', html: 'Surat tidak boleh dijana kerana status <span class="badge bg-warning text-dark">CADANGAN</span>.', icon: 'warning' }); return;
+  }
+  lancarProsesCetak('KP', noKp, tahun, tahap);
+}
+
+function lancarProsesCetak(jenis, noKp, tahun, tahap) {
+  var namaPenuhJenis = jenis === 'KP' ? 'Ketua Pengawas' : 'Penyelia Kawasan';
+  var tabMenunggu = window.open('about:blank', '_blank');
+  
+  if (tabMenunggu) {
+    tabMenunggu.document.write(`
+      <html>
+        <head><title>Menjana Surat ${namaPenuhJenis}...</title><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+        <body style="font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f8f9fa; margin: 0;">
+          <div style="text-align: center; padding: 30px; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); max-width: 450px; border-top: 5px solid #0d6efd;">
+            <div style="font-size: 40px; margin-bottom: 15px;">⏳</div>
+            <h3 style="color: #212529; margin-bottom: 10px;">Menjana Surat Lantikan...</h3>
+            <p style="color: #6c757d;">Server sedang memproses dokumen rasmi anda.<br><b style="color: #0d6efd;">Sila tunggu sebentar...</b></p>
+          </div>
+        </body>
+      </html>
+    `);
+  } else { Swal.fire('Halangan Browser', 'Sila benarkan pop-up pada browser anda.', 'warning'); return; }
+
+  Swal.fire({ title: `Menjana Surat ${jenis}...`, text: 'Sila tunggu...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+  var runner = google.script.run
+    .withSuccessHandler(function(res) {
+      Swal.close();
+      if (res && res.status === "SUCCESS") { bukaPDFDalamTabMenunggu(tabMenunggu, res.base64, res.filename); } 
+      else { if (tabMenunggu) tabMenunggu.close(); Swal.fire('Gagal', res.message, 'error'); }
+    })
+    .withFailureHandler(function(err) {
+      Swal.close(); if (tabMenunggu) tabMenunggu.close(); Swal.fire('Ralat Server', err.message, 'error');
+    });
+
+  if (jenis === 'KP') runner.janaSuratLantikanKPPDF(noKp, tahun, tahap);
+  else runner.janaSuratLantikanPDF(noKp, tahun, tahap);
+}
+
+function bukaPDFDalamTabMenunggu(tabRef, base64Data, namaFail) {
+  try {
+    var byteCharacters = atob(base64Data);
+    var byteNumbers = new Array(byteCharacters.length);
+    for (var i = 0; i < byteCharacters.length; i++) { byteNumbers[i] = byteCharacters.charCodeAt(i); }
+    var byteArray = new Uint8Array(byteNumbers);
+    var blob = new Blob([byteArray], { type: 'application/pdf' });
+    var fileURL = URL.createObjectURL(blob);
+    tabRef.location.href = fileURL;
+  } catch (err) {
+    tabRef.close(); Swal.fire('Ralat Preview', 'Gagal memaparkan PDF: ' + err.message, 'error');
+  }
+}
+
+function cetakSuratPusat(kodSekolah, tahun, tahap) {
+  var tabMenunggu = window.open('about:blank', '_blank');
+  
+  if (tabMenunggu) {
+    tabMenunggu.document.write(`
+      <html>
+        <head><title>Menjana Surat Pusat Peperiksaan...</title><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+        <body style="font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f8f9fa; margin: 0;">
+          <div style="text-align: center; padding: 30px; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); max-width: 450px; border-top: 5px solid #6f42c1;">
+            <div style="font-size: 40px; margin-bottom: 15px;">🖨️</div>
+            <h3 style="color: #212529; margin-bottom: 10px;">Menjana Set Surat Petugas...</h3>
+            <p style="color: #6c757d;">Menggabungkan surat Penyelia Kawasan & Ketua Pengawas untuk pusat ini.<br><b style="color: #6f42c1;">Sila tunggu sebentar...</b></p>
+          </div>
+        </body>
+      </html>
+    `);
+  } else { Swal.fire('Halangan Browser', 'Sila benarkan pop-up pada browser anda.', 'warning'); return; }
+
+  Swal.fire({ title: `Menjana Set Surat Pusat...`, text: 'Sila tunggu...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+  google.script.run
+    .withSuccessHandler(function(res) {
+      Swal.close();
+      if (res && res.status === "SUCCESS") { bukaPDFDalamTabMenunggu(tabMenunggu, res.base64, res.filename); } 
+      else { if (tabMenunggu) tabMenunggu.close(); Swal.fire('Gagal', res.message, 'error'); }
+    })
+    .withFailureHandler(function(err) {
+      Swal.close(); if (tabMenunggu) tabMenunggu.close(); Swal.fire('Ralat Server', err.message, 'error');
+    })
+    .janaSuratPusatPDF(kodSekolah, tahun, tahap); // Panggil fungsi GAS
+}
+
+// =======================================================
+// FUNGSI BARU: AUTOSAVE DROPDOWN KETUA PENGAWAS
+// =======================================================
+function simpanAutosaveKpOps(rowNum, kodSekAsal, noKp, kodSekTetapBaru) {
+  if (!kodSekTetapBaru || kodSekTetapBaru === "") return; 
+
+  // Kunci dropdown sementara
+  $(`#sel_inline_${rowNum}`).prop('disabled', true);
+
+  const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timerProgressBar: true
+  });
+  
+  Toast.fire({
+    icon: 'info',
+    title: 'Menyimpan Penempatan...'
+  });
+
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (res.status === "SUCCESS") {
+        Toast.fire({
+          icon: 'success',
+          title: 'Penempatan Disimpan!',
+          timer: 2000
+        });
+        
+        var kpObj = BACKEND_DATA.senaraiKp.find(x => x.no_kp === noKp);
+        if (kpObj) {
+          kpObj.kod_sek_tetap = kodSekTetapBaru;
+          kpObj.status_penetapan = 'DISAHKAN';
+        }
+        renderJadualKpOps();
+        renderJadualOperasi();
+      } else { 
+        Swal.fire('Gagal', res.message, 'error'); 
+        $(`#sel_inline_${rowNum}`).prop('disabled', false); 
+      }
+    })
+    .withFailureHandler(function(err) { 
+      Swal.fire('Ralat Server', err.message, 'error'); 
+      $(`#sel_inline_${rowNum}`).prop('disabled', false);
+    })
+    .simpanPenempatanInlineKp(rowNum, kodSekTetapBaru, 'DISAHKAN', kodSekAsal);
+}
+</script>

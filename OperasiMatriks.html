@@ -1,0 +1,1004 @@
+<style>
+  /* Container Jadual Boleh Scroll (Scrollable Table) */
+  .table-card-scroll {
+    border: 1px solid var(--purple-200);
+    border-radius: var(--radius-md);
+    background: #fff;
+  }
+  
+  /* Melekatkan Tajuk Jadual (Sticky Header) */
+  .table-card-scroll table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: var(--purple-50, #f8f5ff);
+    border-bottom: 2px solid var(--purple-200);
+  }
+
+  /* Gaya Pagination (Halaman & Navigasi) */
+  .pagination-footer { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 12px 16px; 
+    background: #fafafa; 
+    border-top: 1px solid var(--purple-200); 
+    border-radius: 0 0 var(--radius-md) var(--radius-md); 
+  }
+  .pagination-info { 
+    font-size: 0.85rem; 
+    color: var(--purple-700); 
+    font-weight: 500; 
+  }
+  .pagination-ctrl button { 
+    padding: 4px 12px; 
+    font-size: 0.85rem; 
+    border-radius: 4px; 
+    border: 1px solid var(--purple-300); 
+    background: white; 
+    color: var(--purple-700); 
+    cursor: pointer; 
+    transition: 0.2s; 
+  }
+  .pagination-ctrl button:hover:not(:disabled) { 
+    background: var(--purple-100); 
+  }
+  .pagination-ctrl button:disabled { 
+    opacity: 0.5; 
+    cursor: not-allowed; 
+  }
+
+  /* GAYA KHAS MODAL CENTER & INPUT MODEN */
+  #modalPk, #modalOps {
+    background: rgba(15, 23, 42, 0.55) !important;
+    backdrop-filter: blur(4px);
+  }
+
+  #modalPk .modal-dialog, #modalOps .modal-dialog {
+    display: flex !important;
+    align-items: center !important;
+    min-height: calc(100% - 3.5rem) !important;
+    margin: 1.75rem auto !important;
+    max-width: 850px !important;
+  }
+
+  #modalPk .modal-content, #modalOps .modal-content {
+    border: none !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    overflow: hidden;
+  }
+
+  .modal-header-ungu {
+    background: linear-gradient(135deg, #6f42c1 0%, #4c1d95 100%) !important;
+    padding: 18px 24px !important;
+  }
+
+  .form-section-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6f42c1;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .form-section-title::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+  }
+
+  .input-moden {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    font-size: 0.88rem !important;
+    transition: all 0.2s ease-in-out !important;
+    background-color: #ffffff !important;
+  }
+
+  .input-moden:focus {
+    border-color: #6f42c1 !important;
+    box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.18) !important;
+    outline: none !important;
+  }
+
+  .input-read-only {
+    background-color: #f8fafc !important;
+    color: #475569 !important;
+    font-weight: 600;
+  }
+  
+  /* KEKEBALAN WARNA UNGU (Kalis Sidebar) */
+  .btn-toggle.active-ungu { 
+    background: var(--purple-700) !important; 
+    color: #ffffff !important; 
+    border-color: var(--purple-700) !important; 
+    box-shadow: 0 4px 6px -1px rgba(89, 42, 142, 0.2) !important; 
+  }
+
+  /* GAYA TABS KORPORAT BARU (Diseragamkan dengan Profil Sekolah) */
+  .nav-tabs-ungu { 
+    display: flex; 
+    gap: 12px; 
+    margin-bottom: 24px; 
+    border-bottom: 1px solid var(--border-color, #e2e8f0); 
+    padding-bottom: 16px; 
+    flex-wrap: wrap; 
+    list-style: none; 
+    padding-left: 0; 
+  }
+  .btn-toggle-tab { 
+    background: #ffffff; 
+    color: var(--purple-700); 
+    border: 1px solid var(--purple-100); 
+    padding: 10px 20px; 
+    font-weight: 700; 
+    font-size: 0.9rem; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    transition: all 0.2s ease; 
+    text-decoration: none; 
+  }
+  .btn-toggle-tab.active { 
+    background: var(--purple-700) !important; 
+    color: #ffffff !important; 
+    border-color: var(--purple-700) !important; 
+    box-shadow: 0 4px 6px -1px rgba(89, 42, 142, 0.2) !important; 
+  }
+  .btn-toggle-tab:hover:not(.active) { 
+    background: var(--purple-50); 
+  }
+</style>
+
+<div id="modul-matriks-ungu" class="animate__animated animate__fadeIn">
+  <!-- PANGGIL STYLE GLOBAL -->
+  <?!= include('StyleGlobal'); ?>
+  
+  <!-- HEADER MODUL -->
+  <div class="page-header">
+    <div>
+      <h2><i class="fas fa-satellite-dish" style="color: var(--purple-500);"></i> Pusat Operasi Matriks Pembelajaran Bersepadu</h2>
+    </div>
+    <div class="btn-group-ungu">
+      <button class="btn-toggle active-ungu" id="btnOpsT4" onclick="tukarTahapOps('RENDAH')"><i class="fas fa-child"></i> TAHUN 4</button>
+      <button class="btn-toggle" id="btnOpsT3" onclick="tukarTahapOps('MENENGAH')"><i class="fas fa-user-graduate"></i> TINGKATAN 3</button>
+    </div>
+  </div>
+
+  <!-- NAV TABS OPERASI DISERAGAMKAN -->
+  <ul class="nav nav-pills nav-tabs-ungu" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="btn-toggle-tab active" id="tab-btn-1" onclick="tukarTabOps('pemantauan')" type="button" role="tab">
+        <i class="fas fa-desktop me-2"></i> 1. Pemantauan Operasi
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="btn-toggle-tab" id="tab-btn-2" onclick="tukarTabOps('pk')" type="button" role="tab">
+        <i class="fas fa-user-ninja me-2"></i> 2. Senarai Penyelia Kawasan
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="btn-toggle-tab" id="tab-btn-3" onclick="tukarTabOps('kp')" type="button" role="tab">
+        <i class="fas fa-user-shield me-2"></i> 3. Senarai Ketua Pengawas
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="btn-toggle-tab" id="tab-btn-4" onclick="tukarTabOps('pengawas')" type="button" role="tab">
+        <i class="fas fa-users me-2"></i> 4. Senarai Pengawas
+      </button>
+    </li>
+  </ul>
+
+  <!-- SECTION TAB 1: PEMANTAUAN OPERASI -->
+  <div id="pane-pemantauan" class="tab-pane-ops">
+    
+    <!-- KAD STATISTIK PEMANTAUAN TAB 1 -->
+    <div class="summary-grid mb-3">
+      <div class="sum-card">
+        <div class="sum-icon-box"><i class="far fa-building"></i></div>
+        <div class="sum-info"><h4>Jumlah Sekolah</h4><h2 id="ops-stat-jum-sek">0</h2></div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon-box" style="color: #16a34a; background: #dcfce7;"><i class="fas fa-check-circle"></i></div>
+        <div class="sum-info"><h4>Sekolah Aktif</h4><h2 id="ops-stat-aktif">0</h2></div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon-box" style="color: #dc2626; background: #fee2e2;"><i class="fas fa-times-circle"></i></div>
+        <div class="sum-info"><h4>Tidak Aktif</h4><h2 id="ops-stat-tak-aktif">0</h2></div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon-box" style="color: #ca8a04; background: #fef08a;"><i class="fas fa-mountain-sun"></i></div>
+        <div class="sum-info"><h4>Pedalaman</h4><h2 id="ops-stat-pedalaman">0</h2></div>
+      </div>
+    </div>
+
+    <!-- KOTAK TAPISAN DIPERBAIKI (LEBAR, FLEX AUTO & ADA BUTANG RESET) -->
+    <div style="margin-bottom: 16px; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; align-items: center;">
+      
+      <!-- Filter Status Aktif -->
+      <div style="min-width: 200px; flex: 1 1 auto;">
+        <select id="selFilterStatusSekOps" class="form-select input-moden w-100" style="border-color: #cbd5e1;" onchange="tapisJadualOps()">
+          <option value="">Semua Status Aktif/Tidak</option>
+          <option value="AKTIF">Hanya Aktif</option>
+          <option value="TIDAK AKTIF">Tidak Aktif (0 Murid)</option>
+        </select>
+      </div>
+
+      <!-- Filter Lokasi -->
+      <div style="min-width: 240px; flex: 1 1 auto;">
+        <select id="selFilterLokasiSekOps" class="form-select input-moden w-100" style="border-color: #cbd5e1;" onchange="tapisJadualOps()">
+          <option value="">Semua Lokasi Sekolah</option>
+          <option value="BIASA">Biasa (Bukan Pedalaman)</option>
+          <option value="PEDALAMAN">Sekolah Pedalaman Sahaja</option>
+        </select>
+      </div>
+
+      <!-- DROPDOWN FILTER DAERAH (KHAS UNTUK ADMIN/JPN SAHAJA) -->
+      <div id="boxFilterDaerahOps" style="display: none; min-width: 220px; flex: 1 1 auto;">
+        <select id="selFilterDaerahOps" class="form-select input-moden w-100" style="border-color: #cbd5e1; background-color: #f8fafc;" onchange="tapisJadualOps()">
+          <option value="">-- Semua Daerah --</option>
+        </select>
+      </div>
+
+      <!-- KOTAK CARIAN KOD/NAMA SEKOLAH -->
+      <div class="position-relative" style="min-width: 250px; flex: 2 1 auto;">
+        <i class="fas fa-search position-absolute text-muted" style="top: 50%; transform: translateY(-50%); left: 14px; z-index: 5;"></i>
+        <input type="text" id="cariOpsInput" class="form-control input-moden w-100" placeholder="Cari Kod / Nama Sekolah..." style="border-color: #cbd5e1; padding-left: 36px !important;" onkeyup="tapisJadualOps()">
+      </div>
+
+      <!-- BUTANG RESET TAB 1 -->
+      <div>
+        <button class="btn btn-outline-danger shadow-sm" style="padding: 8px 16px; border-radius: var(--radius-md); font-size:0.85rem; font-weight: 700;" onclick="resetFilterOps1()">
+          <i class="fa-solid fa-rotate-left me-1"></i> Reset
+        </button>
+      </div>
+    </div>
+
+    <div class="table-card table-card-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 5%; text-align: center;">BIL.</th>
+            <th style="width: 29%;">Maklumat Sekolah & Daerah</th>
+            <th style="width: 22%; text-align: center;">Bilik Kebal</th>
+            <th style="width: 12%; text-align: center;">Penyelia Kawasan</th>
+            <th style="width: 17%;">Ketua Pengawas</th>
+            <th style="width: 8%; text-align: center;">Status</th>
+            <th style="width: 7%; text-align: center;">Tindakan</th>
+          </tr>
+        </thead>
+        <tbody id="tblOpsBody">
+          <tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--purple-300);"><i class="fas fa-spinner fa-spin"></i> Memuatkan data...</td></tr>
+        </tbody>
+      </table>
+      <div class="pagination-footer">
+        <div id="pg-info-ops" class="pagination-info">Jumlah Rekod: 0</div>
+        <div id="pg-ctrl-ops" class="pagination-ctrl"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION TAB 2: SENARAI PENYELIA KAWASAN -->
+  <div id="pane-pk" class="tab-pane-ops" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+      <h3 style="color: var(--purple-900); font-size: 1.1rem; margin: 0;"><i class="fas fa-users"></i> Senarai Penyelia Kawasan Berdaftar</h3>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-toggle" style="background: #0284c7; color: white;" onclick="salinPukalPk()"><i class="fas fa-copy"></i> Salin Pukal</button>
+        <button class="btn-toggle" style="background: #166534; color: white;" onclick="eksportJadualKeExcel('tblPkUtama', 'Senarai_PK')"><i class="fas fa-file-excel"></i> Excel</button>
+        <button class="btn-toggle active-ungu" onclick="bukaModalPk(null)"><i class="fas fa-plus"></i> Tambah</button>
+      </div>
+    </div>
+    
+    <!-- KOTAK CARIAN & FILTER DAERAH (TAB 2) -->
+    <div style="margin-bottom: 16px; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; align-items: center;">
+      <div id="boxFilterDaerahPk" style="display: none; min-width: 250px; flex: 1 1 auto;">
+        <select id="selFilterDaerahPk" class="form-select input-moden w-100" style="border-color: #cbd5e1; background-color: #f8fafc;" onchange="tapisJadualPk()">
+          <option value="">-- Semua Daerah --</option>
+        </select>
+      </div>
+      
+      <div class="position-relative" style="min-width: 300px; flex: 2 1 auto;">
+        <i class="fas fa-search position-absolute text-muted" style="top: 50%; transform: translateY(-50%); left: 14px; z-index: 5;"></i>
+        <input type="text" id="cariPkInput" class="form-control input-moden w-100" placeholder="Cari Nama / No. KP / Sekolah..." style="border-color: #cbd5e1; padding-left: 36px !important;" onkeyup="tapisJadualPk()">
+      </div>
+
+      <!-- BUTANG RESET TAB 2 -->
+      <div>
+        <button class="btn btn-outline-danger shadow-sm" style="padding: 8px 16px; border-radius: var(--radius-md); font-size:0.85rem; font-weight: 700;" onclick="resetFilterOps2()">
+          <i class="fa-solid fa-rotate-left me-1"></i> Reset
+        </button>
+      </div>
+    </div>
+
+    <div class="table-card table-card-scroll">
+      <table id="tblPkUtama">
+        <thead>
+          <tr>
+            <th style="width: 4%; text-align: center;">
+              <input type="checkbox" id="chkAllPk" onclick="pilihSemuaPk(this)" style="cursor: pointer;" title="Pilih Semua">
+            </th>
+            <th style="width: 4%; text-align: center;">BIL.</th>
+            <th style="width: 30%;">Daerah & Sekolah Asal</th>
+            <th style="width: 25%;">Nama Penyelia & Jawatan</th>
+            <th style="width: 25%;">Maklumat Perhubungan & Alamat</th>
+            <th style="text-align: center; width: 12%;">Tindakan</th>
+          </tr>
+        </thead>
+        <tbody id="tblPkBody">
+          <tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--purple-300);"><i class="fas fa-spinner fa-spin"></i> Memuatkan data...</td></tr>
+        </tbody>
+      </table>
+      <div class="pagination-footer">
+        <div id="pg-info-pk" class="pagination-info">Jumlah Rekod: 0</div>
+        <div id="pg-ctrl-pk" class="pagination-ctrl"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION TAB 3: SENARAI KETUA PENGAWAS & STATISTIK -->
+  <div id="pane-kp" class="tab-pane-ops" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+      <h3 style="color: var(--purple-900); font-size: 1.1rem; margin: 0;"><i class="fas fa-user-shield"></i> Senarai Ketua Pengawas Berdaftar</h3>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <div id="boxKebenaranCetakKp" class="d-none">
+          <button type="button" id="btnKebenaranCetakKp" class="btn-toggle fw-bold shadow-sm" style="background: #dc2626; color: white;" onclick="tukarKebenaranCetakKp()">
+            <i class="fas fa-lock me-1"></i> Cetakan KP: DITUTUP (OFF)
+          </button>
+        </div>
+        <button class="btn-toggle" style="background: #166534; color: white;" onclick="eksportJadualKeExcel('tblKpUtama', 'Senarai_KP')"><i class="fas fa-file-excel"></i> Excel</button>
+      </div>
+    </div>
+    
+    <div class="summary-grid mb-3">
+      <div class="sum-card">
+        <div class="sum-icon-box"><i class="far fa-user"></i></div>
+        <div class="sum-info"><h4>Calon KP</h4><h2 id="ops-stat-total">0</h2></div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon-box"><i class="far fa-check-circle"></i></div>
+        <div class="sum-info"><h4>Disahkan</h4><h2 id="ops-stat-disahkan">0</h2></div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon-box"><i class="far fa-clock"></i></div>
+        <div class="sum-info"><h4>Cadangan</h4><h2 id="ops-stat-cadangan">0</h2></div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon-box"><i class="fas fa-school"></i></div>
+        <div class="sum-info"><h4>Sekolah SKM</h4><h2 id="ops-stat-skm">0</h2></div>
+      </div>
+    </div>
+
+    <!-- KOTAK CARIAN & FILTER DAERAH (TAB 3) -->
+    <div style="margin-bottom: 16px; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; align-items: center;">
+      <!-- Filter Daerah -->
+      <div id="boxFilterDaerahKp" style="display: none; min-width: 220px; flex: 1 1 auto;">
+        <select id="selFilterDaerahKp" class="form-select input-moden w-100" style="border-color: #cbd5e1; background-color: #f8fafc;" onchange="tapisJadualKpOps()">
+          <option value="">-- Semua Daerah --</option>
+        </select>
+      </div>
+      <!-- Filter Status -->
+      <div style="min-width: 220px; flex: 1 1 auto;">
+        <select id="selFilterStatusKp" class="form-select input-moden w-100" style="border-color: #cbd5e1;" onchange="tapisJadualKpOps()">
+          <option value="">Semua Status Lantikan</option>
+          <option value="DISAHKAN">✅ Telah Disahkan</option>
+          <option value="CADANGAN">⏳ Menunggu (Cadangan)</option>
+        </select>
+      </div>
+      <!-- Kotak Carian -->
+      <div class="position-relative" style="min-width: 250px; flex: 2 1 auto;">
+        <i class="fas fa-search position-absolute text-muted" style="top: 50%; transform: translateY(-50%); left: 14px; z-index: 5;"></i>
+        <input type="text" id="cariKpInput" class="form-control input-moden w-100" placeholder="Cari Nama / No. KP..." style="border-color: #cbd5e1; padding-left: 36px !important;" onkeyup="tapisJadualKpOps()">
+      </div>
+      
+      <!-- BUTANG RESET TAB 3 -->
+      <div>
+        <button class="btn btn-outline-danger shadow-sm" style="padding: 8px 16px; border-radius: var(--radius-md); font-size:0.85rem; font-weight: 700;" onclick="resetFilterOps3()">
+          <i class="fa-solid fa-rotate-left me-1"></i> Reset
+        </button>
+      </div>
+    </div>
+
+    <div class="table-card table-card-scroll">
+      <table id="tblKpUtama">
+        <thead>
+          <tr>
+            <th style="width: 5%; text-align: center;">BIL.</th>
+            <th style="width: 36%;">CALON, SEKOLAH ASAL & ALAMAT</th>
+            <th style="width: 44%;">PENEMPATAN PPD (MUKTAMAD)</th>
+            <th style="width: 15%; text-align: center;">TINDAKAN</th>
+          </tr>
+        </thead>
+        <tbody id="tblKpOpsBody">
+          <tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--purple-300);"><i class="fas fa-spinner fa-spin"></i> Memuatkan data...</td></tr>
+        </tbody>
+      </table>
+      <div class="pagination-footer">
+        <div id="pg-info-kp" class="pagination-info">Jumlah Rekod: 0</div>
+        <div id="pg-ctrl-kp" class="pagination-ctrl"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION TAB 4: SENARAI PENGAWAS -->
+  <div id="pane-pengawas" class="tab-pane-ops" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+      <h3 style="color: var(--purple-900); font-size: 1.1rem; margin: 0;"><i class="fas fa-users-viewfinder"></i> Senarai Pengawas Berdaftar</h3>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-toggle shadow-sm" style="background: #166534; color: white; border-radius: var(--radius-md);" onclick="eksportJadualKeExcel('tblPgwsUtama', 'Senarai_Pengawas')">
+          <i class="fas fa-file-excel"></i> Excel
+        </button>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;">
+      <div style="flex: 1; min-width: 200px;">
+        <select id="filterDaerahPgws" class="form-select input-moden" style="border-color: #cbd5e1;" onchange="tapisJadualPengawas()">
+          <option value="">-- Semua Daerah / PPD --</option>
+        </select>
+      </div>
+      <div style="flex: 1; min-width: 200px;" class="position-relative">
+        <i class="fas fa-search position-absolute text-muted" style="top: 50%; transform: translateY(-50%); left: 12px; z-index: 5;"></i>
+        <input type="text" class="form-control input-moden w-100" style="border-color: #cbd5e1; padding-left: 36px !important;" list="listSekPgws" id="filterSekolahPgws" placeholder="Cari / Pilih Sekolah..." onchange="tapisJadualPengawas()">
+        <datalist id="listSekPgws"></datalist>
+      </div>
+      <div style="flex: 1; min-width: 200px;" class="position-relative">
+        <i class="fas fa-search position-absolute text-muted" style="top: 50%; transform: translateY(-50%); left: 12px; z-index: 5;"></i>
+        <input type="text" id="cariNamaPgws" class="form-control input-moden w-100" style="border-color: #cbd5e1; padding-left: 36px !important;" placeholder="Taip Nama / No. KP..." onkeyup="tapisJadualPengawas()">
+      </div>
+      <div>
+        <button class="btn btn-outline-danger shadow-sm" style="padding: 8px 16px; border-radius: var(--radius-md); font-size:0.85rem; font-weight: 700;" onclick="resetFilterPengawas()">
+          <i class="fa-solid fa-rotate-left me-1"></i> Reset
+        </button>
+      </div>
+    </div>
+
+    <div class="table-card table-card-scroll">
+      <table id="tblPgwsUtama">
+        <thead>
+          <tr>
+            <th style="width: 6%; text-align: center;">BIL.</th>
+            <th style="width: 34%;">MAKLUMAT SEKOLAH ASAL</th>
+            <th style="width: 32%;">MAKLUMAT PENGAWAS</th>
+            <th style="width: 28%;">MAKLUMAT PERHUBUNGAN</th>
+          </tr>
+        </thead>
+        <tbody id="tblPgwsBody">
+          <tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--purple-300);"><i class="fas fa-spinner fa-spin"></i> Memuatkan data pengawas...</td></tr>
+        </tbody>
+      </table>
+      <div class="pagination-footer">
+        <div id="pg-info-pgws" class="pagination-info">Jumlah Rekod: 0</div>
+        <div id="pg-ctrl-pgws" class="pagination-ctrl"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL KEMASKINI / TAMBAH PENYELIA KAWASAN (MODEN & CENTER) -->
+  <div class="modal fade" id="modalPk" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <form id="formPk" class="w-100" onsubmit="event.preventDefault(); if(typeof simpanDataPk==='function') simpanDataPk();">
+        <div class="modal-content">
+          <div class="modal-header modal-header-ungu text-white border-0">
+            <div class="d-flex align-items-center gap-2">
+              <div class="p-2 rounded-circle bg-white bg-opacity-20 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                <i class="fa-solid fa-user-ninja fs-6 text-white"></i>
+              </div>
+              <div>
+                <h5 class="modal-title fw-bold fs-6 mb-0" id="pkModalTitle">Kemaskini Penyelia Kawasan</h5>
+                <small class="text-white-50" style="font-size: 0.75rem;">Sistem Pengurusan Pusat Operasi Matriks</small>
+              </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <div class="modal-body p-4 bg-white text-dark">
+            <input type="hidden" id="txtPkRow">
+            
+            <div class="form-section-title">
+              <i class="fas fa-info-circle"></i> 1. Maklumat Penugasan
+            </div>
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-secondary mb-1">Tahun Penugasan</label>
+                <input type="text" id="txtPkTahun" class="form-control input-moden input-read-only" readonly>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-secondary mb-1">Matrik Pembelajaran & Tahap</label>
+                <input type="text" id="txtPkTahap" class="form-control input-moden input-read-only" readonly>
+              </div>
+            </div>
+
+            <div class="form-section-title">
+              <i class="fas fa-school"></i> 2. Penempatan & Peranan
+            </div>
+            <div class="row g-3 mb-4">
+              <div class="col-12">
+                <label class="form-label small fw-bold text-dark mb-1">Sekolah Asal Calon <span class="text-danger">*</span></label>
+                <input type="text" id="txtPkSekAsal" class="form-control input-moden fw-semibold text-primary" list="listPkSekAsal" placeholder="Taip Kod / Nama Sekolah untuk carian..." required autocomplete="off" onfocus="janaPilihanSekolahPk(); this.select();">
+                <datalist id="listPkSekAsal"></datalist>
+                <small class="text-muted" style="font-size: 0.75rem;"><i class="fas fa-lightbulb text-warning me-1"></i>Pilih sekolah daripada senarai pilihan yang muncul semasa menaip.</small>
+              </div>
+              <div class="col-12">
+                <label class="form-label small fw-bold text-dark mb-1">Jawatan & Peranan Khusus <span class="text-danger">*</span></label>
+                <select id="txtPkJawatan" class="form-select input-moden fw-semibold" required>
+                  <option value="">-- Pilih Peranan Penyelia Kawasan --</option>
+                  <option value="PEMEGANG KUNCI LUAR/DALAM">PEMEGANG KUNCI LUAR/DALAM</option>
+                  <option value="PEMEGANG TATAKIRA">PEMEGANG TATAKIRA</option>
+                  <option value="PENYELIA KAWASAN">PENYELIA KAWASAN</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-section-title">
+              <i class="fas fa-id-card"></i> 3. Maklumat Peribadi & Hubungan
+            </div>
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-secondary mb-1">Nama Penuh Penyelia <span class="text-danger">*</span></label>
+                <input type="text" id="txtPkNama" class="form-control input-moden text-uppercase" required placeholder="NAMA GURU">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-secondary mb-1">No. Kad Pengenalan <span class="text-danger">*</span></label>
+                <input type="text" id="txtPkKp" class="form-control input-moden" required maxlength="14" placeholder="Contoh: 800101-08-1234" oninput="formatInputIC(this)">
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-secondary mb-1">No. Telefon <span class="text-danger">*</span></label>
+                <input type="text" id="txtPkTel" class="form-control input-moden" required maxlength="13" placeholder="Contoh: 012-3456789" oninput="formatInputTel(this)">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-secondary mb-1">Emel Delima / Rasmi</label>
+                <input type="email" id="txtPkEmel" class="form-control input-moden" placeholder="g-12345678@moe-dl.edu.my">
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label small fw-semibold text-secondary mb-1">Alamat Rumah / Kediaman Semasa</label>
+                <textarea id="txtPkAlamat" class="form-control input-moden text-uppercase" rows="2" placeholder="NO. RUMAH, JALAN, TAMAN / KAMPUNG, POSKOD, BANDAR, NEGERI..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer bg-light border-top px-4 py-3">
+            <button type="button" class="btn btn-outline-danger btn-sm px-4 fw-bold rounded-2" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-sm px-4 fw-bold rounded-2 text-white shadow-sm" style="background: linear-gradient(135deg, #6f42c1, #5b21b6); border: none;"><i class="fa-solid fa-floppy-disk me-2"></i>Simpan Data</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL KEMASKINI OPERASI MATRIKS (PUSAT PEPERIKSAAN) -->
+  <div class="modal fade" id="modalOps" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <form id="formOps" class="w-100" onsubmit="event.preventDefault(); simpanOperasiPPD();">
+        <div class="modal-content">
+          <div class="modal-header modal-header-ungu text-white border-0">
+            <div class="d-flex align-items-center gap-2">
+              <div class="p-2 rounded-circle bg-white bg-opacity-20 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                <i class="fa-solid fa-sliders fs-6 text-white"></i>
+              </div>
+              <div>
+                <h5 class="modal-title fw-bold fs-6 mb-0">Kemaskini Penugasan Operasi Pusat</h5>
+                <small class="text-white-50" style="font-size: 0.75rem;" id="lblOpsSekolahSub">Sistem Pengurusan Pusat Operasi Matriks</small>
+              </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <div class="modal-body p-4 bg-white text-dark">
+            <input type="hidden" id="txtOpsKodSek">
+            <input type="hidden" id="txtOpsDaerah">
+
+            <div class="form-section-title"><i class="fas fa-school"></i> 1. Maklumat Pusat Peperiksaan</div>
+            <div class="row g-3 mb-4">
+              <div class="col-md-8">
+                <label class="form-label small fw-semibold text-secondary mb-1">Pusat Peperiksaan</label>
+                <input type="text" id="txtOpsNamaSek" class="form-control input-moden input-read-only" readonly>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold text-secondary mb-1">Daerah / PPD</label>
+                <input type="text" id="txtOpsNamaDaerah" class="form-control input-moden input-read-only" readonly>
+              </div>
+            </div>
+
+            <div class="form-section-title"><i class="fas fa-vault"></i> 2. Penetapan Bilik Kebal</div>
+            <div class="row g-3 mb-4">
+              <div class="col-12">
+                <label class="form-label small fw-bold text-dark mb-1">Pilih Bilik Kebal <span class="text-danger">*</span></label>
+                <select id="selOpsBilikKebal" class="form-select input-moden fw-semibold" required>
+                  <option value="">-- Pilih Bilik Kebal --</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-section-title"><i class="fas fa-user-ninja"></i> 3. Penetapan Penyelia Kawasan (PK)</div>
+            <div class="row g-3 mb-4">
+              <div class="col-12 mb-2">
+                <label class="form-label small fw-bold text-dark mb-1">Penyelia Kawasan 1 (PK1)</label>
+                <select id="selOpsPk1" class="form-select input-moden fw-semibold">
+                  <option value="">-- Tiada PK 1 Ditetapkan --</option>
+                </select>
+              </div>
+              
+              <!-- Butang Tambah PK2 -->
+              <div class="col-12 mb-2" id="boxButangTambahPk2">
+                <button type="button" class="btn btn-sm btn-outline-primary fw-bold rounded-pill shadow-sm" onclick="paparPk2()" style="font-size: 0.8rem;"><i class="fas fa-plus me-1"></i> Tambah PK Ke-2 (Untuk Kes Khas)</button>
+              </div>
+
+              <!-- Dropdown PK2 Disorok secara Default -->
+              <div class="col-12" id="boxOpsPk2" style="display: none;">
+                <label class="form-label small fw-bold text-dark mb-1">Penyelia Kawasan 2 (PK2)</label>
+                <div class="d-flex gap-2 align-items-center">
+                  <select id="selOpsPk2" class="form-select input-moden fw-semibold w-100">
+                    <option value="">-- Tiada PK 2 Ditetapkan --</option>
+                  </select>
+                  <button type="button" class="btn btn-sm btn-outline-danger shadow-sm rounded-2" onclick="sorokPk2()" title="Batal PK2" style="height: 36px;"><i class="fas fa-times"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- SEKSYEN 4: READ-ONLY KETUA PENGAWAS (KP) -->
+            <div class="form-section-title">
+              <i class="fas fa-user-shield"></i> 4. Maklumat Ketua Pengawas (KP)
+              <span class="badge bg-secondary bg-opacity-10 text-secondary ms-2" style="font-size: 0.68rem; font-weight: 600;">READ-ONLY</span>
+            </div>
+            
+            <div class="alert alert-purple p-2 mb-3 d-flex align-items-center gap-2" style="background-color: #f3e8ff; border: 1px solid #d8b4fe; border-radius: 8px; color: #6b21a8; font-size: 0.78rem;">
+              <i class="fas fa-info-circle fs-6"></i>
+              <span>Penetapan & Pengesahan Ketua Pengawas hanya boleh dilakukan melalui <b>Tab 3: Senarai Ketua Pengawas</b>.</span>
+            </div>
+
+            <input type="hidden" id="txtOpsNoKpKp">
+            <div class="row g-3">
+              <div class="col-md-8">
+                <label class="form-label small fw-semibold text-secondary mb-1">Ketua Pengawas Ditempatkan</label>
+                <input type="text" id="txtOpsKp" class="form-control input-moden input-read-only fw-bold" readonly placeholder="Belum Ditetapkan">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold text-secondary mb-1">Status Penetapan KP</label>
+                <input type="text" id="txtOpsStatusKp" class="form-control input-moden input-read-only fw-bold text-center" readonly placeholder="BELUM DITETAPKAN">
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer bg-light border-top px-4 py-3">
+            <button type="button" class="btn btn-outline-danger btn-sm px-4 fw-bold rounded-2" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-sm px-4 fw-bold rounded-2 text-white shadow-sm" style="background: linear-gradient(135deg, #6f42c1, #5b21b6); border: none;"><i class="fa-solid fa-floppy-disk me-2"></i>Simpan Penugasan</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- JAVASCRIPT KHAS: FUNGSI RESET UNTUK TAB 1, 2, 3 -->
+  <script>
+    function resetFilterOps1() {
+      var isPPD = G_USER && G_USER.role === 'PPD';
+      if (!isPPD && document.getElementById('selFilterDaerahOps')) {
+        $('#selFilterDaerahOps').val("");
+      }
+      $('#selFilterStatusSekOps').val("");
+      $('#selFilterLokasiSekOps').val("");
+      $('#cariOpsInput').val("");
+      tapisJadualOps();
+    }
+
+    function resetFilterOps2() {
+      var isPPD = G_USER && G_USER.role === 'PPD';
+      if (!isPPD && document.getElementById('selFilterDaerahPk')) {
+        $('#selFilterDaerahPk').val("");
+      }
+      $('#cariPkInput').val("");
+      tapisJadualPk();
+    }
+
+    function resetFilterOps3() {
+      var isPPD = G_USER && G_USER.role === 'PPD';
+      if (!isPPD && document.getElementById('selFilterDaerahKp')) {
+        $('#selFilterDaerahKp').val("");
+      }
+      $('#selFilterStatusKp').val("");
+      $('#cariKpInput').val("");
+      tapisJadualKpOps();
+    }
+  </script>
+
+  <script>
+    var G_STATUS_CETAK_KP = "TIDAK";
+
+    function formatInputIC(el) {
+      let val = el.value.replace(/\D/g, ''); 
+      if (val.length > 12) val = val.substring(0, 12);
+      let formatted = val;
+      if (val.length > 8) {
+        formatted = val.substring(0, 6) + '-' + val.substring(6, 8) + '-' + val.substring(8);
+      } else if (val.length > 6) {
+        formatted = val.substring(0, 6) + '-' + val.substring(6);
+      }
+      el.value = formatted;
+    }
+
+    function formatInputTel(el) {
+      let val = el.value.replace(/\D/g, ''); 
+      if (val.length > 11) val = val.substring(0, 11);
+      let formatted = val;
+      if (val.startsWith('011')) {
+        if (val.length > 3) { formatted = val.substring(0, 3) + '-' + val.substring(3); }
+      } else if (val.startsWith('03')) {
+        if (val.length > 2) { formatted = val.substring(0, 2) + '-' + val.substring(2); }
+      } else {
+        if (val.length > 3) { formatted = val.substring(0, 3) + '-' + val.substring(3); }
+      }
+      el.value = formatted;
+    }
+
+    function janaPilihanSekolahPk() {
+      const listContainer = document.getElementById('listPkSekAsal');
+      if (!listContainer) return;
+      if (listContainer.options.length > 0) return;
+
+      let senaraiSekolah = [];
+      if (typeof BACKEND_OPS !== 'undefined' && BACKEND_OPS.senaraiSekolah && BACKEND_OPS.senaraiSekolah.length > 0) {
+        senaraiSekolah = BACKEND_OPS.senaraiSekolah;
+      } else if (typeof DATA_SEKOLAH !== 'undefined' && DATA_SEKOLAH.length > 0) {
+        senaraiSekolah = DATA_SEKOLAH;
+      }
+
+      if (senaraiSekolah.length > 0) {
+        let htmlOptions = '';
+        senaraiSekolah.forEach(sek => {
+          let val = (typeof sek === 'object') ? `${sek.kod} - ${sek.nama}` : sek;
+          htmlOptions += `<option value="${val}">`;
+        });
+        listContainer.innerHTML = htmlOptions;
+      }
+    }
+
+    function pilihSemuaPk(masterCheckbox) {
+      const allCheckboxes = document.querySelectorAll('.chk-pk-item');
+      allCheckboxes.forEach(cb => {
+        cb.checked = masterCheckbox.checked;
+      });
+    }
+
+    function salinPukalPk() {
+      const terpilih = Array.from(document.querySelectorAll('.chk-pk-item:checked')).map(cb => cb.value);
+      const msetTerpilih = terpilih.length > 0;
+      const mesejSub = msetTerpilih 
+        ? `Anda telah memilih <b>${terpilih.length}</b> Penyelia Kawasan.` 
+        : `Tiada petak ditanda. <b>SEMUA</b> rekod Penyelia Kawasan bagi tahap ini akan disalin.`;
+
+      const tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+      const tahunSasarDefault = (parseInt(tahunSemasa) + 1).toString();
+
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          title: 'Salin Pukal Penyelia Kawasan',
+          html: `
+            <div class="text-start fs-6 mb-3">${mesejSub}</div>
+            <div class="text-start">
+              <label class="form-label fw-bold small text-secondary mb-1">Pilih Tahun Sesi Sasaran (Destinasi):</label>
+              <select id="swalTahunSasaran" class="form-select border-primary fw-bold">
+                <option value="${tahunSasarDefault}" selected>Sesi ${tahunSasarDefault}</option>
+                <option value="${tahunSemasa}">Sesi ${tahunSemasa}</option>
+                <option value="${parseInt(tahunSemasa) + 2}">Sesi ${parseInt(tahunSemasa) + 2}</option>
+              </select>
+            </div>
+          `,
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: '<i class="fas fa-copy me-1"></i> Mula Salin',
+          cancelButtonText: 'Batal',
+          confirmButtonColor: '#0284c7',
+          preConfirm: () => {
+            return document.getElementById('swalTahunSasaran').value;
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            const tahunSasaran = result.value;
+            hantarSalinPukalBackend(terpilih, tahunSasaran);
+          }
+        });
+      } else {
+        const tahunSasaran = prompt(`${msetTerpilih ? terpilih.length + ' rekod terpilih.' : 'Semua rekod terpilih.'}\n\nMasukkan TAHUN SESI SASARAN:`, tahunSasarDefault);
+        if (tahunSasaran) {
+          hantarSalinPukalBackend(terpilih, tahunSasaran);
+        }
+      }
+    }
+
+    function hantarSalinPukalBackend(senaraiId, tahunSasaran) {
+      const tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+
+      if (tahunSasaran.toString() === tahunSemasa.toString()) {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Tahun Sama Dikesan!',
+            text: 'Anda tidak boleh menyalin rekod ke Sesi ' + tahunSasaran + ' (sesi yang sama). Sila pilih tahun sasaran yang berbeza.',
+            confirmButtonColor: '#f59e0b'
+          });
+        } else {
+          alert('Anda tidak boleh menyalin rekod ke Sesi ' + tahunSasaran + ' (sesi yang sama).');
+        }
+        return;
+      }
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            title: 'Memproses...',
+            text: 'Sedang menyalin rekod ke Sesi ' + tahunSasaran + '...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+          });
+        }
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (typeof Swal !== 'undefined') {
+              if (res && res.status === "SUCCESS") {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Berjaya!',
+                  text: res.message || `Rekod Penyelia Kawasan telah berjaya disalin ke Sesi ${tahunSasaran}.`,
+                  confirmButtonColor: '#6366f1'
+                }).then(function() {
+                  if (typeof initModulOperasi === 'function') initModulOperasi();
+                });
+              } else if (res && res.status === "WARNING") {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Amaran Pendua!',
+                  text: res.message,
+                  confirmButtonColor: '#f59e0b'
+                });
+              } else {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Gagal!',
+                  text: (res ? res.message : 'Ralat tidak diketahui berlaku.'),
+                  confirmButtonColor: '#ef4444'
+                });
+              }
+            } else {
+              alert(res ? res.message : `Status: ${res.status}`);
+              if (typeof initModulOperasi === 'function') initModulOperasi();
+            }
+          })
+          .withFailureHandler(function(err) {
+            if (typeof Swal !== 'undefined') {
+              Swal.fire('Ralat Pelayan!', err.message, 'error');
+            } else {
+              alert('Ralat Salin Pukal: ' + err.message);
+            }
+          })
+          .salinPukalPkBackend(senaraiId, tahunSasaran, typeof TAHAP_OPS !== 'undefined' ? TAHAP_OPS : 'RENDAH');
+      } else {
+        alert(`[Demo Mode] Menyalin ${senaraiId.length > 0 ? senaraiId.length : 'SEMUA'} rekod ke Sesi ${tahunSasaran}`);
+      }
+    }
+
+    function semakPaparanKawalanCetakKp() {
+      if (typeof G_USER !== 'undefined' && G_USER) {
+        var role = (G_USER.role || "").toUpperCase();
+        if (role === 'ADMIN' || role === 'JPN') {
+          $('#boxKebenaranCetakKp').removeClass('d-none');
+          muatStatusKebenaranCetakKp();
+        } else {
+          $('#boxKebenaranCetakKp').addClass('d-none');
+        }
+      }
+    }
+
+    function muatStatusKebenaranCetakKp() {
+      var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+      var tahapSemasa = typeof TAHAP_OPS !== 'undefined' ? TAHAP_OPS : 'RENDAH';
+      
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.status === "SUCCESS") {
+              G_STATUS_CETAK_KP = res.kebenaranCetak || "TIDAK";
+              kemaskiniButangCetakUI();
+            }
+          })
+          .dapatkanStatusKebenaranCetakKP(tahunSemasa, tahapSemasa);
+      }
+    }
+
+    function kemaskiniButangCetakUI() {
+      var $btn = $('#btnKebenaranCetakKp');
+      if (G_STATUS_CETAK_KP === "YA") {
+        $btn.css({'background': '#16a34a', 'color': '#ffffff'})
+            .html('<i class="fas fa-lock-open me-1"></i> Cetakan KP: DIBUKA (ON)');
+      } else {
+        $btn.css({'background': '#dc2626', 'color': '#ffffff'})
+            .html('<i class="fas fa-lock me-1"></i> Cetakan KP: DITUTUP (OFF)');
+      }
+    }
+
+    function tukarKebenaranCetakKp() {
+      var statusBaharu = (G_STATUS_CETAK_KP === "YA") ? "TIDAK" : "YA";
+      var tajukAksi = (statusBaharu === "YA") ? "Membuka" : "Menutup";
+      var warnaAksi = (statusBaharu === "YA") ? "#16a34a" : "#dc2626";
+
+      Swal.fire({
+        title: tajukAksi + ' Kebenaran Cetak?',
+        html: 'Adakah anda pasti mahu <b>' + tajukAksi.toLowerCase() + '</b> kebenaran mencetak Surat Lantikan KP untuk semua sekolah bagi sesi ini?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: warnaAksi,
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ya, ' + tajukAksi,
+        cancelButtonText: 'Batal'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Swal.fire({ title: 'Kemaskini Status...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+          
+          var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+          var tahapSemasa = typeof TAHAP_OPS !== 'undefined' ? TAHAP_OPS : 'RENDAH';
+
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if (res && res.status === "SUCCESS") {
+                G_STATUS_CETAK_KP = statusBaharu;
+                kemaskiniButangCetakUI();
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Berjaya!',
+                  text: 'Kebenaran mencetak surat KP kini: ' + (statusBaharu === "YA" ? "DIBUKA" : "DITUTUP"),
+                  timer: 2000,
+                  showConfirmButton: false
+                });
+              } else {
+                Swal.fire('Gagal', res ? res.message : 'Penyimpanan gagal.', 'error');
+              }
+            })
+            .withFailureHandler(function(err) {
+              Swal.fire('Ralat Pelayan', err.message, 'error');
+            })
+            .simpanStatusKebenaranCetakKP(tahunSemasa, tahapSemasa, statusBaharu);
+        }
+      });
+    }
+    
+    // Fungsi UI untuk butang PK2
+    function paparPk2() {
+      $('#boxOpsPk2').slideDown(200);
+      $('#boxButangTambahPk2').hide();
+    }
+
+    function sorokPk2() {
+      $('#selOpsPk2').val('');
+      $('#boxOpsPk2').slideUp(200);
+      $('#boxButangTambahPk2').show();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const modalEl = document.getElementById('modalPk');
+      if (modalEl) {
+        modalEl.addEventListener('shown.bs.modal', function () {
+          janaPilihanSekolahPk();
+        });
+      }
+      setTimeout(semakPaparanKawalanCetakKp, 300);
+    });
+  </script>
+
+  <!-- PANGGIL LOGIK JAVASCRIPT MODUL -->
+  <?!= include('ScriptOperasiMatriks'); ?>
+</div>
+
+```

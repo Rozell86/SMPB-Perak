@@ -1,0 +1,499 @@
+<style>
+  /* === PURE CUSTOM CSS SPLIT-PANEL === */
+  .smpb-login-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .smpb-login-card {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    max-width: 860px;
+    min-height: 500px;
+    background: #ffffff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Panel Kiri: Ungu Gradient */
+  .smpb-panel-left {
+    flex: 1;
+    background: linear-gradient(135deg, #2e1065 0%, #581c87 50%, #6b21a8 100%);
+    color: #ffffff;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .smpb-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+  }
+
+  .smpb-brand i {
+    font-size: 1.8rem;
+  }
+
+  .smpb-panel-left h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0 0 12px 0;
+    line-height: 1.3;
+    color: #ffffff;
+  }
+
+  .smpb-panel-left p {
+    font-size: 0.88rem;
+    opacity: 0.85;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .smpb-left-footer {
+    font-size: 0.75rem;
+    opacity: 0.75;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 15px;
+    line-height: 1.4;
+  }
+
+  /* Panel Kanan: Borang */
+  .smpb-panel-right {
+    flex: 1;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: #ffffff;
+  }
+
+  .smpb-right-header {
+    text-align: center;
+    margin-bottom: 25px;
+  }
+
+  .smpb-right-header h3 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 6px 0;
+  }
+
+  .smpb-right-header p {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin: 0;
+  }
+
+  .smpb-form-group {
+    margin-bottom: 18px;
+  }
+
+  .smpb-form-group label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  .smpb-input-box {
+    display: flex;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+  }
+
+  .smpb-input-box:focus-within {
+    border-color: #6b21a8;
+    box-shadow: 0 0 0 3px rgba(107, 33, 168, 0.15);
+  }
+
+  .smpb-icon {
+    padding: 10px 14px;
+    color: #94a3b8;
+    font-size: 0.9rem;
+  }
+
+  .smpb-input-box input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 10px 12px 10px 0;
+    font-size: 0.88rem;
+    outline: none;
+    color: #1e293b;
+  }
+
+  .smpb-toggle-pass {
+    background: none;
+    border: none;
+    padding: 10px 14px;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .smpb-toggle-pass:hover {
+    color: #6b21a8;
+  }
+
+  .smpb-btn-submit {
+    width: 100%;
+    padding: 12px;
+    background: #6b21a8;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.92rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .smpb-btn-submit:hover {
+    background: #581c87;
+  }
+
+  .smpb-btn-submit:disabled {
+    background: #a855f7;
+    cursor: not-allowed;
+  }
+
+  .smpb-right-footer {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .smpb-login-card {
+      flex-direction: column;
+    }
+    .smpb-panel-left, .smpb-panel-right {
+      padding: 25px;
+    }
+  }
+</style>
+
+<div class="smpb-login-wrapper">
+  <div class="smpb-login-card">
+    
+    <!-- Panel Kiri: Branding -->
+    <div class="smpb-panel-left">
+      <div>
+        <div class="smpb-brand">
+          <i class="fa-solid fa-graduation-cap"></i>
+          <span>SMPB v2.0</span>
+        </div>
+        <h2>Sistem Matriks Pembelajaran Bersepadu</h2>
+        <p>Platform pengurusan pentaksiran dan operasi matriks pembelajaran yang selamat dan berintegriti. Sila log masuk menggunakan ID pengguna yang sah.</p>
+      </div>
+
+      <div class="smpb-left-footer">
+        Sektor Pentaksiran dan Peperiksaan,<br>Jabatan Pendidikan Negeri Perak
+      </div>
+    </div>
+
+    <!-- Panel Kanan: Borang Log Masuk -->
+    <div class="smpb-panel-right">
+      <div>
+        <div class="smpb-right-header">
+          <h3>Selamat Datang</h3>
+          <p>Sila masukkan maklumat akaun anda</p>
+        </div>
+
+        <form id="formLogin" onsubmit="event.preventDefault(); lakukanLogin();">
+          <div class="smpb-form-group">
+            <label>EMEL PENGGUNA / ID</label>
+            <div class="smpb-input-box">
+              <span class="smpb-icon"><i class="fa-solid fa-envelope"></i></span>
+              <input type="email" id="txtEmail" placeholder="contoh@moe.gov.my / @moe.edu.my" required>
+            </div>
+          </div>
+
+          <div class="smpb-form-group">
+            <label>KATA LALUAN</label>
+            <div class="smpb-input-box">
+              <span class="smpb-icon"><i class="fa-solid fa-lock"></i></span>
+              <input type="password" id="txtPassword" placeholder="Masukkan Kata Laluan" required>
+              <button type="button" class="smpb-toggle-pass" onclick="togglePasswordVisibility()">
+                <i id="btnEyeIcon" class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" id="btnLogin" class="smpb-btn-submit">
+            <i class="fa-solid fa-right-to-bracket"></i> Log Masuk
+          </button>
+        </form>
+      </div>
+
+      <div class="smpb-right-footer">
+        © <span id="lblTahun"></span> Hak Cipta Terpelihara JPN Perak
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+    $('#lblTahun').text(new Date().getFullYear());
+  });
+
+  function togglePasswordVisibility() {
+    var txtPass = $('#txtPassword');
+    var icon = $('#btnEyeIcon');
+    if (txtPass.attr('type') === 'password') {
+      txtPass.attr('type', 'text');
+      icon.removeClass('fa-eye').addClass('fa-eye-slash');
+    } else {
+      txtPass.attr('type', 'password');
+      icon.removeClass('fa-eye-slash').addClass('fa-eye');
+    }
+  }
+
+  function lakukanLogin() {
+    var email = $('#txtEmail').val().trim();
+    var pass = $('#txtPassword').val().trim();
+    
+    if (!email || !pass) {
+      Swal.fire({ icon: 'warning', title: 'Sila Isi Maklumat', text: 'Sila masukkan emel dan kata laluan.' });
+      return;
+    }
+
+    var $btn = $('#btnLogin');
+    $btn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin"></i> Menyemak...');
+
+    google.script.run
+      .withSuccessHandler(function(respon) {
+        if (respon.status === "SUCCESS") {
+          G_USER = respon.user;
+          G_DATA = respon.dataSistem; 
+          
+          if (G_USER.role === 'SEKOLAH' && G_USER.statusTukar === 'BELUM') {
+            $btn.prop('disabled', false).html('<i class="fa-solid fa-right-to-bracket"></i> Log Masuk');
+            paparModalTukarPassword(G_USER.username || G_USER.emel);
+          } else {
+            
+            // ==============================================================
+            // TAMBAHAN SIFU: SIMPAN KATA LALUAN KE LOCAL STORAGE (MEMORI PINTAR)
+            // ==============================================================
+            var idBase = G_USER.username || "";
+            if (idBase.indexOf('@') > -1) { idBase = idBase.split('@')[0]; }
+            localStorage.setItem("SMPB_PASS_" + idBase, pass);
+            // ==============================================================
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Log Masuk Berjaya!',
+              text: 'Selamat Datang, Akses ' + G_USER.role,
+              timer: 1500,
+              showConfirmButton: false
+            }).then(() => {
+              if (G_USER.role === 'SEKOLAH') {
+                panggilHalaman('SekolahView');
+              } else {
+                panggilHalaman('ProfilSekolah');
+              }
+            });
+          }
+        } else {
+          Swal.fire({ icon: 'error', title: 'Gagal Log Masuk', text: respon.message });
+          $btn.prop('disabled', false).html('<i class="fa-solid fa-right-to-bracket"></i> Log Masuk');
+        }
+      })
+      .withFailureHandler(function(err) {
+        Swal.fire({ icon: 'error', title: 'Ralat Server', text: err.message });
+        $btn.prop('disabled', false).html('<i class="fa-solid fa-right-to-bracket"></i> Log Masuk');
+      })
+      .prosesLogin(email, pass);
+  }
+
+  // ==============================================================
+  // KEMASKINI UX: FUNGSI POP-UP TUKAR KATA LALUAN BAHARU
+  // ==============================================================
+  function paparModalTukarPassword(userId) {
+    var customHtml = `
+      <div style="text-align: left; margin-top: 10px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+          <div style="font-size: 0.8rem; color: #475569; font-weight: 600; margin-bottom: 5px;">Syarat Keselamatan:</div>
+          <ul style="margin: 0; padding-left: 20px; font-size: 0.75rem; color: #64748b; line-height: 1.5;">
+            <li>Minimum <strong>8 aksara</strong>.</li>
+            <li>Elakkan penggunaan kata laluan yang mudah diteka.</li>
+          </ul>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 6px;">KATA LALUAN BAHARU</label>
+          <div style="display: flex; align-items: center; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0; background: white; transition: 0.2s;" id="box-pass1">
+            <i class="fa-solid fa-key" style="padding: 12px 14px; color: #94a3b8; font-size: 0.9rem;"></i>
+            <input id="swalNewPass" type="password" placeholder="Taip kata laluan baharu..." style="flex: 1; border: none; outline: none; padding: 12px 0; font-size: 0.9rem; background: transparent; width: 100%;">
+            <button type="button" tabindex="-1" onclick="toggleMata('swalNewPass', 'iconMata1')" style="background: none; border: none; padding: 12px 15px; color: #94a3b8; cursor: pointer;"><i id="iconMata1" class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 6px;">SAHKAN KATA LALUAN</label>
+          <div style="display: flex; align-items: center; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0; background: white; transition: 0.2s;" id="box-pass2">
+            <i class="fa-solid fa-circle-check" style="padding: 12px 14px; color: #94a3b8; font-size: 0.9rem;" id="iconCheckMatch"></i>
+            <input id="swalConfirmPass" type="password" placeholder="Ulang kata laluan di atas..." style="flex: 1; border: none; outline: none; padding: 12px 0; font-size: 0.9rem; background: transparent; width: 100%;">
+            <button type="button" tabindex="-1" onclick="toggleMata('swalConfirmPass', 'iconMata2')" style="background: none; border: none; padding: 12px 15px; color: #94a3b8; cursor: pointer;"><i id="iconMata2" class="fa-solid fa-eye"></i></button>
+          </div>
+          <div id="textMatchIndicator" style="font-size: 0.7rem; font-weight: 600; margin-top: 5px; height: 14px;"></div>
+        </div>
+      </div>
+    `;
+
+    Swal.fire({
+      title: '<strong>Tukar Kata Laluan</strong>',
+      html: customHtml,
+      iconHtml: '<div style="background:#f4f0fc; color:#6b21a8; width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto;"><i class="fa-solid fa-shield-halved fa-2x"></i></div>',
+      customClass: { icon: 'border-0' }, // Buang border bulat asal Sweetalert
+      focusConfirm: false,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      confirmButtonText: '<i class="fa-solid fa-floppy-disk me-2"></i>Simpan & Teruskan',
+      confirmButtonColor: '#6b21a8',
+      didOpen: () => {
+        // Logik Validasi Masa Nyata (Real-time)
+        const btnConfirm = Swal.getConfirmButton();
+        const input1 = document.getElementById('swalNewPass');
+        const input2 = document.getElementById('swalConfirmPass');
+        const box2 = document.getElementById('box-pass2');
+        const iconCheck = document.getElementById('iconCheckMatch');
+        const textMatch = document.getElementById('textMatchIndicator');
+
+        // Mula-mula disable butang simpan
+        btnConfirm.disabled = true;
+        btnConfirm.style.opacity = '0.5';
+        btnConfirm.style.cursor = 'not-allowed';
+
+        function checkMatching() {
+          const val1 = input1.value;
+          const val2 = input2.value;
+
+          if (val2.length === 0) {
+            box2.style.borderColor = '#cbd5e1';
+            iconCheck.style.color = '#94a3b8';
+            textMatch.innerHTML = '';
+            btnConfirm.disabled = true;
+            btnConfirm.style.opacity = '0.5';
+            btnConfirm.style.cursor = 'not-allowed';
+            return;
+          }
+
+          if (val1 === val2 && val1.length >= 8) {
+            box2.style.borderColor = '#16a34a'; // Hijau
+            box2.style.boxShadow = '0 0 0 3px rgba(22, 163, 74, 0.15)';
+            iconCheck.style.color = '#16a34a';
+            textMatch.innerHTML = '<span style="color:#16a34a;"><i class="fa-solid fa-check me-1"></i> Kata laluan sepadan.</span>';
+            btnConfirm.disabled = false;
+            btnConfirm.style.opacity = '1';
+            btnConfirm.style.cursor = 'pointer';
+          } else if (val1 === val2 && val1.length < 8) {
+             box2.style.borderColor = '#eab308'; // Kuning
+             box2.style.boxShadow = 'none';
+             iconCheck.style.color = '#eab308';
+             textMatch.innerHTML = '<span style="color:#ca8a04;"><i class="fa-solid fa-triangle-exclamation me-1"></i> Terlalu pendek (Min 8 aksara).</span>';
+             btnConfirm.disabled = true;
+             btnConfirm.style.opacity = '0.5';
+             btnConfirm.style.cursor = 'not-allowed';
+          } else {
+            box2.style.borderColor = '#dc2626'; // Merah
+            box2.style.boxShadow = 'none';
+            iconCheck.style.color = '#dc2626';
+            textMatch.innerHTML = '<span style="color:#dc2626;"><i class="fa-solid fa-xmark me-1"></i> Kata laluan tidak sepadan!</span>';
+            btnConfirm.disabled = true;
+            btnConfirm.style.opacity = '0.5';
+            btnConfirm.style.cursor = 'not-allowed';
+          }
+        }
+
+        input1.addEventListener('input', checkMatching);
+        input2.addEventListener('input', checkMatching);
+        
+        // Letakkan logik toggleMata ke window supaya butang HTML boleh panggil
+        window.toggleMata = function(inputId, iconId) {
+          var input = document.getElementById(inputId);
+          var icon = document.getElementById(iconId);
+          if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+          } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+          }
+        };
+      },
+      preConfirm: () => {
+        const newPass = document.getElementById('swalNewPass').value;
+        return newPass; // Jika butang ditekan, bermakna validasi dah lepas
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: 'Memproses...',
+          text: 'Mengemas kini kata laluan baharu anda...',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+
+        google.script.run
+          .withSuccessHandler(function(resUpdate) {
+            if (resUpdate.status === "SUCCESS") {
+              G_USER = resUpdate.user;
+              G_DATA = resUpdate.dataSistem;
+              
+              // Simpan kata laluan baru dalam memori supaya terus lepas "Memori Pintar" SekolahView
+              var idBase = G_USER.username || "";
+              if (idBase.indexOf('@') > -1) { idBase = idBase.split('@')[0]; }
+              localStorage.setItem("SMPB_PASS_" + idBase, result.value);
+
+              Swal.fire({
+                icon: 'success',
+                title: 'Berjaya!',
+                text: 'Kata laluan telah dikemaskini. Selamat datang!',
+                timer: 1500,
+                showConfirmButton: false
+              }).then(() => {
+                panggilHalaman('SekolahView');
+              });
+            } else {
+              Swal.fire('Ralat', resUpdate.message, 'error').then(() => {
+                paparModalTukarPassword(userId);
+              });
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire('Ralat Server', err.message, 'error');
+          })
+          .kemaskiniKataLaluan(userId, result.value);
+      }
+    });
+  }
+</script>

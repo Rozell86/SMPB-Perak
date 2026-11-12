@@ -1,0 +1,210 @@
+<script>
+// ==========================================
+// PEMBOLEHUBAH GLOBAL KONFIGURASI
+// ==========================================
+var DATA_KONFIG_MASTER = [];   
+var DATA_KONFIG_SARINGAN = []; 
+var HALAMAN_SEMASA_KONFIG = 1;
+var REKOD_PER_HALAMAN = 20;    
+
+// ==========================================
+// FUNGSI KONFIGURASI PPD
+// ==========================================
+function muatSenaraiAksesSekolah() {
+  $('#tblAksesSekolahBody').html('<tr><td colspan="6" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin me-2"></i>Mengambil maklumat keselamatan...</td></tr>');
+  $('#txtCarianKonfig').val(''); 
+  
+  var daerahUser = G_USER.daerah || ""; 
+  var roleUser = G_USER.role || ""; 
+  
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (res && res.status === "SUCCESS") {
+        DATA_KONFIG_MASTER = res.data;
+        saringPaginasiKonfig(); 
+      } else {
+        $('#tblAksesSekolahBody').html('<tr><td colspan="6" class="text-center text-danger py-4">Gagal memuat turun data: ' + res.message + '</td></tr>');
+      }
+    })
+    .withFailureHandler(function(error) {
+      $('#tblAksesSekolahBody').html('<tr><td colspan="6" class="text-center text-danger py-4">Ralat berhubung dengan pangkalan data.</td></tr>');
+    })
+    .dapatkanDataAksesSekolah(daerahUser, roleUser);
+}
+
+// ==========================================
+// FUNGSI ENJIN CARIAN (LIVE SEARCH)
+// ==========================================
+function saringPaginasiKonfig() {
+  var kataKunci = $('#txtCarianKonfig').val().toLowerCase().trim();
+  
+  if (kataKunci === "") {
+    DATA_KONFIG_SARINGAN = DATA_KONFIG_MASTER.slice();
+  } else {
+    DATA_KONFIG_SARINGAN = DATA_KONFIG_MASTER.filter(function(row) {
+      var teks = (row.id_sekolah + " " + row.nama_sekolah + " " + row.daerah + " " + row.status_tukar + " " + row.emel).toLowerCase();
+      return teks.indexOf(kataKunci) > -1;
+    });
+  }
+  
+  HALAMAN_SEMASA_KONFIG = 1; 
+  renderJadualKonfig();
+}
+
+// ==========================================
+// FUNGSI RENDER JADUAL MENGIKUT MUKA SURAT
+// ==========================================
+function renderJadualKonfig() {
+  var jumRekod = DATA_KONFIG_SARINGAN.length;
+  var jumHalaman = Math.ceil(jumRekod / REKOD_PER_HALAMAN);
+  
+  if (jumHalaman === 0) jumHalaman = 1;
+  if (HALAMAN_SEMASA_KONFIG > jumHalaman) HALAMAN_SEMASA_KONFIG = jumHalaman;
+  
+  var mulaIndex = (HALAMAN_SEMASA_KONFIG - 1) * REKOD_PER_HALAMAN;
+  var akhirIndex = mulaIndex + REKOD_PER_HALAMAN;
+  var senaraiPapar = DATA_KONFIG_SARINGAN.slice(mulaIndex, akhirIndex);
+  
+  var html = "";
+  
+  if (jumRekod === 0) {
+    html = '<tr><td colspan="6" class="text-center text-muted py-4">Tiada rekod dijumpai berdasarkan carian anda.</td></tr>';
+    $('#lblInfoPaginasi').text('Memaparkan 0 rekod');
+  } else {
+    for (var i = 0; i < senaraiPapar.length; i++) {
+      var row = senaraiPapar[i];
+      var bil = mulaIndex + i + 1;
+      
+      var badgeStatus = '<span class="badge bg-danger">BELUM</span>';
+      if (row.status_tukar && row.status_tukar.toUpperCase() === "SUDAH") {
+        badgeStatus = '<span class="badge bg-success">SUDAH</span>';
+      }
+      
+      var uikatalaluan = `
+        <div class="input-group input-group-sm mb-0">
+          <input type="password" class="form-control fw-bold bg-light" id="passRekod_${bil}" value="${row.katalaluan}" readonly style="font-family: monospace; letter-spacing: 2px;">
+          <button class="btn btn-outline-secondary" type="button" title="Papar Kata Laluan" onclick="toggleMata(${bil})">
+            <i class="fa-solid fa-eye" id="iconMata_${bil}"></i>
+          </button>
+          <button class="btn btn-outline-primary" type="button" title="Salin E-mel & Kata Laluan" onclick="salinMaklumatLengkap('${row.emel}', '${row.katalaluan}')">
+            <i class="fa-solid fa-copy"></i> Salin
+          </button>
+        </div>
+      `;
+      
+      // SIFU UPDATE: Lajur row.emel diletakkan di antara Daerah dan Status
+      html += `<tr>
+        <td class="text-center fw-bold text-muted">${bil}</td>
+        <td>
+          <div class="fw-bold" style="color:#4c1d95; font-size: 0.85rem; line-height: 1.2; margin-bottom: 3px;">${row.nama_sekolah}</div>
+          <div class="small text-muted fw-semibold"><i class="fa-solid fa-fingerprint me-1"></i>${row.id_sekolah}</div>
+        </td>
+        <td class="text-uppercase">${row.daerah}</td>
+        <td><span class="text-muted" style="font-size: 0.85rem;">${row.emel}</span></td>
+        <td class="text-center">${badgeStatus}</td>
+        <td>${uikatalaluan}</td>
+      </tr>`;
+    }
+    
+    var infoAkhir = akhirIndex > jumRekod ? jumRekod : akhirIndex;
+    $('#lblInfoPaginasi').text(`Memaparkan ${mulaIndex + 1} hingga ${infoAkhir} dari ${jumRekod} rekod sekolah`);
+  }
+  
+  $('#tblAksesSekolahBody').html(html);
+  binaKawalPaginasi(jumHalaman);
+}
+
+// ==========================================
+// FUNGSI BINA BUTANG PAGINATION
+// ==========================================
+function binaKawalPaginasi(jumHalaman) {
+  var html = "";
+  
+  html += `<li class="page-item ${HALAMAN_SEMASA_KONFIG === 1 ? 'disabled' : ''}">
+             <a class="page-link page-link-ungu" onclick="tukarHalamanKonfig(${HALAMAN_SEMASA_KONFIG - 1})"><i class="fa-solid fa-angle-left"></i></a>
+           </li>`;
+  
+  var maxPapar = 5; 
+  var mulaPage = Math.max(1, HALAMAN_SEMASA_KONFIG - 2);
+  var akhirPage = Math.min(jumHalaman, mulaPage + maxPapar - 1);
+  
+  if (akhirPage - mulaPage + 1 < maxPapar) {
+    mulaPage = Math.max(1, akhirPage - maxPapar + 1);
+  }
+
+  for (var p = mulaPage; p <= akhirPage; p++) {
+    html += `<li class="page-item ${p === HALAMAN_SEMASA_KONFIG ? 'active' : ''}">
+               <a class="page-link page-link-ungu" onclick="tukarHalamanKonfig(${p})">${p}</a>
+             </li>`;
+  }
+  
+  html += `<li class="page-item ${HALAMAN_SEMASA_KONFIG === jumHalaman ? 'disabled' : ''}">
+             <a class="page-link page-link-ungu" onclick="tukarHalamanKonfig(${HALAMAN_SEMASA_KONFIG + 1})"><i class="fa-solid fa-angle-right"></i></a>
+           </li>`;
+           
+  $('#ulPaginasiKonfig').html(html);
+}
+
+function tukarHalamanKonfig(pageBaru) {
+  HALAMAN_SEMASA_KONFIG = pageBaru;
+  renderJadualKonfig();
+}
+
+// ==========================================
+// FUNGSI KAWALAN UI & SALIN
+// ==========================================
+function salinMaklumatLengkap(emel, laluan) {
+  var teksSalin = "Maklumat Akses Sekolah\n-------------------\nID Pengguna: " + emel + "\nKata Laluan: " + laluan;
+  
+  // SIFU FIX: Gunakan kaedah 'textarea' (document.execCommand) yang mesra iframe Google Apps Script
+  var tempTextArea = document.createElement("textarea");
+  tempTextArea.value = teksSalin;
+  
+  // Letakkan kotak teks halimunan di luar skrin
+  tempTextArea.style.position = "absolute";
+  tempTextArea.style.left = "-9999px";
+  document.body.appendChild(tempTextArea);
+  
+  // Pilih teks di dalam kotak tersebut
+  tempTextArea.select();
+  tempTextArea.setSelectionRange(0, 99999); // Untuk sokongan peranti mudah alih
+
+  try {
+    // Jalankan arahan salin (copy)
+    var berjaya = document.execCommand('copy');
+    if (berjaya) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Tersalin!',
+        text: 'E-mel dan Kata Laluan telah disalin untuk dihantar.',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } else {
+      throw new Error("Salinan disekat oleh pelayar");
+    }
+  } catch (err) {
+    Swal.fire('Ralat Penyemak Imbas', 'Sila salin secara manual (Pilih teks & Ctrl+C)', 'warning');
+  } finally {
+    // Padam semula kotak halimunan tadi
+    document.body.removeChild(tempTextArea);
+  }
+}
+
+function toggleMata(bil) {
+  var input = document.getElementById("passRekod_" + bil);
+  var icon = document.getElementById("iconMata_" + bil);
+  
+  if (!input || !icon) return; // Keluar jika elemen tak dijumpai
+
+  if (input.type === "password") {
+    input.type = "text";
+    icon.classList.remove("fa-eye");
+    icon.classList.add("fa-eye-slash");
+  } else {
+    input.type = "password";
+    icon.classList.remove("fa-eye-slash");
+    icon.classList.add("fa-eye");
+  }
+}
+</script>

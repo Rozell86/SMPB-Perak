@@ -1,0 +1,542 @@
+<script>
+var BACKEND_DATA = null;
+var G_TAHAP_KPN = 'RENDAH';
+var DATA_SUBJEK_SEMASA = [];
+window.POOL_CALON_SEMASA = {};
+window.isPentaksirInit = false;
+
+// ==========================================
+// AUTO-LOAD SCRIPT 
+// ==========================================
+$(function() {
+  setTimeout(function() {
+    if (typeof initKetuaPentaksir === 'function' && !window.isPentaksirInit) {
+      window.isPentaksirInit = true;
+      initKetuaPentaksir();
+    }
+  }, 100); 
+});
+
+function initKetuaPentaksir() {
+  muatDataLaporanKpn();
+}
+
+function tukarTahapKpn(tahap) {
+  G_TAHAP_KPN = tahap;
+  $('#lblTahapSubjek').text(tahap);
+  saringDataIkutTahapKpn();
+}
+
+function muatDataLaporanKpn() {
+  var roleSemasa = G_USER.role;
+  var kodDaerahSemasa = G_USER.kod_daerah ? G_USER.kod_daerah : G_USER.username;
+  google.script.run.withSuccessHandler(function(respon) {
+    if (respon && respon.status === "SUCCESS") {
+      BACKEND_DATA = respon.data;
+      tukarTahapKpn('RENDAH');
+    } else Swal.fire('Ralat', 'Gagal memproses data KPN/KPKw.', 'error');
+  }).mendapatkanDataPPD_JPN(roleSemasa, kodDaerahSemasa, kodDaerahSemasa); 
+}
+
+function saringDataIkutTahapKpn() {
+  if (!BACKEND_DATA) return;
+  DATA_SUBJEK_SEMASA = BACKEND_DATA.senaraiMp
+    .filter(m => m.kategori.toUpperCase() === G_TAHAP_KPN || m.kategori.toUpperCase() === 'UMUM')
+    .sort((a,b) => a.nama.localeCompare(b.nama));
+  
+  $('#cariSubjekInput').val('');
+  renderJadualKpn();
+}
+
+function tapisJadualKpn() {
+  var carian = $('#cariSubjekInput').val().toLowerCase().trim();
+  var subjekTapis = BACKEND_DATA.senaraiMp.filter(m => m.kategori.toUpperCase() === G_TAHAP_KPN || m.kategori.toUpperCase() === 'UMUM');
+  
+  if (carian === "") {
+    DATA_SUBJEK_SEMASA = [...subjekTapis];
+  } else {
+    DATA_SUBJEK_SEMASA = subjekTapis.filter(m => m.nama.toLowerCase().indexOf(carian) > -1 || m.kod.toLowerCase().indexOf(carian) > -1);
+  }
+  renderJadualKpn();
+}
+
+function renderJadualKpn() {
+  var html = '';
+  var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+  var tahapSurat = G_TAHAP_KPN === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+  var isPPD = G_USER.role === 'PPD';
+  var isSuperAdmin = (G_USER.role === 'ADMIN' || G_USER.role === 'JPN');
+  var kodDaerahSemasa = G_USER.kod_daerah ? G_USER.kod_daerah : G_USER.username;
+
+  if (DATA_SUBJEK_SEMASA.length === 0) {
+    html = '<tr><td colspan="4" class="text-center text-muted py-5">Tiada subjek dijumpai untuk kategori ini.</td></tr>';
+  } else {
+    DATA_SUBJEK_SEMASA.forEach((mp, index) => {
+      
+      var kpkwList = (BACKEND_DATA.senaraiKpnKpkw || []).filter(k => k.kod_mp === mp.kod && k.peringkat === 'DAERAH' && k.tahun === tahunSemasa && k.matrik_tahap === tahapSurat);
+      var kpkwDisplay = "";
+
+      // PAPARAN KPKw
+      if (isPPD) {
+        var kpkw = kpkwList.find(k => k.daerah === kodDaerahSemasa);
+        if (kpkw) {
+          var namaSekKpkw = BACKEND_DATA.senaraiSekolah.find(s => s.kod === kpkw.kod_sekolah) ? BACKEND_DATA.senaraiSekolah.find(s => s.kod === kpkw.kod_sekolah).nama : kpkw.kod_sekolah;
+          kpkwDisplay = `
+            <div class="p-2 mb-1 bg-light border rounded-1 small d-flex justify-content-between align-items-center" style="font-size:0.78rem;">
+              <div class="d-flex align-items-center gap-2">
+                <input type="checkbox" class="form-check-input chk-pentaksir m-0 shadow-sm border-secondary" value="${kpkw.id}" style="cursor:pointer;">
+                <div>
+                  <b class="text-dark text-uppercase">${kpkw.nama_guru}</b><br>
+                  <span class="text-muted" style="font-size:0.7rem;">${kpkw.kod_sekolah} - ${namaSekKpkw}</span>
+                </div>
+              </div>
+              <div>
+                <button class="btn btn-sm btn-outline-success py-0 px-2 fw-bold border-0 me-1" title="Cetak Surat" onclick="cetakSuratLantikan('${kpkw.no_kp}', '${kpkw.tahun}', '${kpkw.matrik_tahap}')"><i class="fa-solid fa-print"></i></button>
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2 fw-bold text-dark border-0" style="background:#fde047;" onclick="bukaModalLantik('${mp.kod}', '${mp.nama}', 'DAERAH', ${kpkw.rowNum}, '${kpkw.no_kp}')" title="Urus"><i class="fa-solid fa-pen"></i></button>
+              </div>
+            </div>
+          `;
+        } else {
+          kpkwDisplay = `<div class="text-muted small fst-italic mb-2">Belum Dilantik</div><button class="btn btn-sm btn-outline-ungu py-1 px-3 fw-bold rounded-1 border" style="font-size:0.75rem;" onclick="bukaModalLantik('${mp.kod}', '${mp.nama}', 'DAERAH', null)"><i class="fa-solid fa-plus me-1"></i>Lantik KPKw</button>`;
+        }
+      } else {
+        if (kpkwList.length === 0) {
+          kpkwDisplay = `<div class="text-muted small fst-italic mb-2">Belum Dilantik (0 / 12 Daerah)</div><button class="btn btn-sm btn-outline-ungu py-1 px-3 fw-bold rounded-1 border" style="font-size:0.75rem;" onclick="bukaModalLantik('${mp.kod}', '${mp.nama}', 'DAERAH', null)"><i class="fa-solid fa-plus me-1"></i>Lantik KPKw</button>`;
+        } else {
+          kpkwDisplay = `<div class="mb-2"><span class="badge" style="background:var(--purple-700);">${kpkwList.length} / 12 Daerah Dilantik</span></div>`;
+          kpkwList.forEach(k => {
+            var namaSek = BACKEND_DATA.senaraiSekolah.find(s => s.kod === k.kod_sekolah) ? BACKEND_DATA.senaraiSekolah.find(s => s.kod === k.kod_sekolah).nama : k.kod_sekolah;
+            var namaDaerahTunjuk = k.daerah;
+            var daeObj = (BACKEND_DATA.senaraiDaerah || []).find(d => d.ppd === k.daerah || d.kod === k.daerah || d.nama === k.daerah);
+            if (daeObj && daeObj.nama) namaDaerahTunjuk = daeObj.nama.toUpperCase();
+
+            kpkwDisplay += `
+              <div class="p-2 mb-1 bg-light border rounded-1 small d-flex justify-content-between align-items-center" style="font-size:0.78rem;">
+                <div class="d-flex align-items-center gap-2">
+                  <input type="checkbox" class="form-check-input chk-pentaksir m-0 shadow-sm border-secondary" value="${k.id}" style="cursor:pointer;">
+                  <div>
+                    <b class="text-dark text-uppercase">${k.nama_guru}</b> <span class="badge bg-secondary ms-1">${namaDaerahTunjuk}</span><br>
+                    <span class="text-muted" style="font-size:0.7rem;">${k.kod_sekolah} - ${namaSek}</span>
+                  </div>
+                </div>
+                <div>
+                  <button class="btn btn-sm btn-outline-success py-0 px-2 fw-bold border-0 me-1" title="Cetak Surat" onclick="cetakSuratLantikan('${k.no_kp}', '${k.tahun}', '${k.matrik_tahap}')"><i class="fa-solid fa-print"></i></button>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2 fw-bold text-dark border-0" style="background:#fde047;" onclick="bukaModalLantik('${mp.kod}', '${mp.nama}', 'DAERAH', ${k.rowNum}, '${k.no_kp}')" title="Urus"><i class="fa-solid fa-pen"></i></button>
+                </div>
+              </div>
+            `;
+          });
+          if (kpkwList.length < 12) {
+            kpkwDisplay += `<button class="btn btn-sm btn-outline-ungu py-1 px-3 fw-bold rounded-1 mt-1 w-100 shadow-sm border" style="font-size:0.75rem;" onclick="bukaModalLantik('${mp.kod}', '${mp.nama}', 'DAERAH', null)"><i class="fa-solid fa-plus me-1"></i>+ Tambah KPKw Daerah Lain</button>`;
+          }
+        }
+      }
+
+      // PAPARAN KPN
+      var kpn = (BACKEND_DATA.senaraiKpnKpkw || []).find(k => k.kod_mp === mp.kod && k.peringkat === 'NEGERI' && k.tahun === tahunSemasa && k.matrik_tahap === tahapSurat);
+      var kpnBtn = isPPD ? `<span class="badge bg-secondary opacity-50 px-2 py-1"><i class="fa-solid fa-lock me-1"></i>Akses JPN Sahaja</span>` : `<button class="btn btn-sm btn-outline-ungu py-1 px-3 fw-bold rounded-1 border" style="font-size:0.75rem;" onclick="bukaModalLantik('${mp.kod}', '${mp.nama}', 'NEGERI', null)"><i class="fa-solid fa-plus me-1"></i>Lantik KPN</button>`;
+      
+      var kpnDisplay = `<div class="text-muted small fst-italic mb-2">Belum Dilantik</div>${kpnBtn}`;
+      
+      if (kpn) {
+        var namaSekKpn = BACKEND_DATA.senaraiSekolah.find(s => s.kod === kpn.kod_sekolah) ? BACKEND_DATA.senaraiSekolah.find(s => s.kod === kpn.kod_sekolah).nama : kpn.kod_sekolah;
+        
+        var actionBtnsKpn = isPPD 
+          ? `<div><button class="btn btn-sm btn-outline-success py-0 px-2 fw-bold border-0" title="Cetak Surat" onclick="cetakSuratLantikan('${kpn.no_kp}', '${kpn.tahun}', '${kpn.matrik_tahap}')"><i class="fa-solid fa-print"></i></button></div>` 
+          : `<div>
+               <button class="btn btn-sm btn-outline-success py-0 px-2 fw-bold border-0 me-1" title="Cetak Surat" onclick="cetakSuratLantikan('${kpn.no_kp}', '${kpn.tahun}', '${kpn.matrik_tahap}')"><i class="fa-solid fa-print"></i></button>
+               <button class="btn btn-sm btn-outline-secondary py-0 px-2 fw-bold text-dark border-0" style="background:#fde047;" onclick="bukaModalLantik('${mp.kod}', '${mp.nama}', 'NEGERI', ${kpn.rowNum}, '${kpn.no_kp}')" title="Urus"><i class="fa-solid fa-pen"></i></button>
+             </div>`;
+             
+        var cbKpn = isPPD ? '' : `<input type="checkbox" class="form-check-input chk-pentaksir m-0 shadow-sm border-secondary" value="${kpn.id}" style="cursor:pointer;">`;
+        
+        kpnDisplay = `
+          <div class="p-2 mb-1 bg-light border rounded-1 small d-flex justify-content-between align-items-center" style="font-size:0.78rem;">
+            <div class="d-flex align-items-center gap-2">
+              ${cbKpn}
+              <div>
+                <b class="text-dark text-uppercase">${kpn.nama_guru}</b> <span class="badge text-white ms-1 shadow-sm" style="background:#0ea5e9;"><i class="fa-solid fa-crown me-1"></i>KPN</span><br>
+                <span class="text-muted" style="font-size:0.7rem;">${kpn.kod_sekolah} - ${namaSekKpn}</span>
+              </div>
+            </div>
+            ${actionBtnsKpn}
+          </div>
+        `;
+      }
+
+      html += `<tr>
+        <td class="text-center fw-bold text-muted">${index + 1}</td>
+        <td>
+          <span class="badge bg-opacity-10 border mb-1" style="color:var(--purple-700); border-color:var(--purple-300) !important; background:var(--purple-50);">${mp.kod}</span>
+          <div class="fw-bold text-dark small text-uppercase">${mp.nama}</div>
+        </td>
+        <td class="align-middle">${kpkwDisplay}</td>
+        <td class="align-middle">${kpnDisplay}</td>
+      </tr>`;
+    });
+  }
+  $('#tblReportKpnBody').html(html);
+}
+
+// ==========================================================
+// FUNGSI SALIN PUKAL PENTAKSIR (CHECKBOX & MODAL)
+// ==========================================================
+function pilihSemuaKpn() {
+  var jumlahCheckbox = $('.chk-pentaksir').length;
+  var jumlahDipilih = $('.chk-pentaksir:checked').length;
+  
+  if (jumlahDipilih === jumlahCheckbox) {
+    $('.chk-pentaksir').prop('checked', false); 
+  } else {
+    $('.chk-pentaksir').prop('checked', true); 
+  }
+}
+
+function bukaModalSalinPukalKpn() {
+  var checkList = $('.chk-pentaksir:checked');
+  if (checkList.length === 0) {
+    Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Sila tanda (tik) sekurang-kurangnya satu pentaksir (KPN / KPKw) sebelum menyalin.'});
+    return;
+  }
+  
+  var tahunDepan = (new Date().getFullYear() + 1).toString();
+  $('#selTahunSalinKpn').val(tahunDepan);
+  $('#lblJumSalinKpn').text(checkList.length);
+  
+  var myModal = new bootstrap.Modal(document.getElementById('modalSalinPukalKpn'));
+  myModal.show();
+}
+
+function prosesSalinPukalKpn() {
+  var targetTahun = $('#selTahunSalinKpn').val();
+  var checkedNodes = $('.chk-pentaksir:checked');
+  var senaraiId = [];
+  
+  checkedNodes.each(function() {
+    senaraiId.push($(this).val());
+  });
+  
+  $('#modalSalinPukalKpn').modal('hide');
+  Swal.fire({ title: 'Menyalin Pentaksir...', text: 'Sila tunggu sebentar. Enjin sedang memproses data.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+
+  google.script.run.withSuccessHandler(function(res) {
+    if (res.status === 'SUCCESS') {
+      Swal.fire('Berjaya', res.message, 'success');
+      muatDataLaporanKpn(); 
+    } else if (res.status === 'WARNING') {
+      Swal.fire('Info Pukal', res.message, 'info');
+      muatDataLaporanKpn();
+    } else {
+      Swal.fire('Ralat Menyalin', res.message, 'error');
+    }
+  }).salinPukalKpnKpkwBackend(JSON.stringify(senaraiId), targetTahun, G_TAHAP_KPN);
+}
+
+// ==========================================================
+// FUNGSI MUAT TURUN PDF (Preview/Stream Surat KPN / KPKw)
+// ==========================================================
+function cetakSuratLantikan(noKp, tahun, tahap) {
+  if (!noKp || !tahun || !tahap) {
+    Swal.fire('Ralat', 'Maklumat calon tidak lengkap untuk dicetak.', 'error');
+    return;
+  }
+  
+  var tabMenunggu = window.open('about:blank', '_blank');
+  if (tabMenunggu) {
+    tabMenunggu.document.write(`
+      <html>
+        <head><title>Menjana Surat Pentaksir...</title></head>
+        <body style="font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f8f9fa; margin: 0;">
+          <div style="text-align: center; padding: 30px 40px; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+            <h3 style="color: #1e293b; margin-top: 0; display: flex; align-items: center; justify-content: center; gap: 10px;">
+              <span style="font-size: 1.5rem;">🖨️</span> Menjana Surat Rasmi...
+            </h3>
+            <p style="color: #475569; font-size: 0.95rem; margin-bottom: 0;">Sila tunggu seketika sementara dokumen anda disiapkan.</p>
+          </div>
+        </body>
+      </html>
+    `);
+  } else {
+    Swal.fire('Halangan Pop-up', 'Sila benarkan pop-up pada pelayar web anda untuk membuka dokumen ini.', 'warning');
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (res && res.status === "SUCCESS") {
+        var byteCharacters = atob(res.base64);
+        var byteNumbers = new Array(byteCharacters.length);
+        for (var i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        var byteArray = new Uint8Array(byteNumbers);
+        var fileBlob = new Blob([byteArray], { type: 'application/pdf' });
+        
+        tabMenunggu.location.href = URL.createObjectURL(fileBlob);
+        
+      } else {
+        tabMenunggu.close();
+        Swal.fire('Gagal Menjana PDF', res.message ? res.message : 'Sila hubungi pentadbir sistem.', 'error');
+      }
+    })
+    .withFailureHandler(function(err) {
+      tabMenunggu.close();
+      Swal.fire('Ralat Pelayan', err.message, 'error');
+    })
+    .janaSuratLantikanKpnKpkwPDF(noKp, tahun, tahap, false);
+}
+
+// ==========================================================
+// FUNGSI EKSPORT EXCEL PRO
+// ==========================================================
+function eksportDataKpnKpkw(jenis) {
+  if (typeof XLSX === 'undefined') {
+    Swal.fire('Ralat Library', 'Sila pastikan library SheetJS telah dimasukkan ke dalam Index.html!', 'error');
+    return;
+  }
+
+  var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+  var tahapSurat = G_TAHAP_KPN === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+  var peringkatCari = jenis === 'KPN' ? 'NEGERI' : 'DAERAH';
+
+  var dataSenarai = (BACKEND_DATA.senaraiKpnKpkw || []).filter(k => 
+    k.tahun === tahunSemasa && 
+    k.matrik_tahap === tahapSurat && 
+    k.peringkat === peringkatCari
+  );
+
+  if (dataSenarai.length === 0) {
+    Swal.fire('Perhatian', `Tiada data lantikan ${jenis} untuk dieksport pada sesi ini!`, 'warning');
+    return;
+  }
+
+  var dataExcel = [];
+  
+  dataSenarai.forEach((k) => {
+    var mp = BACKEND_DATA.senaraiMp.find(m => m.kod === k.kod_mp);
+    var namaMp = mp ? mp.nama.toUpperCase() : k.kod_mp;
+    
+    var sek = BACKEND_DATA.senaraiSekolah.find(s => s.kod === k.kod_sekolah);
+    var namaSek = sek ? sek.nama.toUpperCase() : "-";
+    
+    var namaDaerah = k.daerah;
+    var daeObj = (BACKEND_DATA.senaraiDaerah || []).find(d => d.ppd === k.daerah || d.kod === k.daerah || d.nama === k.daerah);
+    if (daeObj && daeObj.nama) {
+      namaDaerah = daeObj.nama.toUpperCase();
+    }
+
+    dataExcel.push({
+      "NO. BIL": 0, 
+      "SESI": k.tahun || "",
+      "TAHAP": k.matrik_tahap || "",
+      "JAWATAN": peringkatCari === 'NEGERI' ? "KETUA PENTAKSIR NEGERI (KPN)" : "KETUA PENTAKSIR KAWASAN (KPKW)",
+      "KOD SUBJEK": k.kod_mp || "",
+      "MATA PELAJARAN": namaMp,
+      "DAERAH LANTIKAN": namaDaerah,
+      "KOD SEKOLAH": k.kod_sekolah || "",
+      "NAMA SEKOLAH": namaSek,
+      "NAMA GURU LANTIKAN": k.nama_guru || "",
+      "NO. KAD PENGENALAN": k.no_kp || "",
+      "NO. TELEFON": k.no_tel || "-",
+      "EMEL DELIMA": k.emel || "-"
+    });
+  });
+
+  dataExcel.sort((a, b) => {
+    if(a["MATA PELAJARAN"] === b["MATA PELAJARAN"]) {
+       return a["DAERAH LANTIKAN"].localeCompare(b["DAERAH LANTIKAN"]);
+    }
+    return a["MATA PELAJARAN"].localeCompare(b["MATA PELAJARAN"]);
+  });
+
+  dataExcel.forEach((d, i) => d["NO. BIL"] = i + 1);
+
+  var ws = XLSX.utils.json_to_sheet(dataExcel);
+
+  var colWidths = Object.keys(dataExcel[0]).map(key => {
+    var maxLen = key.length;
+    dataExcel.forEach(row => {
+      var val = row[key] ? row[key].toString() : "";
+      if (val.length > maxLen) {
+        maxLen = val.length;
+      }
+    });
+    return { wch: maxLen + 4 };
+  });
+
+  ws['!cols'] = colWidths;
+
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "SENARAI_" + jenis);
+  
+  var tarikh = new Date().toISOString().slice(0, 10);
+  var namaFailTulis = `Senarai_Lantikan_${jenis}_${G_TAHAP_KPN}_${tarikh}.xlsx`;
+  
+  XLSX.writeFile(wb, namaFailTulis);
+}
+
+// ==========================================================
+// PUSAT LANTIKAN KPN & KPKW (KEMASUKAN MANUAL & UPDATE)
+// ==========================================================
+function bukaModalLantik(kodMp, namaMp, peringkat, rowNum, rekodNoKpSediaAda) {
+  $('#formLantikKpn')[0].reset();
+  $('#txtLantikMp').val(kodMp);
+  $('#txtLantikPeringkat').val(peringkat);
+  $('#txtLantikRow').val(rowNum || "");
+  $('#kpnPpd').val("");
+  
+  var tajuk = peringkat === 'NEGERI' ? 'Ketua Pentaksir Negeri (KPN)' : 'Ketua Pentaksir Kawasan (KPKw)';
+  $('#kpnModalTitle').html(`<i class="fa-solid fa-user-tie me-2"></i>Lantikan ${tajuk} <br><span class="fs-6 fw-normal text-light opacity-75">Subjek: ${namaMp}</span>`);
+
+  // SIFU FIX: Kosmetik Tukar Label Butang & Papar Butang Delete Jika Kemaskini
+  if (rowNum) {
+    $('#btnPadamLantikan').removeClass('d-none');
+    $('button[type="submit"]').html('<i class="fa-solid fa-pen-to-square me-2"></i>Kemaskini Lantikan');
+  } else {
+    $('#btnPadamLantikan').addClass('d-none');
+    $('button[type="submit"]').html('<i class="fa-solid fa-floppy-disk me-2"></i>Simpan Lantikan');
+  }
+
+  var isPPD = (G_USER.role === 'PPD');
+  var kodDaerahSemasa = G_USER.kod_daerah ? G_USER.kod_daerah : G_USER.username;
+  
+  // TAPISAN SEKOLAH MENGIKUT DAERAH PPD (Jika PPD login)
+  var senaraiSekolah = BACKEND_DATA.senaraiSekolah || [];
+  if (isPPD) {
+    senaraiSekolah = senaraiSekolah.filter(s => (s.ppd || s.daerah || "").toUpperCase() === kodDaerahSemasa.toUpperCase());
+  }
+
+  // BINA DROPDOWN SEKOLAH
+  var htmlDatalist = '';
+  senaraiSekolah.forEach(s => {
+    var namaSek = s.nama ? s.nama.toUpperCase() : "SEKOLAH";
+    htmlDatalist += `<option value="${s.kod} - ${namaSek}"></option>`;
+  });
+  $('#listSekolahKpn').html(htmlDatalist);
+  
+  // POPULATE DATA JIKA MODE KEMASKINI
+  if (rowNum && rekodNoKpSediaAda) {
+    var manualData = BACKEND_DATA.senaraiKpnKpkw.find(k => k.no_kp === rekodNoKpSediaAda && k.rowNum === rowNum);
+    if (manualData) {
+      $('#kpnNama').val(manualData.nama_guru);
+      $('#kpnNoKp').val(manualData.no_kp);
+      
+      var manualSekObj = senaraiSekolah.find(s => s.kod === manualData.kod_sekolah);
+      var namaManualSek = manualSekObj ? manualSekObj.nama.toUpperCase() : "";
+      $('#kpnSek').val(namaManualSek ? `${manualData.kod_sekolah} - ${namaManualSek}` : manualData.kod_sekolah);
+      
+      var manualPpd = manualData.daerah;
+      var manualDaeObj = (BACKEND_DATA.senaraiDaerah || []).find(d => d.ppd === manualPpd || d.kod === manualPpd || d.nama === manualPpd);
+      if (manualDaeObj && manualDaeObj.nama) {
+         $('#kpnPpdPaparan').val(`${manualDaeObj.kod || manualPpd} - ${manualDaeObj.nama.toUpperCase()}`);
+      } else {
+         $('#kpnPpdPaparan').val(manualPpd);
+      }
+      
+      $('#kpnPpd').val(manualPpd);
+      $('#kpnTel').val(manualData.no_tel || "");
+      $('#kpnEmel').val(manualData.emel || "");
+    }
+  }
+
+  var myModal = new bootstrap.Modal(document.getElementById('modalLantikKpn'));
+  myModal.show();
+}
+
+// LOGIK AUTOMASI DAERAH BILA SEKOLAH DIPILIH
+function pilihSekolahKpn() {
+  var rawSek = $('#kpnSek').val().trim();
+  if (!rawSek) {
+    $('#kpnPpdPaparan').val(""); $('#kpnPpd').val(""); return;
+  }
+  
+  var kodSekolah = rawSek.indexOf(" - ") > -1 ? rawSek.split(" - ")[0].trim().toUpperCase() : rawSek.toUpperCase();
+  var sekObj = (BACKEND_DATA.senaraiSekolah || []).find(s => s.kod.toUpperCase() === kodSekolah);
+  
+  if (sekObj) {
+    var kodPpd = sekObj.ppd || sekObj.daerah || "";
+    var daeObj = (BACKEND_DATA.senaraiDaerah || []).find(d => d.ppd === kodPpd || d.nama === kodPpd || d.kod === kodPpd);
+    var namaPpdPaparan = kodPpd;
+    if (daeObj) {
+      var kD = daeObj.ppd || daeObj.kod || kodPpd;
+      var nD = daeObj.nama || "";
+      if (kD && nD && kD !== nD) { namaPpdPaparan = `${kD} - ${nD.toUpperCase()}`; } else { namaPpdPaparan = kD || nD; }
+    } else if (sekObj.daerah && sekObj.ppd !== sekObj.daerah) {
+      namaPpdPaparan = `${sekObj.ppd} - ${sekObj.daerah.toUpperCase()}`;
+    }
+    
+    $('#kpnPpdPaparan').val(namaPpdPaparan);
+    $('#kpnPpd').val(kodPpd); 
+  } else {
+    $('#kpnPpdPaparan').val(""); $('#kpnPpd').val("");
+  }
+}
+
+// FUNGSI SIMPAN & UPDATE MANUAL 
+function simpanLantikanKpn() {
+  var rowNum = $('#txtLantikRow').val();
+  var peringkat = $('#txtLantikPeringkat').val();
+  var ppdGuruTerpilih = $('#kpnPpd').val().trim();
+  var daerahSimpan = ppdGuruTerpilih !== "" ? ppdGuruTerpilih : (G_USER.kod_daerah ? G_USER.kod_daerah : G_USER.username);
+
+  var rawSek = $('#kpnSek').val() || "";
+  var kodSekolahSimpan = rawSek.indexOf(" - ") > -1 ? rawSek.split(" - ")[0].trim() : rawSek.trim();
+
+  var d = {
+    tahun: window.G_TAHUN_AKTIF || new Date().getFullYear().toString(),
+    matrik_tahap: G_TAHAP_KPN === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3',
+    peringkat: peringkat,
+    daerah: daerahSimpan, 
+    kod_mp: $('#txtLantikMp').val(),
+    nama_guru: $('#kpnNama').val().toUpperCase(),
+    no_kp: $('#kpnNoKp').val(),
+    kod_sekolah: kodSekolahSimpan.toUpperCase(),
+    no_tel: $('#kpnTel').val(),
+    emel: $('#kpnEmel').val()
+  };
+  
+  var statusText = rowNum ? 'Mengemaskini Maklumat...' : 'Menyimpan Lantikan...';
+  Swal.fire({ title: statusText, html: 'Menyusun pangkalan data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+  google.script.run.withSuccessHandler(function(res) { 
+    if (res.status === "SUCCESS") { 
+      Swal.fire('Berjaya', rowNum ? 'Maklumat dikemaskini!' : 'Lantikan Disahkan!', 'success'); 
+      $('#modalLantikKpn').modal('hide'); 
+      muatDataLaporanKpn(); 
+    } 
+    else { Swal.fire('Gagal', res.message, 'error'); }
+  }).urusDataKpnKpkwPPD(d, rowNum); // ID tidak lagi dikira dari frontend
+}
+
+function padamLantikan() {
+  var rowNum = $('#txtLantikRow').val();
+  if (!rowNum) return;
+  Swal.fire({ title: 'Batalkan Lantikan?', text: "Rekod lantikan KPN/KPKw ini akan dipadamkan!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#858796', confirmButtonText: 'Ya, Padam!', cancelButtonText: 'Batal' })
+  .then((r) => {
+    if (r.isConfirmed) { 
+      Swal.fire({title:'Memadam...', allowOutsideClick: false, didOpen:()=>{Swal.showLoading();}}); 
+      google.script.run.withSuccessHandler(()=>{ Swal.fire('Dipadam!', 'Lantikan terbatal.', 'success'); $('#modalLantikKpn').modal('hide'); muatDataLaporanKpn(); }).padamRekod('tbkpn_kpkw', rowNum); 
+    }
+  });
+}
+
+// FORMAT AUTO NO. KP & TEL
+function formatInputICKpn(el) {
+  let val = el.value.replace(/\D/g, ''); 
+  if (val.length > 12) val = val.substring(0, 12);
+  let formatted = val;
+  if (val.length > 8) formatted = val.substring(0, 6) + '-' + val.substring(6, 8) + '-' + val.substring(8);
+  else if (val.length > 6) formatted = val.substring(0, 6) + '-' + val.substring(6);
+  el.value = formatted;
+}
+
+function formatInputTelKpn(el) {
+  let val = el.value.replace(/\D/g, ''); 
+  if (val.length > 11) val = val.substring(0, 11);
+  let formatted = val;
+  if (val.startsWith('011') && val.length > 3) formatted = val.substring(0, 3) + '-' + val.substring(3);
+  else if (val.startsWith('03') && val.length > 2) formatted = val.substring(0, 2) + '-' + val.substring(2);
+  else if (val.length > 3) formatted = val.substring(0, 3) + '-' + val.substring(3);
+  el.value = formatted;
+}
+</script>

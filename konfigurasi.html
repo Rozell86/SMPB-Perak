@@ -1,0 +1,78 @@
+<style>
+  /* GAYA BERSKROL & KORPORAT */
+  .table-card-scroll { border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow-x: auto; }
+  .table-card-scroll table thead th { position: sticky; top: 0; z-index: 2; background-color: #f8f5ff; border-bottom: 2px solid #d8b4fe; color: #475569; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 14px 16px; }
+  .table-card-scroll table tbody td { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; color: #1e293b; font-size: 0.85rem; }
+  
+  /* BUTANG UNGU KHAS */
+  .btn-ungu { background: #6b21a8; color: white; border: none; font-weight: 600; padding: 8px 16px; border-radius: 6px; transition: 0.2s; }
+  .btn-ungu:hover { background: #581c87; color: white; }
+
+  /* KOTAK CARIAN MODEN */
+  .carian-input { border: 1px solid #cbd5e1; border-radius: 20px; padding: 8px 16px; font-size: 0.85rem; width: 300px; outline: none; transition: 0.2s; }
+  .carian-input:focus { border-color: #6b21a8; box-shadow: 0 0 0 3px rgba(107, 33, 168, 0.15); }
+  
+  /* GAYA PAGINATION UNGU */
+  .page-link-ungu { color: #6b21a8; border-color: #e2e8f0; cursor: pointer; font-size: 0.85rem; font-weight: 600;}
+  .page-item.active .page-link-ungu { background-color: #6b21a8; border-color: #6b21a8; color: white; }
+  .page-link-ungu:hover:not(.disabled) { background-color: #f3e8ff; color: #581c87;}
+</style>
+
+<div id="modul-konfigurasi" class="container-fluid animate__animated animate__fadeIn pb-4 mt-4">
+  <!-- SIFU UPDATE: Membuang border-top berwarna ungu pada kad utama -->
+  <div class="card p-4 shadow-sm border-0 mb-4 bg-white" style="border-radius:15px;">
+    
+    <!-- BAHAGIAN ATAS: TAJUK & CARIAN -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom gap-3">
+      <div>
+        <h5 class="fw-bold mb-0" style="color: #4c1d95;"><i class="fa-solid fa-user-shield me-2 text-warning"></i>Konfigurasi & Akses Sekolah</h5>
+        <small class="text-muted fw-semibold" style="font-size: 0.72rem;">Pantau dan bantu pengguna log masuk ke sistem</small>
+      </div>
+      
+      <div class="d-flex flex-column flex-md-row gap-2 align-items-md-center">
+        <!-- KOTAK CARIAN -->
+        <div class="position-relative">
+          <i class="fa-solid fa-search position-absolute text-muted" style="top: 50%; transform: translateY(-50%); left: 14px; font-size: 0.85rem;"></i>
+          <input type="text" id="txtCarianKonfig" class="carian-input" placeholder="Cari kod sekolah, nama, daerah..." style="padding-left: 36px;" onkeyup="saringPaginasiKonfig()">
+        </div>
+        <!-- BUTANG MUAT SEMULA -->
+        <button class="btn btn-ungu" onclick="muatSenaraiAksesSekolah()"><i class="fa-solid fa-rotate-right me-1"></i>Muat Semula Semakan</button>
+      </div>
+    </div>
+    
+    <!-- JADUAL DATA -->
+    <div class="table-card-scroll mb-3">
+      <table class="table mb-0 align-middle">
+        <thead>
+          <tr>
+            <th style="width:5%" class="text-center">Bil</th>
+            <th style="width:25%">Kod & Nama Sekolah</th>
+            <th style="width:15%">Daerah</th>
+            <!-- SIFU UPDATE: Kolum Emel Ditambah -->
+            <th style="width:20%">E-mel Rasmi</th>
+            <th style="width:10%" class="text-center">Status Tukar</th>
+            <th style="width:25%">Maklumat Log Masuk</th>
+          </tr>
+        </thead>
+        <tbody id="tblAksesSekolahBody">
+          <!-- SIFU UPDATE: Colspan ditukar ke 6 -->
+          <tr><td colspan="6" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin me-2"></i>Memuatkan data konfigurasi...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- KAWALAN PAGINATION BAWAH JADUAL -->
+    <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+      <div class="small text-muted fw-semibold" id="lblInfoPaginasi">Memaparkan 0 rekod</div>
+      <nav>
+        <ul class="pagination pagination-sm mb-0" id="ulPaginasiKonfig">
+          <!-- Butang akan dijana oleh Javascript secara dinamik -->
+        </ul>
+      </nav>
+    </div>
+
+  </div>
+</div>
+
+<!-- MEMANGGIL SKRIP DARI FAIL ASING -->
+<?!= typeof include === 'function' ? include('scriptkonfigurasi') : ''; ?>

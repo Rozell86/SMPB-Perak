@@ -1,0 +1,509 @@
+<script>
+var BACKEND_DATA = null;
+var HAD_REKOD = 20;
+var HAL_SEKASA = { sek: 1, kpmp: 1, pmp: 1 };
+var DATA_TAPIS_SEMASA = { sek: [], kpmp: [], pmp: [] };
+var LAJUR_ISIAN_SEKOLAH = "";
+var ARAH_ISIAN_SEKOLAH = true;
+var G_TAHAP_SEMASA = 'RENDAH';
+var isProfilInit = false; 
+
+function initProfilSekolah() {
+  if (isProfilInit) return; 
+  isProfilInit = true;
+  
+  $('#lblTahunSemasa').text(window.G_TAHUN_AKTIF || new Date().getFullYear().toString());
+  muatDataLaporanPegawai();
+}
+
+$(function() {
+  setTimeout(function() {
+    if (typeof initProfilSekolah === 'function') {
+      initProfilSekolah();
+    }
+  }, 50); 
+});
+
+function dapatkanNamaDaerahSebenar(kodPpd) {
+  if(!kodPpd) return "-";
+  if(!BACKEND_DATA || !BACKEND_DATA.senaraiDaerah) return kodPpd.toUpperCase();
+  var d = BACKEND_DATA.senaraiDaerah.find(x => {
+    var kodSemak = x.ppd ? x.ppd : (x.kod ? x.kod : "");
+    return kodSemak.toUpperCase() === kodPpd.toUpperCase();
+  });
+  if (d) {
+    return `${d.nama.toUpperCase()}`;
+  }
+  return kodPpd.toUpperCase();
+}
+
+function tukarTabProfil(tabName) {
+  document.querySelectorAll('.tab-pane-profil').forEach(el => el.style.display = 'none');
+  
+  document.querySelectorAll('#nav-tabs-container .btn-toggle-tab').forEach(el => {
+    el.classList.remove('active');
+  });
+
+  var activeBtn = document.getElementById('tab-btn-' + tabName);
+  if (activeBtn) {
+    activeBtn.classList.add('active');
+  }
+
+  document.getElementById('pane-' + tabName).style.display = 'block';
+}
+
+function tukarTahapUtama(tahap) {
+  G_TAHAP_SEMASA = tahap;
+  document.querySelectorAll('.btn-group-ungu .btn-toggle').forEach(el => {
+    el.classList.remove('active');
+  });
+  
+  if(tahap === 'RENDAH') {
+    document.getElementById('btnTahap4').classList.add('active');
+  } else {
+    document.getElementById('btnTing3').classList.add('active');
+  }
+  
+  if(BACKEND_DATA) {
+      saringDataIkutTahap();
+  }
+}
+
+function muatDataLaporanPegawai() {
+  var roleSemasa = (G_USER && G_USER.role) ? G_USER.role : "PPD";
+  var kodDaerahSemasa = (G_USER && G_USER.kod_daerah) ? G_USER.kod_daerah : (G_USER ? G_USER.username : "");
+  
+  google.script.run.withSuccessHandler(function(respon) {
+    if (respon && respon.status === "SUCCESS") {
+      BACKEND_DATA = respon.data;
+      
+      if (roleSemasa.toUpperCase() === 'JPN' || roleSemasa.toUpperCase() === 'ADMIN') {
+        $('#panelKawalanJPN').show();
+        if (BACKEND_DATA.tetapan) {
+          var suisProfil = BACKEND_DATA.tetapan['KUNCI_PROFIL'] === 'BUKA';
+          var suisOperasi = BACKEND_DATA.tetapan['KUNCI_OPERASI'] === 'BUKA';
+          $('#suisProfil').prop('checked', suisProfil);
+          $('#suisOperasi').prop('checked', suisOperasi);
+        }
+      }
+
+      if (roleSemasa === 'PPD') {
+        $('.id-filter-daerah-kpmp').hide(); 
+        $('.id-filter-daerah-pmp').hide();
+        $('#boxFilterDaerahSek').hide(); 
+      } else {
+        $('.id-filter-daerah-kpmp').show(); 
+        $('.id-filter-daerah-pmp').show();
+        $('#boxFilterDaerahSek').show(); 
+        
+        var optionDaerah = '<option value="">-- Semua Daerah/PPD --</option>';
+        if(BACKEND_DATA.senaraiDaerah && BACKEND_DATA.senaraiDaerah.length > 0) {
+          var sortedDaerah = BACKEND_DATA.senaraiDaerah.sort((a,b) => {
+            var kodA = a.ppd ? a.ppd : a.kod; var kodB = b.ppd ? b.ppd : b.kod; return kodA.localeCompare(kodB);
+          });
+          sortedDaerah.forEach(d => {
+            var kodPpdAktif = d.ppd ? d.ppd : d.kod;
+            optionDaerah += `<option value="${kodPpdAktif.toUpperCase()}">${kodPpdAktif.toUpperCase()} - ${d.nama.toUpperCase()}</option>`; 
+          });
+        }
+        $('#filterDaerahKpmp').html(optionDaerah); 
+        $('#filterDaerahPmp').html(optionDaerah);
+        $('#selFilterDaerahSek').html(optionDaerah); 
+      }
+      
+      tukarTahapUtama('RENDAH');
+
+    } else {
+      Swal.fire('Ralat Backend', 'Gagal memproses data laporan JPN/PPD.', 'error');
+    }
+  }).mendapatkanDataPPD_JPN(roleSemasa, kodDaerahSemasa, kodDaerahSemasa); 
+}
+
+function saringDataIkutTahap() {
+  if (!BACKEND_DATA) return;
+  
+  $('#selFilterDaerahSek, #cariSekolahInput, #filterSekolahKpmp, #filterSekolahPmp').val('');
+  
+  var sekTapis = BACKEND_DATA.senaraiSekolah.filter(s => s.kategori_sekolah && s.kategori_sekolah.toUpperCase() === G_TAHAP_SEMASA);
+  var kodSekTapis = sekTapis.map(s => s.kod);
+
+  var kpmpTapis = BACKEND_DATA.senaraiKpmp.filter(k => kodSekTapis.includes(k.kod_sekolah));
+  var pmpTapis = BACKEND_DATA.senaraiPmp.filter(p => kodSekTapis.includes(p.kod_sekolah));
+
+  DATA_TAPIS_SEMASA.sek = [...sekTapis];
+  DATA_TAPIS_SEMASA.kpmp = kpmpTapis;
+  DATA_TAPIS_SEMASA.pmp = pmpTapis;
+
+  kemaskiniKadStatistik(sekTapis, kpmpTapis, pmpTapis);
+
+  var optionSekolah = '';
+  var sortedSekolah = [...sekTapis].sort((a,b) => a.kod.localeCompare(b.kod));
+  sortedSekolah.forEach(s => { optionSekolah += `<option value="${s.kod} - ${s.nama.toUpperCase()}"></option>`; });
+  $('#listSekKpmp').html(optionSekolah);
+  $('#listSekPmp').html(optionSekolah);
+
+  var optionMp = '<option value="">-- Semua Mata Pelajaran --</option>';
+  var mpTapis = BACKEND_DATA.senaraiMp.filter(m => m.kategori && m.kategori.toUpperCase() === G_TAHAP_SEMASA);
+  mpTapis.forEach(m => { optionMp += `<option value="${m.kod}">${m.kod} - ${m.nama}</option>`; });
+  $('#filterMpKpmp').html(optionMp);
+  $('#filterMpPmp').html(optionMp);
+
+  HAL_SEKASA = { sek: 1, kpmp: 1, pmp: 1 };
+  
+  renderJadualSekolah();
+  renderJadualKpmp();
+  renderJadualPmp();
+}
+
+function kemaskiniKadStatistik(dataSekolah, dataKpmp, dataPmp) {
+  var totalSekolah = dataSekolah.length;
+  var sudahMengisiProfil = 0;
+  var sudahMengisiOperasi = 0;
+  
+  dataSekolah.forEach(s => {
+    var statProfil = s.pengesahan_selesai || s.pengesahan || "";
+    if (statProfil.toUpperCase() === "SELESAI" || statProfil.toUpperCase() === "YA") sudahMengisiProfil++;
+
+    var statOp = s.pengesahan_pengawas || "";
+    if (statOp.toUpperCase() === "SELESAI" || statOp.toUpperCase() === "YA") sudahMengisiOperasi++;
+  });
+
+  $('#statSekolah').text(totalSekolah.toLocaleString());
+  $('#statPeratusProfil').text(sudahMengisiProfil.toLocaleString() + " / " + totalSekolah.toLocaleString());
+  $('#statPeratusOperasi').text(sudahMengisiOperasi.toLocaleString() + " / " + totalSekolah.toLocaleString());
+  $('#statPetugas').text((dataKpmp.length + dataPmp.length).toLocaleString());
+}
+
+function tapisJadualSekolah() {
+  if (!BACKEND_DATA || !BACKEND_DATA.senaraiSekolah) return;
+  
+  var inputCarian = $('#cariSekolahInput').val().toLowerCase().trim();
+  var filterDaerah = $('#selFilterDaerahSek').val() ? $('#selFilterDaerahSek').val().toUpperCase() : "";
+  
+  var sekIkutTahap = BACKEND_DATA.senaraiSekolah.filter(function(s) {
+    return s.kategori_sekolah && s.kategori_sekolah.toUpperCase() === G_TAHAP_SEMASA;
+  });
+
+  var sekLepasDaerah = sekIkutTahap;
+  if (filterDaerah !== "") {
+     sekLepasDaerah = sekIkutTahap.filter(s => (s.ppd || s.daerah || "").toUpperCase() === filterDaerah);
+  }
+
+  var kodSekDaerah = sekLepasDaerah.map(s => s.kod);
+  var kpmpKira = BACKEND_DATA.senaraiKpmp.filter(k => kodSekDaerah.includes(k.kod_sekolah));
+  var pmpKira = BACKEND_DATA.senaraiPmp.filter(p => kodSekDaerah.includes(p.kod_sekolah));
+  kemaskiniKadStatistik(sekLepasDaerah, kpmpKira, pmpKira);
+
+  if (inputCarian === "") {
+    DATA_TAPIS_SEMASA.sek = [...sekLepasDaerah];
+  } else {
+    DATA_TAPIS_SEMASA.sek = sekLepasDaerah.filter(function(s) {
+      var kodSek = (s.kod || "").toLowerCase();
+      var namaSek = (s.nama || "").toLowerCase();
+      return kodSek.includes(inputCarian) || namaSek.includes(inputCarian);
+    });
+  }
+  
+  HAL_SEKASA.sek = 1; 
+  renderJadualSekolah();
+}
+
+function urusIsianSekolah(lajurKekunci) {
+  if (LAJUR_ISIAN_SEKOLAH === lajurKekunci) { ARAH_ISIAN_SEKOLAH = !ARAH_ISIAN_SEKOLAH; } else { LAJUR_ISIAN_SEKOLAH = lajurKekunci; ARAH_ISIAN_SEKOLAH = true; }
+  
+  var senaraiLajur = ['nama', 'bil_kelas', 'jum_calon', 'pengesahan_selesai', 'pengesahan_pengawas'];
+  senaraiLajur.forEach(l => { $(`#sortIcon_${l}`).html('<i class="fa-solid fa-sort ms-1" style="opacity:0.3"></i>'); });
+  var ikonAktif = ARAH_ISIAN_SEKOLAH ? '<i class="fa-solid fa-sort-up ms-1" style="color:var(--purple-700)"></i>' : '<i class="fa-solid fa-sort-down ms-1" style="color:var(--purple-700)"></i>';
+  $(`#sortIcon_${lajurKekunci}`).html(ikonAktif);
+  
+  DATA_TAPIS_SEMASA.sek.sort((a, b) => {
+    var valA = a[lajurKekunci] || ""; var valB = b[lajurKekunci] || "";
+    if (lajurKekunci === 'bil_kelas' || lajurKekunci === 'jum_calon') {
+      return ARAH_ISIAN_SEKOLAH ? (parseFloat(valA)||0) - (parseFloat(valB)||0) : (parseFloat(valB)||0) - (parseFloat(valA)||0);
+    } 
+    var strA = valA.toString().toLowerCase().trim(); var strB = valB.toString().toLowerCase().trim();
+    if (strA < strB) return ARAH_ISIAN_SEKOLAH ? -1 : 1; if (strA > strB) return ARAH_ISIAN_SEKOLAH ? 1 : -1; return 0;
+  });
+  HAL_SEKASA.sek = 1; renderJadualSekolah();
+}
+
+function binaPaginationCustom(stateObj, containerInfo, containerCtrl, jenisFungsi) {
+  var mula = stateObj.total === 0 ? 0 : ((stateObj.page - 1) * HAD_REKOD) + 1;
+  var tamat = Math.min(stateObj.page * HAD_REKOD, stateObj.total);
+  
+  document.getElementById(containerInfo).innerHTML = `Menunjukkan ${mula} hingga ${tamat} daripada ${stateObj.total.toLocaleString()} rekod`;
+  
+  var prevDis = stateObj.page === 1 ? 'disabled' : '';
+  var nextDis = tamat >= stateObj.total ? 'disabled' : '';
+  
+  document.getElementById(containerCtrl).innerHTML = `
+    <button ${prevDis} onclick="tukarHalaman('${jenisFungsi}', -1)">Sebelumnya</button>
+    <button ${nextDis} onclick="tukarHalaman('${jenisFungsi}', 1)">Seterusnya</button>
+  `;
+}
+
+function renderJadualSekolah() {
+  var data = DATA_TAPIS_SEMASA.sek;
+  var total = data.length;
+  var mula = (HAL_SEKASA.sek - 1) * HAD_REKOD;
+  var tamat = Math.min(mula + HAD_REKOD, total);
+  var htmlSek = '';
+  
+  if(total === 0){
+    htmlSek = '<tr><td colspan="7" style="text-align:center; padding: 30px; color: #94a3b8; font-size: 0.85rem;">Tiada rekod sekolah dikesan.</td></tr>';
+  } else {
+    var segmenData = data.slice(mula, tamat);
+    
+    segmenData.forEach((s, idx) => {
+      var bil = mula + idx + 1; 
+      var indeksAsal = BACKEND_DATA.senaraiSekolah.findIndex(x => x.kod === s.kod);
+      var namaDaerahPaparan = dapatkanNamaDaerahSebenar(s.ppd); 
+      
+      var dbStatusPro = s.pengesahan_selesai || s.pengesahan || "";
+      var isSelesaiPro = (dbStatusPro.toUpperCase() === 'SELESAI' || dbStatusPro.toUpperCase() === 'YA');
+      var badgeStatusPro = isSelesaiPro 
+        ? '<span style="background: #dcfce7; color: #15803d; border: 1px solid #86efac; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; font-weight: 600;">SELESAI</span>' 
+        : '<span style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; font-weight: 600;">BELUM</span>';
+
+      var dbStatusOp = s.pengesahan_pengawas || "";
+      var isSelesaiOp = (dbStatusOp.toUpperCase() === 'SELESAI' || dbStatusOp.toUpperCase() === 'YA');
+      var badgeStatusOp = isSelesaiOp 
+        ? '<span style="background: #dcfce7; color: #15803d; border: 1px solid #86efac; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; font-weight: 600;">SELESAI</span>' 
+        : '<span style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; font-weight: 600;">BELUM</span>';
+      
+      htmlSek += `<tr>
+        <td style="text-align: center; vertical-align: middle; font-weight: bold; color: var(--purple-700);">${bil}</td>
+        <td>
+          <div class="td-title" style="font-size:0.85rem; font-weight:bold; color:var(--purple-900); text-transform:uppercase;">${s.nama}</div>
+          <div class="td-subtitle" style="font-size:0.75rem; color:var(--purple-700); margin-bottom: 8px;">${s.kod} &nbsp;|&nbsp; PPD ${namaDaerahPaparan}</div>
+          
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="font-size: 0.75rem; display: flex; align-items: center; gap: 6px;">
+              <span style="background: var(--purple-100); color: var(--purple-700); padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">PENTADBIR</span>
+              <span style="text-transform: capitalize; font-weight: 500;">${s.nama_gb ? s.nama_gb.toLowerCase() : "-"}</span>
+            </div>
+            <div style="font-size: 0.75rem; display: flex; align-items: center; gap: 6px;">
+              <span style="background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">SUP</span>
+              <span style="text-transform: capitalize; font-weight: 500;">${s.nama_sup ? s.nama_sup.toLowerCase() : "-"}</span>
+            </div>
+          </div>
+        </td>
+        <td style="text-align: center; vertical-align: middle;">
+          <span style="background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">${s.bil_kelas}</span>
+        </td>
+        <td style="text-align: center; vertical-align: middle;">
+          <span style="background: #ffedd5; color: #c2410c; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">${s.jum_calon.toLocaleString()}</span>
+        </td>
+        <td style="text-align: center; vertical-align: middle;">${badgeStatusPro}</td>
+        <td style="text-align: center; vertical-align: middle;">${badgeStatusOp}</td>
+        <td style="text-align: center; vertical-align: middle;">
+          <button class="btn btn-outline-purple btn-sm py-1 px-3" style="font-size:0.75rem;" onclick="bukaModalProfilPenuh(${indeksAsal})"><i class="fas fa-eye me-1"></i> Papar</button>
+        </td>
+      </tr>`;
+    });
+  }
+  $('#tblReportSekBody').html(htmlSek); 
+  binaPaginationCustom({page: HAL_SEKASA.sek, total: total}, 'pg-info-sek', 'pg-ctrl-sek', 'sek');
+}
+
+function renderJadualKpmp() {
+  var data = DATA_TAPIS_SEMASA.kpmp; 
+  var total = data.length; 
+  var mula = (HAL_SEKASA.kpmp - 1) * HAD_REKOD; 
+  var tamat = Math.min(mula + HAD_REKOD, total); 
+  var htmlKp = '';
+  
+  if(total === 0){
+    htmlKp = '<tr><td colspan="4" style="text-align:center; padding: 30px; color: #94a3b8; font-size: 0.85rem;">Tiada rekod pelantikan KPMP dikesan.</td></tr>'; 
+  } else {
+    data.slice(mula, tamat).forEach((k, idx) => {
+      var bil = mula + idx + 1; 
+      var mpObj = BACKEND_DATA.senaraiMp.find(m => m.kod === k.kod_mp);
+      var namaMp = mpObj ? mpObj.nama : k.kod_mp; 
+      var namaDaerahPaparan = dapatkanNamaDaerahSebenar(k.ppd);
+      var infoSekolah = BACKEND_DATA.senaraiSekolah.find(s => s.kod === k.kod_sekolah); 
+      var namaSekolah = infoSekolah ? infoSekolah.nama.toUpperCase() : "";
+      
+      htmlKp += `<tr>
+        <td style="text-align: center; vertical-align: middle; font-weight: bold; color: var(--purple-700);">${bil}</td>
+        <td>
+          <div class="td-title" style="font-weight: bold; font-size: 0.85rem; text-transform: uppercase;">${namaSekolah}</div>
+          <div class="td-subtitle" style="font-size: 0.75rem; color: var(--text-muted);">${k.kod_sekolah} &nbsp;|&nbsp; PPD ${namaDaerahPaparan}</div>
+        </td>
+        <td>
+          <div class="td-title" style="font-weight: bold; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 4px;">${k.nama_kpmp}</div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="background: #dcfce7; color: #16a34a; border-radius: 4px; padding: 2px 8px; font-size: 0.7rem; font-weight: 600;">KPMP</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted);"><i class="fas fa-id-card"></i> ${k.no_kp} &nbsp;|&nbsp; <i class="fas fa-phone"></i> ${k.no_tel}</span>
+          </div>
+        </td>
+        <td style="vertical-align: middle;">
+          <div class="td-title" style="font-size: 0.85rem; font-weight: 500;">${k.kod_mp} - <span style="text-transform: capitalize;">${namaMp.toLowerCase()}</span></div>
+        </td>
+      </tr>`;
+    });
+  }
+  $('#tblReportKpmpBody').html(htmlKp); 
+  binaPaginationCustom({page: HAL_SEKASA.kpmp, total: total}, 'pg-info-kpmp', 'pg-ctrl-kpmp', 'kpmp');
+}
+
+function renderJadualPmp() {
+  var data = DATA_TAPIS_SEMASA.pmp; 
+  var total = data.length; 
+  var mula = (HAL_SEKASA.pmp - 1) * HAD_REKOD; 
+  var tamat = Math.min(mula + HAD_REKOD, total); 
+  var htmlPm = '';
+  
+  if(total === 0){
+    htmlPm = '<tr><td colspan="4" style="text-align:center; padding: 30px; color: #94a3b8; font-size: 0.85rem;">Tiada rekod pelantikan PMP dikesan.</td></tr>'; 
+  } else {
+    data.slice(mula, tamat).forEach((p, idx) => {
+      var bil = mula + idx + 1; 
+      var mpObj = BACKEND_DATA.senaraiMp.find(m => m.kod === p.kod_mp);
+      var namaMp = mpObj ? mpObj.nama : p.kod_mp; 
+      var namaDaerahPaparan = dapatkanNamaDaerahSebenar(p.ppd);
+      var infoSekolah = BACKEND_DATA.senaraiSekolah.find(s => s.kod === p.kod_sekolah); 
+      var namaSekolah = infoSekolah ? infoSekolah.nama.toUpperCase() : "";
+      
+      htmlPm += `<tr>
+        <td style="text-align: center; vertical-align: middle; font-weight: bold; color: var(--purple-700);">${bil}</td>
+        <td>
+          <div class="td-title" style="font-weight: bold; font-size: 0.85rem; text-transform: uppercase;">${namaSekolah}</div>
+          <div class="td-subtitle" style="font-size: 0.75rem; color: var(--text-muted);">${p.kod_sekolah} &nbsp;|&nbsp; PPD ${namaDaerahPaparan}</div>
+        </td>
+        <td>
+          <div class="td-title" style="font-weight: bold; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 4px;">${p.nama_pmp}</div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="background: #ffedd5; color: #ca8a04; border-radius: 4px; padding: 2px 8px; font-size: 0.7rem; font-weight: 600;">PMP</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted);"><i class="fas fa-id-card"></i> ${p.no_kp} &nbsp;|&nbsp; <i class="fas fa-phone"></i> ${p.no_tel}</span>
+          </div>
+        </td>
+        <td style="vertical-align: middle;">
+          <div class="td-title" style="font-size: 0.85rem; font-weight: 500;">${p.kod_mp} - <span style="text-transform: capitalize;">${namaMp.toLowerCase()}</span></div>
+        </td>
+      </tr>`;
+    });
+  }
+  $('#tblReportPmpBody').html(htmlPm); 
+  binaPaginationCustom({page: HAL_SEKASA.pmp, total: total}, 'pg-info-pmp', 'pg-ctrl-pmp', 'pmp');
+}
+
+function tukarHalaman(jenis, arah) { 
+  HAL_SEKASA[jenis] += arah; 
+  if (jenis === 'sek') renderJadualSekolah(); 
+  if (jenis === 'kpmp') renderJadualKpmp();
+  if (jenis === 'pmp') renderJadualPmp(); 
+}
+
+function jalankanPenapisKpmp() {
+  var dVal = $('#filterDaerahKpmp').val()||""; var sVal = $('#filterSekolahKpmp').val()||""; var s = sVal.indexOf(" - ") > -1 ? sVal.split(" - ")[0].trim() : sVal.trim(); var m = $('#filterMpKpmp').val()||"";
+  var sekTapis = BACKEND_DATA.senaraiSekolah.filter(sek => sek.kategori_sekolah === G_TAHAP_SEMASA).map(sek => sek.kod);
+  var asalkpmp = BACKEND_DATA.senaraiKpmp.filter(k => sekTapis.includes(k.kod_sekolah));
+  DATA_TAPIS_SEMASA.kpmp = asalkpmp.filter(k => (dVal===""||k.ppd.toUpperCase()===dVal.toUpperCase()) && (s===""||k.kod_sekolah.toUpperCase()===s.toUpperCase()) && (m===""||k.kod_mp.toUpperCase()===m.toUpperCase()));
+  HAL_SEKASA.kpmp = 1; renderJadualKpmp();
+}
+
+function jalankanPenapisPmp() {
+  var dVal = $('#filterDaerahPmp').val()||""; var sVal = $('#filterSekolahPmp').val()||""; var s = sVal.indexOf(" - ") > -1 ? sVal.split(" - ")[0].trim() : sVal.trim(); var m = $('#filterMpPmp').val()||"";
+  var sekTapis = BACKEND_DATA.senaraiSekolah.filter(sek => sek.kategori_sekolah === G_TAHAP_SEMASA).map(sek => sek.kod);
+  var asalpmp = BACKEND_DATA.senaraiPmp.filter(p => sekTapis.includes(p.kod_sekolah));
+  DATA_TAPIS_SEMASA.pmp = asalpmp.filter(p => (dVal===""||p.ppd.toUpperCase()===dVal.toUpperCase()) && (s===""||p.kod_sekolah.toUpperCase()===s.toUpperCase()) && (m===""||p.kod_mp.toUpperCase()===m.toUpperCase()));
+  HAL_SEKASA.pmp = 1; renderJadualPmp();
+}
+
+function resetPenapis(j) {
+  if(j === 'kpmp') { $('#filterDaerahKpmp,#filterSekolahKpmp,#filterMpKpmp').val(""); DATA_TAPIS_SEMASA.kpmp = BACKEND_DATA.senaraiKpmp.filter(k => BACKEND_DATA.senaraiSekolah.some(s => s.kod === k.kod_sekolah && s.kategori_sekolah === G_TAHAP_SEMASA)); HAL_SEKASA.kpmp=1; renderJadualKpmp(); }
+  else { $('#filterDaerahPmp,#filterSekolahPmp,#filterMpPmp').val(""); DATA_TAPIS_SEMASA.pmp = BACKEND_DATA.senaraiPmp.filter(p => BACKEND_DATA.senaraiSekolah.some(s => s.kod === p.kod_sekolah && s.kategori_sekolah === G_TAHAP_SEMASA)); HAL_SEKASA.pmp=1; renderJadualPmp(); }
+}
+
+function bukaModalProfilPenuh(indeks) {
+  if (!BACKEND_DATA || !BACKEND_DATA.senaraiSekolah[indeks]) return;
+  var s = BACKEND_DATA.senaraiSekolah[indeks];
+  var namaDaerahAsal = dapatkanNamaDaerahSebenar(s.ppd);
+  
+  var dbStatus = s.pengesahan_selesai || s.pengesahan || "";
+  var isSelesai = (dbStatus.toUpperCase() === 'SELESAI' || dbStatus.toUpperCase() === 'YA');
+  
+  var alertSelesai = isSelesai 
+    ? `<div style="background:#f0fdf4; border:1px solid #bbf7d0; color:#15803d; padding:12px 16px; margin-bottom:20px; border-radius:8px; font-weight:600; font-size:0.85rem; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-circle-check fs-5"></i><span>SELESAI - Pihak sekolah telah mengesahkan pendaftaran maklumat Profil.</span></div>` 
+    : `<div style="background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:12px 16px; margin-bottom:20px; border-radius:8px; font-weight:600; font-size:0.85rem; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-triangle-exclamation fs-5"></i><span>BELUM SELESAI - Pihak sekolah masih belum membuat pengesahan Profil.</span></div>`;
+  
+  $('#lblSubProfilModal').text(s.kod + ' - ' + s.nama);
+
+  var alamatLengkap = [s.alamat || "-", s.poskod || "-", s.bandar || "-"].filter(Boolean).join(", ").toUpperCase();
+  
+  var htmlModal = `
+    ${alertSelesai}
+    
+    <!-- 1. MAKLUMAT ASAS & LOKASI -->
+    <div class="form-section-title"><i class="fa-solid fa-building me-1"></i> 1. Maklumat Asas Pendaftaran</div>
+    <div class="row g-2 mb-3">
+      <div class="col-md-6 col-6"><div class="korporat-grid-item"><div class="korporat-label">Kategori</div><div class="korporat-nilai">${s.kategori_sekolah || "-"}</div></div></div>
+      <div class="col-md-6 col-6"><div class="korporat-grid-item"><div class="korporat-label">Daerah/PPD</div><div class="korporat-nilai text-uppercase">${s.ppd || "-"} - ${namaDaerahAsal}</div></div></div>
+      <div class="col-12"><div class="korporat-grid-item"><div class="korporat-label">Kod & Nama Sekolah</div><div class="korporat-nilai">${s.kod} - ${s.nama.toUpperCase()}</div></div></div>
+      <div class="col-12"><div class="korporat-grid-item"><div class="korporat-label">Alamat Lengkap</div><div class="korporat-nilai text-uppercase">${alamatLengkap}</div></div></div>
+    </div>
+
+    <!-- 2. HUBUNGAN & OPERASI -->
+    <div class="form-section-title"><i class="fa-solid fa-phone me-1"></i> 2. Hubungan & Operasi</div>
+    <div class="row g-2 mb-3">
+      <div class="col-md-4 col-6"><div class="korporat-grid-item"><div class="korporat-label">No. Telefon</div><div class="korporat-nilai">${s.tel_sekolah || "-"}</div></div></div>
+      <div class="col-md-4 col-6"><div class="korporat-grid-item"><div class="korporat-label">Emel Rasmi</div><div class="korporat-nilai">${s.emel_sekolah || "-"}</div></div></div>
+      <div class="col-md-2 col-6"><div class="korporat-grid-item"><div class="korporat-label">Kelas</div><div class="korporat-nilai text-center">${s.bil_kelas || "0"}</div></div></div>
+      <div class="col-md-2 col-6"><div class="korporat-grid-item"><div class="korporat-label">Murid</div><div class="korporat-nilai text-center">${s.jum_calon || "0"}</div></div></div>
+    </div>
+
+    <!-- 3. PROFIL PENGURUSAN -->
+    <div class="form-section-title"><i class="fa-solid fa-user-tie me-1"></i> 3. Profil Pengurusan</div>
+    <div class="row g-2 mb-2">
+      <!-- PENTADBIR -->
+      <div class="col-md-6">
+        <div class="korporat-grid-item" style="border-left: 3px solid #0284c7;">
+          <div class="korporat-label text-primary mb-1">GURU BESAR / PENGETUA</div>
+          <div class="korporat-nilai text-uppercase mb-1"><i class="fa-solid fa-user me-1" style="opacity:0.5"></i> ${s.nama_gb || "-"}</div>
+          <div class="korporat-nilai" style="font-size:0.8rem; opacity:0.8;"><i class="fa-solid fa-id-card me-1"></i> ${s.kp_gb || "-"} | <i class="fa-solid fa-phone me-1"></i> ${s.tel_gb || "-"}</div>
+          <div class="korporat-nilai text-primary mt-1" style="font-size:0.75rem;"><i class="fa-solid fa-envelope me-1"></i> ${s.emel_gb || "-"}</div>
+        </div>
+      </div>
+      <!-- SUP -->
+      <div class="col-md-6">
+        <div class="korporat-grid-item" style="border-left: 3px solid #16a34a;">
+          <div class="korporat-label text-success mb-1">SETIAUSAHA PENTAKSIRAN</div>
+          <div class="korporat-nilai text-uppercase mb-1"><i class="fa-solid fa-user me-1" style="opacity:0.5"></i> ${s.nama_sup || "-"}</div>
+          <div class="korporat-nilai" style="font-size:0.8rem; opacity:0.8;"><i class="fa-solid fa-id-card me-1"></i> ${s.kp_sup || "-"} | <i class="fa-solid fa-phone me-1"></i> ${s.tel_sup || "-"}</div>
+          <div class="korporat-nilai text-success mt-1" style="font-size:0.75rem;"><i class="fa-solid fa-envelope me-1"></i> ${s.emel_sup || "-"}</div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  $('#modalProfilKandungan').html(htmlModal);
+  var myModal = new bootstrap.Modal(document.getElementById('modalProfilSekolah'));
+  myModal.show();
+}
+
+function ubahMasterSwitch(jenis, elem) {
+  var isChecked = $(elem).is(':checked');
+  var statusDB = isChecked ? 'BUKA' : 'TUTUP';
+  var kunci = jenis === 'PROFIL' ? 'KUNCI_PROFIL' : 'KUNCI_OPERASI';
+
+  Swal.fire({title: 'Menyimpan Tetapan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+  
+  google.script.run.withSuccessHandler(function(res) {
+    if(res.status === 'SUCCESS') {
+      Swal.fire({
+        icon: 'success', 
+        title: 'Berjaya', 
+        text: 'Akses pengisian borang ' + jenis + ' di pihak sekolah telah di' + statusDB.toLowerCase() + '.', 
+        timer: 2000, 
+        showConfirmButton: false
+      });
+      if(!BACKEND_DATA.tetapan) BACKEND_DATA.tetapan = {};
+      BACKEND_DATA.tetapan[kunci] = statusDB;
+    } else {
+      Swal.fire('Ralat', res.message, 'error');
+      $(elem).prop('checked', !isChecked); 
+    }
+  }).simpanMasterSwitchDB(kunci, statusDB);
+}
+</script>

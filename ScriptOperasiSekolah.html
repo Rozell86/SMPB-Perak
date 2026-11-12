@@ -1,0 +1,526 @@
+<script>
+var DATA_OPERASI_SEKOLAH = null;
+var G_SENARAI_KP_SEKOLAH = []; 
+var isOperasiSekolahInit = false;
+
+$(function() {
+  setTimeout(function() {
+    if (!isOperasiSekolahInit) {
+      isOperasiSekolahInit = true;
+      muatDataOperasiSekolah();
+    }
+  }, 100); 
+});
+
+// Auto-Dash IC dan Telefon (Kitar Semula Skrip Sekolah)
+$(document).ready(function() {
+  $('#kp_no_kp, #txtPgwsIC').on('input', function() {
+    var val = $(this).val().replace(/\D/g, ''); 
+    if (val.length > 12) val = val.substring(0, 12); 
+    var formatted = '';
+    if (val.length > 0) formatted += val.substring(0, 6);
+    if (val.length > 6) formatted += '-' + val.substring(6, 8);
+    if (val.length > 8) formatted += '-' + val.substring(8, 12);
+    $(this).val(formatted);
+  });
+
+  $('#kp_no_tel, #txtPgwsTel').on('input', function() {
+    var val = $(this).val().replace(/\D/g, ''); 
+    if (val.length > 11) val = val.substring(0, 11); 
+    var formatted = '';
+    var kodTengah = 3; 
+    if (val.startsWith('03') || val.startsWith('04') || val.startsWith('05') || val.startsWith('06') || val.startsWith('07') || val.startsWith('09')) {
+      if (!val.startsWith('01')) kodTengah = 2; 
+    }
+    if (val.length > 0) formatted += val.substring(0, kodTengah);
+    if (val.length > kodTengah) formatted += '-' + val.substring(kodTengah, val.length);
+    $(this).val(formatted);
+  });
+
+  $('#kp_nama, #txtPgwsNama').on('input', function() {
+    var posisiKursor = this.selectionStart; 
+    $(this).val($(this).val().toUpperCase()); 
+    this.setSelectionRange(posisiKursor, posisiKursor); 
+  });
+});
+
+// Dapatkan semua data dari Backend
+function muatDataOperasiSekolah() {
+  var kodSekolah = G_USER.kod_sekolah || G_USER.username;
+  var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+  $('#lblTahunOperasiSekolah').text(tahunSemasa);
+
+  google.script.run.withSuccessHandler(function(res) {
+    if(res.status === "SUCCESS") {
+      DATA_OPERASI_SEKOLAH = res.data;
+      $('#lblTahapOperasiSekolah').text(DATA_OPERASI_SEKOLAH.tahap_matrik);
+      
+      var p = DATA_OPERASI_SEKOLAH.profilSekolah;
+      var jumCalon = parseInt(DATA_OPERASI_SEKOLAH.jum_calon || 0);
+
+      // =========================================================================
+      // KEMASKINI 1: PENGESAN 0 MURID (SEKOLAH TIDAK AKTIF)
+      // =========================================================================
+      if (jumCalon === 0) {
+        // Buat Paparan Notis Gergasi dan Kunci Semua Benda
+        var notisKosong = `
+          <div class="alert alert-danger text-center shadow-sm p-5 m-3" style="border-radius:15px;">
+            <i class="fa-solid fa-triangle-exclamation text-danger mb-3" style="font-size: 3rem;"></i>
+            <h3 class="fw-bold text-danger">SEKOLAH TIDAK AKTIF BAGI SESI INI</h3>
+            <p class="text-dark fs-6 mb-0">Sistem mengesan <b>TIADA CALON MATRIKS</b> (0 Murid) direkodkan untuk tahap ini.<br>Tiada sebarang penetapan operasi diperlukan daripada pihak sekolah anda.</p>
+            <p class="text-muted mt-3 mb-0" style="font-size:0.8rem;">*Sila kemaskini <b>Profil Pentadbiran</b> jika terdapat kesilapan kemasukan data (typo).</p>
+          </div>
+        `;
+        $('#operasi-tabContent').html(notisKosong);
+        $('#operasi-tab').hide(); // Sorok Tab Menu
+        return; // Hentikan skrip. Jangan render apa-apa borang.
+      } else {
+        $('#operasi-tab').show(); 
+      }
+
+      inisialisasiModulCadanganKP(); 
+      renderJadualPengawas(); 
+
+      if(p) {
+        var statusSelesai = p.pengesahan_pengawas || "";
+        var masterOperasi = (DATA_OPERASI_SEKOLAH.tetapan && DATA_OPERASI_SEKOLAH.tetapan['KUNCI_OPERASI']) ? DATA_OPERASI_SEKOLAH.tetapan['KUNCI_OPERASI'] : 'BUKA';
+
+        if (masterOperasi === 'TUTUP') {
+          $('#chkPengesahanOperasiSelesai').prop('checked', (statusSelesai.toUpperCase() === "SELESAI"));
+          kawalKunciDataOperasi(true, true);
+        } else {
+          if (statusSelesai.toUpperCase() === "SELESAI") {
+            $('#chkPengesahanOperasiSelesai').prop('checked', true);
+            kawalKunciDataOperasi(true, false); 
+          } else {
+            $('#chkPengesahanOperasiSelesai').prop('checked', false);
+            kawalKunciDataOperasi(false, false);
+          }
+        }
+      }
+
+    } else {
+      Swal.fire('Ralat', res.message, 'error');
+    }
+  }).getDataOperasiSekolahUtama(kodSekolah, tahunSemasa);
+}
+
+// ==========================================
+// LOGIK 1: CADANGAN KP (KEMASKINI SKM & PEDALAMAN)
+// ==========================================
+function inisialisasiModulCadanganKP() {
+  var p = DATA_OPERASI_SEKOLAH.profilSekolah; 
+  if(!p) return;
+  
+  $('#kp_matrik_tahap').val(DATA_OPERASI_SEKOLAH.tahap_matrik);
+  var jumCalon = parseInt(DATA_OPERASI_SEKOLAH.jum_calon || 0);
+  
+  var statusLokasi = p.status_lokasi ? p.status_lokasi.toUpperCase() : "";
+  var isSkm_Pedalaman = (jumCalon > 0 && jumCalon < 20) || (statusLokasi === "PEDALAMAN");
+
+  if (isSkm_Pedalaman) {
+    $('#kp_alamat_rumah').val('TIDAK BERKENAAN (GURU BESAR BERTUGAS DI SEKOLAH SENDIRI)').prop('readonly', true).removeAttr('required');
+  } else {
+    $('#kp_alamat_rumah').prop('readonly', false).attr('required', true);
+  }
+
+  semakAutoIsiGuruBesar();
+
+  $('#amaranSkmContainer').remove(); 
+  if (isSkm_Pedalaman) {
+    var jenisTeks = (statusLokasi === "PEDALAMAN") ? "PEDALAMAN" : "SKM";
+    var labelSkm = '<div id="amaranSkmContainer" class="alert alert-success fw-bold p-2 mb-3 shadow-sm border-success border-start border-4 rounded-1" style="font-size:0.85rem;"><i class="fa-solid fa-shield-check me-2"></i>Status Sekolah ' + jenisTeks + ' Dikesan: Sekolah anda dipilih secara automatik sebagai pusat pentaksiran.</div>';
+    $('#kp_sek_cadangan').closest('.col-md-12').prepend(labelSkm);
+  }
+
+  var html = '<option value="">-- Sila Pilih Sekolah Cadangan --</option>';
+  DATA_OPERASI_SEKOLAH.senaraiPusat.forEach(function(sek) {
+    var isSekolahIniSkm = sek.nama.indexOf('[SKM]') !== -1;
+    var isSekolahIniPdlm = sek.nama.indexOf('[PEDALAMAN]') !== -1;
+    
+    // Jangan tunjuk SKM/PEDALAMAN orang lain dalam dropdown
+    if ((!isSekolahIniSkm && !isSekolahIniPdlm) || sek.kod === p.kod) {
+      html += '<option value="' + sek.kod + '">' + sek.nama + '</option>';
+    }
+  });
+  
+  $('#kp_sek_cadangan').html(html);
+  
+  if (isSkm_Pedalaman) {
+    $('#kp_sek_cadangan').val(p.kod).prop('disabled', true);
+  } else {
+    $('#kp_sek_cadangan').prop('disabled', false);
+  }
+    
+  muatJadualCadanganKP();
+}
+
+function semakAutoIsiGuruBesar() {
+  var rowNum = $('#kp_row_num').val();
+  if (rowNum !== "") return; 
+
+  var tahap = $('#kp_matrik_tahap').val();
+  var p = DATA_OPERASI_SEKOLAH.profilSekolah;
+  var jumCalon = parseInt(DATA_OPERASI_SEKOLAH.jum_calon || 0);
+  
+  var statusLokasi = p.status_lokasi ? p.status_lokasi.toUpperCase() : "";
+  var isSkm_Pedalaman = (jumCalon > 0 && jumCalon < 20) || (statusLokasi === "PEDALAMAN");
+
+  if (p && isSkm_Pedalaman) {
+    var existingKp = DATA_OPERASI_SEKOLAH.senaraiKp.find(function(x) { return x.matrik_tahap === tahap; });
+    if (existingKp) {
+        $('#kp_row_num').val(existingKp.rowNum);
+    }
+    
+    $('#kp_nama').val(p.nama_gb || "");
+    $('#kp_no_kp').val(p.kp_gb || "");
+    $('#kp_no_tel').val(p.tel_gb || "");
+    $('#kp_emel').val(p.emel_gb || "");
+  } else {
+    $('#kp_nama').val("");
+    $('#kp_no_kp').val("");
+    $('#kp_no_tel').val("");
+    $('#kp_emel').val("");
+  }
+}
+
+function muatJadualCadanganKP() {
+  G_SENARAI_KP_SEKOLAH = DATA_OPERASI_SEKOLAH.senaraiKp; 
+  var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+  var list = G_SENARAI_KP_SEKOLAH;
+  var html = '';
+  
+  if (list && list.length > 0) {
+    list.forEach(function(row) {
+      var badge = row.status === 'CADANGAN' ? '<span class="badge bg-warning text-dark">CADANGAN</span>' : '<span class="badge bg-success">DISAHKAN</span>';
+      
+      var butangEdit = "";
+      var butangCetak = "";
+
+      if (row.status === 'DISAHKAN') {
+        butangEdit = '';
+        butangCetak = '<button type="button" class="btn btn-outline-success btn-sm py-1 px-2 fw-bold" style="font-size:11px;" onclick="cetakSuratKpSekolah(\'' + row.no_kp + '\', \'' + tahunSemasa + '\', \'' + row.matrik_tahap + '\', \'' + row.status + '\')"><i class="fa-solid fa-print me-1"></i> Cetak</button>';
+      } else {
+        butangEdit = '<button type="button" class="btn btn-outline-primary btn-sm py-1 px-2 fw-bold" style="font-size:11px;" onclick="bukaFormEditCadanganKP(' + row.rowNum + ')"><i class="fa-solid fa-pen-to-square me-1"></i> Edit</button>';
+        butangCetak = '<button type="button" class="btn btn-outline-secondary btn-sm py-1 px-2 fw-bold ms-1" style="font-size:11px;" onclick="Swal.fire({ title: \'Tunggu PPD Sahkan\', text: \'Surat lantikan belum boleh dicetak kerana status masih CADANGAN.\', icon: \'info\', confirmButtonText: \'OK\', confirmButtonColor: \'#592A8E\' })"><i class="fa-solid fa-lock me-1"></i> Cetak</button>';
+      }
+
+      html += '<tr>' +
+              '<td class="fw-bold" style="color:var(--purple-700);">' + row.matrik_tahap + '</td>' +
+              '<td>' + row.nama_guru + '</td>' +
+              '<td>' + row.no_kp + '</td>' +
+              '<td>' + row.paparan_cadangan + '</td>' +
+              '<td>' + badge + '</td>' +
+              '<td class="text-center">' +
+                butangEdit + 
+                butangCetak + 
+              '</td>' +
+              '</tr>';
+    });
+  } else {
+    html = '<tr><td colspan="6" class="text-center py-4 text-muted">Tiada data cadangan dikesan.</td></tr>';
+  }
+  
+  $('#tbodySenaraiKP').html(html);
+}
+
+function bukaFormEditCadanganKP(rowNum) {
+  var kp = G_SENARAI_KP_SEKOLAH.find(function(x) { return x.rowNum === rowNum; });
+  if (!kp) return;
+  
+  var jumCalon = parseInt(DATA_OPERASI_SEKOLAH.jum_calon || 0);
+  var p = DATA_OPERASI_SEKOLAH.profilSekolah;
+  var statusLokasi = p.status_lokasi ? p.status_lokasi.toUpperCase() : "";
+  var isSkm_Pedalaman = (jumCalon > 0 && jumCalon < 20) || (statusLokasi === "PEDALAMAN");
+  
+  if (isSkm_Pedalaman) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Makluman Kemaskini Penempatan',
+      html: 'Oleh kerana sekolah anda berstatus <b>SKM/Pedalaman</b>, maklumat Ketua Pengawas ditarik terus daripada data Profil Pentadbir.<br><br>Untuk menukar maklumat Ketua Pengawas, sila kemaskini maklumat Profil Pentadbir di tab <b>"Profil Pentadbiran"</b>.',
+      confirmButtonColor: '#592A8E',
+      confirmButtonText: 'Ok'
+    });
+    return;
+  }
+  
+  $('#kp_row_num').val(kp.rowNum);
+  $('#kp_matrik_tahap').val(kp.matrik_tahap);
+  
+  $('#kp_sek_cadangan').prop('disabled', false).val(kp.kod_cadangan);
+  $('#kp_alamat_rumah').prop('readonly', false).val(kp.alamat_rumah);
+  
+  $('#kp_nama').val(kp.nama_guru);
+  $('#kp_no_kp').val(kp.no_kp);
+  $('#kp_no_tel').val(kp.no_tel);
+  $('#kp_emel').val(kp.emel);
+  
+  $('#btnBatalEditKp').removeClass('d-none');
+  document.getElementById('formCadanganKP').scrollIntoView({ behavior: 'smooth' });
+}
+
+function batalEditKP() {
+  $('#formCadanganKP')[0].reset();
+  $('#kp_row_num').val('');
+  $('#btnBatalEditKp').addClass('d-none');
+  
+  var p = DATA_OPERASI_SEKOLAH.profilSekolah;
+  var jumCalon = parseInt(DATA_OPERASI_SEKOLAH.jum_calon || 0);
+  var statusLokasi = p.status_lokasi ? p.status_lokasi.toUpperCase() : "";
+  var isSkm_Pedalaman = (jumCalon > 0 && jumCalon < 20) || (statusLokasi === "PEDALAMAN");
+  
+  if(isSkm_Pedalaman) {
+      $('#kp_sek_cadangan').val(p.kod); 
+      $('#kp_alamat_rumah').val('TIDAK BERKENAAN (GURU BESAR BERTUGAS DI SEKOLAH SENDIRI)').prop('readonly', true);
+  } else {
+      $('#kp_alamat_rumah').val('').prop('readonly', false);
+  }
+  
+  semakAutoIsiGuruBesar();
+}
+
+function hantarCadanganKP(isAutoSync) {
+  var p = DATA_OPERASI_SEKOLAH.profilSekolah;
+  var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+  var d = {
+    rowNum: $('#kp_row_num').val() || "", 
+    tahun: tahunSemasa,
+    kod_sek_asal: p.kod,
+    daerah: p.ppd, 
+    matrik_tahap: $('#kp_matrik_tahap').val(),
+    id_jawatan: "KP02",
+    nama_guru: $('#kp_nama').val(),
+    no_kp: $('#kp_no_kp').val(),
+    no_tel: $('#kp_no_tel').val(),
+    emel: $('#kp_emel').val(),
+    alamat_rumah: $('#kp_alamat_rumah').val(),
+    kod_sek_cadangan: $('#kp_sek_cadangan').val() 
+  };
+  
+  if (!isAutoSync) {
+    Swal.fire({ title: 'Memproses Maklumat...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+  }
+
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (res.status === "SUCCESS") {
+        if (isAutoSync) {
+          Swal.fire({ icon: 'success', title: 'Selesai!', text: 'Profil Pentadbiran & Data Ketua Pengawas telah diselaraskan.', timer: 2500, showConfirmButton: false });
+        } else {
+          Swal.fire('Berjaya', res.message, 'success');
+        }
+        batalEditKP(); 
+        muatDataOperasiSekolah();       
+      } else {
+        Swal.fire('Gagal Dihantar', res.message, 'error');
+      }
+    })
+    .withFailureHandler(function(err) { Swal.fire('Ralat Sistem', err.message, 'error'); })
+    .simpanCadanganKP(d);
+}
+
+// Fungsi Cetak 
+function cetakSuratKpSekolah(noKp, tahun, tahap, statusSemasa) {
+  if (statusSemasa && statusSemasa.toString().toUpperCase() !== 'DISAHKAN') {
+    Swal.fire({ title: '⛔ Belum Disahkan PPD!', html: 'Sila tunggu pihak PPD mengesahkan status guru ini terlebih dahulu.', icon: 'warning', confirmButtonColor: '#ffc107', confirmButtonText: 'OK' });
+    return;
+  }
+  Swal.fire({ title: 'Menyemak Kebenaran Cetak...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+  google.script.run
+    .withSuccessHandler(function(resCetak) {
+      if (!resCetak || resCetak.kebenaranCetak !== 'YA') {
+        Swal.fire({ title: '🔒 Kebenaran Cetak Belum Dibuka!', html: 'Kebenaran mencetak surat rasmi belum dibuka oleh pihak JPN.', icon: 'info', confirmButtonColor: '#592A8E', confirmButtonText: 'OK' });
+        return;
+      }
+      var tabMenunggu = window.open('about:blank', '_blank');
+      if (tabMenunggu) {
+        tabMenunggu.document.write(`<html><head><title>Menjana Surat Ketua Pengawas...</title></head><body style="font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f8f9fa;"><h2>⏳ Menjana Surat Lantikan... Sila tunggu.</h2></body></html>`);
+      }
+      google.script.run
+        .withSuccessHandler(function(res) {
+          Swal.close();
+          if (res && res.status === "SUCCESS") {
+            try {
+              var byteCharacters = atob(res.base64);
+              var byteNumbers = new Array(byteCharacters.length);
+              for (var i = 0; i < byteCharacters.length; i++) { byteNumbers[i] = byteCharacters.charCodeAt(i); }
+              var blob = new Blob([new Uint8Array(byteNumbers)], { type: 'application/pdf' });
+              tabMenunggu.location.href = URL.createObjectURL(blob);
+            } catch(e) { tabMenunggu.close(); Swal.fire('Ralat', 'Gagal memaparkan PDF', 'error'); }
+          } else { tabMenunggu.close(); Swal.fire('Gagal Menjana PDF', res.message || "Ralat pelayan", 'error'); }
+        })
+        .janaSuratLantikanKPPDF(noKp, tahun, tahap);
+    })
+    .dapatkanStatusKebenaranCetakKP(tahun, tahap);
+}
+
+// ==========================================
+// PENGAWAS (KUOTA 1:30)
+// ==========================================
+function renderJadualPengawas() {
+  var jumCalon = parseInt(DATA_OPERASI_SEKOLAH.jum_calon || 0);
+  var kuota = jumCalon > 0 ? Math.ceil(jumCalon / 30) : 0;
+  var senarai = DATA_OPERASI_SEKOLAH.senaraiPgws;
+  
+  $('#lblJumCalonSekolah').text(jumCalon);
+  $('#lblPengawasSemasa').text(senarai.length);
+  $('#lblKuotaMaksimum').text(kuota);
+
+  if (senarai.length >= kuota) {
+    $('#lblStatusKuota').text("KUOTA PENUH").removeClass('text-success text-warning').addClass('text-danger');
+    $('#btnTambahPengawas').hide();
+  } else {
+    $('#lblStatusKuota').text("DALAM KUOTA").removeClass('text-danger text-warning').addClass('text-success');
+    $('#btnTambahPengawas').show();
+  }
+
+  var html = '';
+  if(senarai.length === 0) {
+    html = '<tr><td colspan="7" class="text-center text-muted py-4">Tiada rekod pengawas didaftarkan.</td></tr>';
+  } else {
+    senarai.forEach((p, idx) => {
+      var jantinaPaparan = p.jantina === 'L' ? '<span class="badge bg-primary">LELAKI</span>' : (p.jantina === 'P' ? '<span class="badge" style="background:#e879f9;">PEREMPUAN</span>' : '-');
+      
+      html += `<tr>
+        <td class="text-center fw-bold">${idx + 1}</td>
+        <td><div class="fw-bold text-dark text-uppercase">${p.nama}</div></td>
+        <td>${p.no_kp}</td>
+        <td class="text-center">${jantinaPaparan}</td>
+        <td>${p.no_tel}</td>
+        <td>${p.emel}</td>
+        <td class="text-center">
+          <button type="button" class="btn btn-outline-primary btn-sm py-1 px-2 fw-bold" style="font-size:11px;" onclick="bukaModalPengawas(${idx})">
+            <i class="fa-solid fa-pen-to-square me-1"></i> Edit
+          </button>
+        </td>
+      </tr>`;
+    });
+  }
+  $('#tblPengawasBody').html(html);
+}
+
+function bukaModalPengawas(idx) {
+  $('#formPengawas')[0].reset();
+  $('#txtPgwsRow').val('');
+  $('#btnPadamPgws').addClass('d-none');
+
+  if(idx !== undefined) {
+    var p = DATA_OPERASI_SEKOLAH.senaraiPgws[idx];
+    $('#txtPgwsRow').val(p.rowNum);
+    $('#txtPgwsNama').val(p.nama);
+    $('#txtPgwsIC').val(p.no_kp);
+    $('#selPgwsJantina').val(p.jantina);
+    $('#txtPgwsTel').val(p.no_tel);
+    $('#txtPgwsEmel').val(p.emel);
+    $('#btnPadamPgws').removeClass('d-none');
+  }
+  new bootstrap.Modal(document.getElementById('modalPengawas')).show();
+}
+
+function simpanPengawas() {
+  var payload = {
+    rowNum: $('#txtPgwsRow').val(),
+    tahun: window.G_TAHUN_AKTIF || new Date().getFullYear().toString(),
+    kod_sekolah: G_USER.kod_sekolah || G_USER.username,
+    daerah: DATA_OPERASI_SEKOLAH.daerah,
+    tahap: DATA_OPERASI_SEKOLAH.tahap_matrik,
+    nama: $('#txtPgwsNama').val(),
+    no_kp: $('#txtPgwsIC').val(),
+    jantina: $('#selPgwsJantina').val(),
+    no_tel: $('#txtPgwsTel').val(),
+    emel: $('#txtPgwsEmel').val()
+  };
+
+  Swal.fire({title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+  google.script.run.withSuccessHandler(function(res) {
+    if(res.status === 'SUCCESS') {
+      Swal.fire('Berjaya', 'Maklumat pengawas disimpan.', 'success');
+      $('#modalPengawas').modal('hide');
+      muatDataOperasiSekolah();
+    } else { Swal.fire('Gagal', res.message, 'error'); }
+  }).simpanPengawasBackend(payload);
+}
+
+function padamRekodSistem(sheetName, rowNum) {
+  if(!rowNum) return;
+  Swal.fire({ title: 'Padam Rekod?', text: "Tindakan ini tidak boleh diundur!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Ya, Padam' })
+  .then((r) => {
+    if(r.isConfirmed) {
+      Swal.fire({title:'Memadam...', allowOutsideClick:false, didOpen:()=>Swal.showLoading()});
+      google.script.run.withSuccessHandler(()=>{ 
+        Swal.fire('Dipadam!', '', 'success'); 
+        $('.modal').modal('hide'); 
+        muatDataOperasiSekolah(); 
+      }).padamRekod(sheetName, rowNum); 
+    }
+  });
+}
+
+// ==========================================
+// FUNGSI PENGESAHAN & KUNCI DATA OPERASI
+// ==========================================
+function ubahStatusPengesahanOperasi(checkboxElem) {
+  var isChecked = $(checkboxElem).is(':checked');
+  
+  if (isChecked) {
+    var jumCalon = parseInt(DATA_OPERASI_SEKOLAH.jum_calon || 0);
+    var kuota = jumCalon > 0 ? Math.ceil(jumCalon / 30) : 0;
+    var senaraiPgws = DATA_OPERASI_SEKOLAH.senaraiPgws || [];
+    var kpAda = (G_SENARAI_KP_SEKOLAH && G_SENARAI_KP_SEKOLAH.length > 0);
+    
+    // Abaikan check kuota KP/PGWS kalau sekolah tu kosong murid (Tidak Aktif)
+    if (jumCalon > 0 && (!kpAda || senaraiPgws.length < kuota)) {
+      Swal.fire({
+        icon: 'error', title: 'Pengesahan Ditolak!',
+        html: 'Sila pastikan perkara berikut selesai terlebih dahulu:<br><br><ul class="text-start"><li>Mempunyai rekod Cadangan Ketua Pengawas.</li><li>Jumlah Pengawas mencapai kuota minimum ('+kuota+' orang).</li></ul>'
+      });
+      $(checkboxElem).prop('checked', false);
+      return;
+    }
+  }
+
+  var statusDipilih = isChecked ? 'SELESAI' : '';
+  var rowDB = DATA_OPERASI_SEKOLAH.profilSekolah.rowNum;
+  
+  Swal.fire({title:'Mengemaskini Status...', allowOutsideClick: false, didOpen:()=>{Swal.showLoading();}});
+  
+  google.script.run
+    .withSuccessHandler(function(res){
+      if(res && res.status === 'SUCCESS') {
+        if(statusDipilih === 'SELESAI') {
+          Swal.fire({ icon: 'success', title: 'Terima Kasih', text: 'Data Operasi Matriks sekolah anda telah disahkan dan dikunci.', timer: 2000, showConfirmButton: false });
+        } else {
+          Swal.fire({ icon: 'info', title: 'Batal Pengesahan', text: 'Kunci data telah dibuka semula.', timer: 2000, showConfirmButton: false });
+        }
+        kawalKunciDataOperasi(isChecked, false);
+        if(DATA_OPERASI_SEKOLAH && DATA_OPERASI_SEKOLAH.profilSekolah) { 
+           DATA_OPERASI_SEKOLAH.profilSekolah.pengesahan_pengawas = statusDipilih; 
+        }
+      } else {
+        Swal.fire('Gagal', res ? res.message : 'Sistem menghadapi masalah menyimpan data.', 'error');
+        $(checkboxElem).prop('checked', !isChecked);
+      }
+    })
+    .withFailureHandler(function(err){
+      Swal.fire('Ralat', 'Sistem tidak dapat mengemaskini status: ' + err.message, 'error');
+      $(checkboxElem).prop('checked', !isChecked); 
+    })
+    .kemaskiniStatusPengesahanOperasiDB(rowDB, statusDipilih);
+}
+
+function kawalKunciDataOperasi(isTerkunci, isMasterSwitch) {
+  if (isTerkunci) {
+    $('body').addClass('mod-operasi-terkunci');
+    $('#chkPengesahanOperasiSelesai').prop('disabled', isMasterSwitch);
+    
+    if (isMasterSwitch) {
+       $('#amaranMasterOperasi').remove();
+       $('#operasi-tab').before('<div id="amaranMasterOperasi" class="alert alert-danger fw-bold shadow-sm mb-4 border-danger border-start border-4"><i class="fa-solid fa-lock me-2"></i>PENGISIAN DITUTUP: Tarikh akhir pengisian maklumat Operasi Pengawas telah tamat mengikut jadual kerja JPN.</div>');
+    }
+  } else {
+    $('body').removeClass('mod-operasi-terkunci');
+    $('#chkPengesahanOperasiSelesai').prop('disabled', false);
+    $('#amaranMasterOperasi').remove();
+  }
+}
+</script>

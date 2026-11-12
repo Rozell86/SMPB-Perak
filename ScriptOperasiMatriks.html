@@ -1,0 +1,1402 @@
+<script>
+  var BACKEND_OPS = null;
+  var TAHAP_OPS = 'RENDAH';
+  var G_STATUS_CETAK_KP = "TIDAK";
+
+  // State Pagination
+  var PG_OPS = { page: 1, limit: 10, total: 0 };
+  var PG_PK = { page: 1, limit: 10, total: 0 };
+  var PG_KP = { page: 1, limit: 10, total: 0 };
+  var PG_PGWS = { page: 1, limit: 10, total: 0 }; 
+
+  function initModulOperasi() {
+    var kodDaerahSemasa = "";
+    if (typeof G_USER !== 'undefined' && G_USER) {
+      kodDaerahSemasa = G_USER.kod_daerah ? G_USER.kod_daerah : (G_USER.username || "");
+    }
+    
+    var roleSemasa = (typeof G_USER !== 'undefined' && G_USER && G_USER.role) ? G_USER.role : "PPD";
+
+    document.getElementById('tblOpsBody').innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--purple-500);"><i class="fas fa-spinner fa-spin"></i> Memuatkan data...</td></tr>';
+
+    google.script.run
+      .withSuccessHandler(function(respon) {
+        if (respon && respon.status === "SUCCESS") {
+          BACKEND_OPS = respon.data;
+          isiFilterPengawas(); 
+          isiSemuaFilterDaerahAdmin(); 
+          renderSemuaTabOps();
+          semakPaparanKawalanCetakKp();
+        } else {
+          paparRalatJadual("Gagal mengambil data dari pangkalan data.");
+        }
+      })
+      .withFailureHandler(function(err) {
+        paparRalatJadual("Ralat Pelayan: " + err.message);
+      })
+      .mendapatkanDataPPD_JPN(roleSemasa, kodDaerahSemasa, kodDaerahSemasa);
+  }
+
+  function paparRalatJadual(pesan) {
+    var errHtml = `<tr><td colspan="7" style="text-align: center; color: #dc2626; padding: 20px; font-weight: bold;"><i class="fas fa-exclamation-triangle me-2"></i> ${pesan}</td></tr>`;
+    if(document.getElementById('tblOpsBody')) document.getElementById('tblOpsBody').innerHTML = errHtml;
+    if(document.getElementById('tblPkBody')) document.getElementById('tblPkBody').innerHTML = errHtml;
+    if(document.getElementById('tblKpOpsBody')) document.getElementById('tblKpOpsBody').innerHTML = errHtml;
+    if(document.getElementById('tblPgwsBody')) document.getElementById('tblPgwsBody').innerHTML = errHtml;
+  }
+
+  function getNamaDaerahPenuh(kodAtauNama) {
+    if (!kodAtauNama) return "-";
+    const input = kodAtauNama.toString().trim().toUpperCase();
+    const map = {
+      'A010': 'BATANG PADANG', 'A020': 'MANJUNG', 'A100': 'KINTA UTARA', 'A040': 'KERIAN',
+      'A050': 'KUALA KANGSAR', 'A060': 'HILIR PERAK', 'A070': 'LARUT MATANG SELAMA', 'A080': 'HULU PERAK',
+      'A090': 'PERAK TENGAH', 'A110': 'KINTA SELATAN', 'A120': 'BAGAN DATUK', 'A130': 'MUALLIM'
+    };
+    return map[input] || input;
+  }
+
+  function tukarTahapOps(tahap) {
+    TAHAP_OPS = tahap;
+    PG_OPS.page = 1; PG_PK.page = 1; PG_KP.page = 1; PG_PGWS.page = 1; 
+    document.getElementById('btnOpsT4').classList.remove('active-ungu', 'active');
+    document.getElementById('btnOpsT3').classList.remove('active-ungu', 'active');
+    
+    if (tahap === 'RENDAH') {
+      document.getElementById('btnOpsT4').classList.add('active-ungu');
+    } else {
+      document.getElementById('btnOpsT3').classList.add('active-ungu');
+    }
+    
+    isiFilterPengawas();
+    resetFilterPengawas();
+    renderSemuaTabOps();
+    semakPaparanKawalanCetakKp();
+  }
+
+  function tukarTabOps(tabName) {
+    document.querySelectorAll('.tab-pane-ops').forEach(el => el.style.display = 'none');
+    
+    document.querySelectorAll('#modul-matriks-ungu .btn-toggle-tab').forEach(el => {
+      if(el.id.startsWith('tab-btn')) el.classList.remove('active');
+    });
+
+    if (tabName === 'pemantauan') {
+      document.getElementById('pane-pemantauan').style.display = 'block';
+      document.getElementById('tab-btn-1').classList.add('active');
+    } else if (tabName === 'pk') {
+      document.getElementById('pane-pk').style.display = 'block';
+      document.getElementById('tab-btn-2').classList.add('active');
+    } else if (tabName === 'kp') {
+      document.getElementById('pane-kp').style.display = 'block';
+      document.getElementById('tab-btn-3').classList.add('active');
+      semakPaparanKawalanCetakKp();
+    } else if (tabName === 'pengawas') {
+      document.getElementById('pane-pengawas').style.display = 'block';
+      document.getElementById('tab-btn-4').classList.add('active');
+      renderTabPengawas();
+    }
+  }
+
+  function renderSemuaTabOps() {
+    if (!BACKEND_OPS) return;
+    renderTabPemantauan();
+    renderTabPK();
+    renderTabKPOps();
+    renderTabPengawas();
+  }
+
+  function semakPaparanKawalanCetakKp() {
+    if (typeof G_USER !== 'undefined' && G_USER) {
+      var role = (G_USER.role || "").toUpperCase();
+      if (role === 'ADMIN' || role === 'JPN') {
+        $('#boxKebenaranCetakKp').removeClass('d-none');
+        muatStatusKebenaranCetakKp();
+      } else {
+        $('#boxKebenaranCetakKp').addClass('d-none');
+      }
+    }
+  }
+
+  function muatStatusKebenaranCetakKp() {
+    var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+    var tahapSemasa = typeof TAHAP_OPS !== 'undefined' ? TAHAP_OPS : 'RENDAH';
+    
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.status === "SUCCESS") {
+            G_STATUS_CETAK_KP = res.kebenaranCetak || "TIDAK";
+            kemaskiniButangCetakUI();
+          }
+        })
+        .dapatkanStatusKebenaranCetakKP(tahunSemasa, tahapSemasa);
+    }
+  }
+
+  function kemaskiniButangCetakUI() {
+    var $btn = $('#btnKebenaranCetakKp');
+    if (!$btn.length) return;
+
+    if (G_STATUS_CETAK_KP === "YA") {
+      $btn.css({'background': '#16a34a', 'color': '#ffffff'})
+          .html('<i class="fas fa-lock-open me-1"></i> Cetakan KP: DIBUKA (ON)');
+    } else {
+      $btn.css({'background': '#dc2626', 'color': '#ffffff'})
+          .html('<i class="fas fa-lock me-1"></i> Cetakan KP: DITUTUP (OFF)');
+    }
+  }
+
+  function tukarKebenaranCetakKp() {
+    var statusBaharu = (G_STATUS_CETAK_KP === "YA") ? "TIDAK" : "YA";
+    var tajukAksi = (statusBaharu === "YA") ? "Membuka" : "Menutup";
+    var warnaAksi = (statusBaharu === "YA") ? "#16a34a" : "#dc2626";
+
+    Swal.fire({
+      title: tajukAksi + ' Kebenaran Cetak?',
+      html: 'Adakah anda pasti mahu <b>' + tajukAksi.toLowerCase() + '</b> kebenaran mencetak Surat Lantikan KP untuk semua sekolah bagi sesi ini?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: warnaAksi,
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Ya, ' + tajukAksi,
+      cancelButtonText: 'Batal'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({ title: 'Kemaskini Status...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+        var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+        var tahapSemasa = typeof TAHAP_OPS !== 'undefined' ? TAHAP_OPS : 'RENDAH';
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.status === "SUCCESS") {
+              G_STATUS_CETAK_KP = statusBaharu;
+              kemaskiniButangCetakUI();
+              Swal.fire({ icon: 'success', title: 'Berjaya!', text: 'Kebenaran mencetak surat KP kini: ' + (statusBaharu === "YA" ? "DIBUKA" : "DITUTUP"), timer: 2000, showConfirmButton: false });
+            } else {
+              Swal.fire('Gagal', res ? res.message : 'Penyimpanan gagal.', 'error');
+            }
+          })
+          .withFailureHandler(function(err) { Swal.fire('Ralat Pelayan', err.message, 'error'); })
+          .simpanStatusKebenaranCetakKP(tahunSemasa, tahapSemasa, statusBaharu);
+      }
+    });
+  }
+
+  function binaPagination(stateObj, namaFungsiRender, divInfo, divCtrl) {
+    var totalPages = Math.ceil(stateObj.total / stateObj.limit) || 1;
+    document.getElementById(divInfo).innerHTML = `Halaman <b>${stateObj.page}</b> / <b>${totalPages}</b> &nbsp;|&nbsp; Jumlah Rekod: <b>${stateObj.total}</b>`;
+    var prevDis = stateObj.page === 1 ? 'disabled' : '';
+    var nextDis = stateObj.page === totalPages ? 'disabled' : '';
+    document.getElementById(divCtrl).innerHTML = `
+      <button ${prevDis} onclick="${namaFungsiRender}('prev')"><i class="fas fa-chevron-left me-1"></i> Prev</button>
+      <button ${nextDis} onclick="${namaFungsiRender}('next')">Next <i class="fas fa-chevron-right ms-1"></i></button>
+    `;
+  }
+
+  function isiSemuaFilterDaerahAdmin() {
+    if (!BACKEND_OPS) return;
+    var roleSemasa = (typeof G_USER !== 'undefined' && G_USER && G_USER.role) ? G_USER.role.toUpperCase() : "PPD";
+    
+    if (roleSemasa === 'ADMIN' || roleSemasa === 'JPN') {
+      var elemOps = document.getElementById('boxFilterDaerahOps');
+      var elemPk = document.getElementById('boxFilterDaerahPk');
+      var elemKp = document.getElementById('boxFilterDaerahKp');
+      
+      if(elemOps) elemOps.style.display = 'block';
+      if(elemPk) elemPk.style.display = 'block';
+      if(elemKp) elemKp.style.display = 'block';
+      
+      var optionDaerah = '<option value="">-- Semua Daerah --</option>';
+      
+      if (BACKEND_OPS.senaraiDaerah && BACKEND_OPS.senaraiDaerah.length > 0) {
+        var sortedDaerah = BACKEND_OPS.senaraiDaerah.sort((a,b) => {
+          var kodA = a.ppd ? a.ppd : a.kod; 
+          var kodB = b.ppd ? b.ppd : b.kod; 
+          return kodA.localeCompare(kodB);
+        });
+        
+        sortedDaerah.forEach(d => {
+          var kodPpdAktif = d.ppd ? d.ppd : d.kod;
+          var namaTunjuk = d.nama || kodPpdAktif;
+          optionDaerah += `<option value="${kodPpdAktif.toUpperCase()}">${kodPpdAktif.toUpperCase()} - ${namaTunjuk.toUpperCase()}</option>`; 
+        });
+      }
+      
+      if(document.getElementById('selFilterDaerahOps')) document.getElementById('selFilterDaerahOps').innerHTML = optionDaerah;
+      if(document.getElementById('selFilterDaerahPk')) document.getElementById('selFilterDaerahPk').innerHTML = optionDaerah;
+      if(document.getElementById('selFilterDaerahKp')) document.getElementById('selFilterDaerahKp').innerHTML = optionDaerah;
+    } else {
+      if(document.getElementById('boxFilterDaerahOps')) document.getElementById('boxFilterDaerahOps').style.display = 'none';
+      if(document.getElementById('boxFilterDaerahPk')) document.getElementById('boxFilterDaerahPk').style.display = 'none';
+      if(document.getElementById('boxFilterDaerahKp')) document.getElementById('boxFilterDaerahKp').style.display = 'none';
+    }
+  }
+
+  // ====================================================================
+  // 1. RENDER TAB PEMANTAUAN (KEMASKINI: TAGGING AKTIF/LOKASI & TAPISAN BARU)
+  // ====================================================================
+  function renderTabPemantauan(action) {
+    if (action === 'next') PG_OPS.page++; 
+    else if (action === 'prev') PG_OPS.page--;
+
+    var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+    var tahapSurat = TAHAP_OPS === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+    var sekTapis = (BACKEND_OPS.senaraiSekolah || []).filter(s => s.kategori_sekolah === TAHAP_OPS);
+
+    // TAPISAN DROPDOWN DAERAH
+    var filterDaerah = document.getElementById('selFilterDaerahOps') ? document.getElementById('selFilterDaerahOps').value.toUpperCase() : "";
+    if (filterDaerah !== "") {
+       sekTapis = sekTapis.filter(s => {
+          var kodPpd = (s.ppd || s.daerah || "").toUpperCase();
+          return kodPpd === filterDaerah;
+       });
+    }
+
+    // --- KIRA STATISTIK (Berdasarkan Daerah Sahaja, Supaya Nombor Tak Hilang Masa Filter Lain Ditekan) ---
+    var bilTakAktif = sekTapis.filter(s => parseInt(s.jum_calon || 0) === 0).length;
+    var bilAktif = sekTapis.length - bilTakAktif;
+    var bilPedalaman = sekTapis.filter(s => (s.status_lokasi || "").toUpperCase() === 'PEDALAMAN').length;
+
+    if (document.getElementById('ops-stat-jum-sek')) {
+      document.getElementById('ops-stat-jum-sek').innerText = sekTapis.length;
+      document.getElementById('ops-stat-aktif').innerText = bilAktif;
+      document.getElementById('ops-stat-tak-aktif').innerText = bilTakAktif;
+      document.getElementById('ops-stat-pedalaman').innerText = bilPedalaman;
+    }
+
+    // SIFU TAMBAH: TAPISAN STATUS AKTIF / TIDAK AKTIF
+    var filterStatus = document.getElementById('selFilterStatusSekOps') ? document.getElementById('selFilterStatusSekOps').value.toUpperCase() : "";
+    if (filterStatus !== "") {
+       sekTapis = sekTapis.filter(s => {
+          var jum = parseInt(s.jum_calon || 0);
+          if (filterStatus === "AKTIF") return jum > 0;
+          if (filterStatus === "TIDAK AKTIF") return jum === 0;
+          return true;
+       });
+    }
+
+    // SIFU TAMBAH: TAPISAN LOKASI (BIASA / PEDALAMAN)
+    var filterLokasi = document.getElementById('selFilterLokasiSekOps') ? document.getElementById('selFilterLokasiSekOps').value.toUpperCase() : "";
+    if (filterLokasi !== "") {
+       sekTapis = sekTapis.filter(s => {
+          var lok = (s.status_lokasi || "").toUpperCase();
+          if (filterLokasi === "PEDALAMAN") return lok === "PEDALAMAN";
+          if (filterLokasi === "BIASA") return lok !== "PEDALAMAN";
+          return true;
+       });
+    }
+
+    // TAPISAN KOTAK CARIAN 
+    var input = document.getElementById('cariOpsInput') ? document.getElementById('cariOpsInput').value.toLowerCase().trim() : "";
+    if (input) { 
+      sekTapis = sekTapis.filter(s => s.nama.toLowerCase().includes(input) || s.kod.toLowerCase().includes(input)); 
+    }
+
+    PG_OPS.total = sekTapis.length;
+    var startIdx = (PG_OPS.page - 1) * PG_OPS.limit;
+    var paginatedData = sekTapis.slice(startIdx, startIdx + PG_OPS.limit);
+
+    var html = "";
+    if (paginatedData.length === 0) {
+      html = '<tr><td colspan="7" style="text-align:center; padding:20px; color: var(--text-muted);">Tiada sekolah dikesan bagi tahap/carian ini.</td></tr>';
+    } else {
+      paginatedData.forEach((sek, idx) => {
+        var bil = startIdx + idx + 1;
+        
+        var ops = (BACKEND_OPS.senaraiMatrik || []).find(m => m.kod_sekolah === sek.kod && m.tahun == tahunSemasa && m.matrik_tahap === tahapSurat);
+        var bilikKebalId = ops ? ops.id_bilik_kebal : "";
+        var bkObj = (BACKEND_OPS.senaraiBilikKebal || []).find(b => b.id_bilik_kebal === bilikKebalId);
+        
+        var namaBk = bkObj ? `<span style="font-size:0.78rem; font-weight:600; color:var(--purple-900);">${bkObj.nama_bilik_kebal}</span>` : (bilikKebalId ? `<span style="font-size:0.78rem;">${bilikKebalId}</span>` : "<span style='color:#dc2626; font-size:0.78rem;'>Belum Tag</span>");
+
+        var pkCount = ops ? ((ops.no_kp_pk1 ? 1 : 0) + (ops.no_kp_pk2 ? 1 : 0)) : 0;
+        
+        var teksPk = "0 / 1";
+        if (pkCount === 1) teksPk = "1 / 1";
+        else if (pkCount === 2) teksPk = "2 / 2";
+        
+        var kp = (BACKEND_OPS.senaraiKp || []).find(k => k.tahun == tahunSemasa && k.matrik_tahap === tahapSurat && (k.kod_sek_tetap === sek.kod || (k.kod_sek_tetap === "" && k.kod_sek_cadangan === sek.kod)));
+        var namaKp = kp ? `<div class="td-title" style="font-size:0.8rem;">${kp.nama_guru}</div>` : "<span style='color:#dc2626; font-size:0.78rem;'>Belum Tetap</span>";
+
+        var namaDaerah = getNamaDaerahPenuh(sek.ppd || sek.daerah);
+
+        var hasBk = bilikKebalId !== "";
+        var hasPkCom = (ops && ops.no_kp_pk1) ? true : false;
+        var hasKpCom = kp && kp.status_penetapan === 'DISAHKAN';
+
+        var badgeText = "BELUM";
+        var badgeCss = "background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;";
+        var btnSpp2 = '';
+
+        // SIFU TAMBAH: TAGGING BERWARNA (AKTIF / TIDAK AKTIF / PEDALAMAN / SKM)
+        var jumC = parseInt(sek.jum_calon || 0);
+        var lok = (sek.status_lokasi || "").toUpperCase();
+        
+        var badgeAktif = (jumC === 0) 
+            ? `<span class="badge" style="background:#fee2e2; color:#b91c1c; border: 1px solid #fca5a5; font-size:0.65rem;">TIDAK AKTIF</span>` 
+            : `<span class="badge" style="background:#dcfce7; color:#15803d; border: 1px solid #86efac; font-size:0.65rem;">AKTIF</span>`;
+            
+        var badgePedalaman = (lok === "PEDALAMAN")
+            ? `<span class="badge" style="background:#fef08a; color:#a16207; border: 1px solid #fde047; font-size:0.65rem; margin-left:4px;">PEDALAMAN</span>`
+            : ``;
+            
+        var badgeSkm = (jumC > 0 && jumC < 20)
+            ? `<span class="badge" style="background:#e0e7ff; color:#4338ca; border: 1px solid #a5b4fc; font-size:0.65rem; margin-left:4px;">SKM</span>`
+            : ``;
+
+        // SIFU TAMBAH: LOGIK BYPASS STATUS UNTUK 0 MURID (TIDAK AKTIF)
+        if (jumC === 0) {
+            badgeText = "N/A (TIDAK AKTIF)";
+            badgeCss = "background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;";
+            
+            // Override nilai lain supaya tak semak
+            namaBk = "-"; teksPk = "-"; namaKp = "-";
+        } else {
+            if (hasBk && hasPkCom && hasKpCom) {
+              badgeText = "SELESAI";
+              badgeCss = "background: #dcfce7; color: #15803d; border: 1px solid #86efac;";
+            } else if (hasBk || pkCount > 0 || kp) {
+              badgeText = "PROSES";
+              badgeCss = "background: #fef3c7; color: #b45309; border: 1px solid #fcd34d;";
+            }
+
+            if (badgeText === "SELESAI" || badgeText === "PROSES") {
+               btnSpp2 = `<button type="button" class="btn btn-sm py-1 px-2 fw-bold" style="font-size:0.75rem; border-radius:6px; border: 1px solid #7e22ce; color: #7e22ce; background: transparent; transition: 0.2s; width: 90px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;" onmouseover="this.style.background='#7e22ce'; this.style.color='white';" onmouseout="this.style.background='transparent'; this.style.color='#7e22ce';" onclick="cetakSpp2Sekolah('${sek.kod}')"><i class="fas fa-print me-1"></i> CETAK</button>`;
+            }
+        }
+
+        html += `
+          <tr class="row-ops-item">
+            <td style="text-align:center; font-weight:bold; color:var(--purple-700); vertical-align:middle;">${bil}</td>
+            <td>
+              <div class="td-title" style="font-size:0.85rem;">${sek.kod} - ${sek.nama}</div>
+              <div class="td-subtitle" style="font-size:0.75rem;"><i class="fas fa-map-marker-alt text-purple me-1"></i>${namaDaerah}</div>
+              <div class="mt-1">${badgeAktif}${badgePedalaman}${badgeSkm}</div>
+            </td>
+            <td style="text-align:center; vertical-align:middle;">${namaBk}</td>
+            <td style="text-align:center; vertical-align:middle;"><span class="badge-status">${teksPk}</span></td>
+            <td style="vertical-align:middle;">${namaKp}</td>
+            <td style="text-align:center; vertical-align:middle;"><span class="badge-status" style="${badgeCss}">${badgeText}</span></td>
+            <td style="text-align:center; vertical-align:middle;">
+              <div class="d-flex flex-column align-items-center gap-1">
+                <button type="button" style="border: none; background: transparent; font-size: 0.75rem; font-weight: 600; color: #334155; padding: 4px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;" onmouseover="this.style.color='#7e22ce';" onmouseout="this.style.color='#334155';" onclick="bukaModalKemaskiniOperasi('${sek.kod}')"><i class="fas fa-edit me-1"></i> Kemaskini</button>
+                ${btnSpp2}
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+    }
+    document.getElementById('tblOpsBody').innerHTML = html;
+    binaPagination(PG_OPS, 'renderTabPemantauan', 'pg-info-ops', 'pg-ctrl-ops');
+  }
+
+  function tapisJadualOps() { 
+    PG_OPS.page = 1; 
+    renderTabPemantauan(); 
+  }
+
+  function cetakSpp2Sekolah(kodSekolah) {
+    var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+    var jenisPeperiksaan = TAHAP_OPS === 'RENDAH' ? 'MATRIKS PEMBELAJARAN TAHUN 4' : 'MATRIKS PEMBELAJARAN TINGKATAN 3';
+
+    var tabMenunggu = window.open('about:blank', '_blank');
+    if (tabMenunggu) {
+      tabMenunggu.document.write(`<html><body style="font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0fdf4;"><div style="text-align: center; padding: 30px; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);"><h2>🖨️ Menjana Borang SPP2...</h2><p>Sila tunggu seketika sementara dokumen untuk pusat ${kodSekolah} disiapkan.</p></div></body></html>`);
+    } else {
+      Swal.fire('Halangan Pop-up', 'Sila benarkan pop-up pada pelayar anda.', 'warning'); return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.success) {
+          var byteCharacters = atob(res.pdfBase64); 
+          var byteNumbers = new Array(byteCharacters.length);
+          for (var i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
+          var blob = new Blob([new Uint8Array(byteNumbers)], { type: 'application/pdf' });
+          tabMenunggu.location.href = URL.createObjectURL(blob);
+        } else { 
+          tabMenunggu.close(); 
+          Swal.fire('Gagal', res.message || "Ralat tidak diketahui.", 'error'); 
+        }
+      })
+      .withFailureHandler(function(err) {
+        tabMenunggu.close();
+        Swal.fire('Ralat Pelayan', 'Punca ralat: ' + err.message, 'error');
+      })
+      .janaBorangSPP2PDF_Pusat(kodSekolah, jenisPeperiksaan, tahunSemasa);
+  }
+
+  // ====================================================================
+  // 2. RENDER TAB PK (KEMASKINI: PADAM PK KALIS ROW-SHIFT)
+  // ====================================================================
+  function renderTabPK(action) {
+    if (action === 'next') PG_PK.page++; 
+    else if (action === 'prev') PG_PK.page--;
+
+    var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+    var tahapSurat = TAHAP_OPS === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+    var dataPk = (BACKEND_OPS.senaraiPk || []).filter(p => p.tahun === tahunSemasa && p.matrik_tahap === tahapSurat);
+
+    // TAPISAN DROPDOWN DAERAH
+    var filterDaerah = document.getElementById('selFilterDaerahPk') ? document.getElementById('selFilterDaerahPk').value.toUpperCase() : "";
+    if (filterDaerah !== "") {
+        dataPk = dataPk.filter(p => {
+            var infoSekAsal = (BACKEND_OPS.senaraiSekolah || []).find(s => s.kod === p.kod_sek_asal) || {};
+            var dae = (p.daerah || infoSekAsal.ppd || infoSekAsal.daerah || "").toUpperCase();
+            return dae === filterDaerah;
+        });
+    }
+
+    // TAPISAN KOTAK CARIAN (FOKUS NAMA, IC & KOD SEKOLAH)
+    var inputCarian = document.getElementById('cariPkInput') ? document.getElementById('cariPkInput').value.toLowerCase().trim() : "";
+    if (inputCarian !== "") {
+        dataPk = dataPk.filter(p => {
+            return (p.nama_pk || "").toLowerCase().includes(inputCarian) || 
+                   (p.no_kp || "").toLowerCase().includes(inputCarian) ||
+                   (p.kod_sek_asal || "").toLowerCase().includes(inputCarian);
+        });
+    }
+
+    PG_PK.total = dataPk.length;
+    var startIdx = (PG_PK.page - 1) * PG_PK.limit;
+    var paginatedData = dataPk.slice(startIdx, startIdx + PG_PK.limit);
+
+    var html = "";
+    if (paginatedData.length === 0) {
+      html = '<tr><td colspan="6" style="text-align:center; padding:20px; color: var(--text-muted);">Tiada Penyelia Kawasan dikesan bagi tapisan ini.</td></tr>';
+    } else {
+      paginatedData.forEach((p, idx) => {
+        var bil = startIdx + idx + 1;
+        var rowNumAsal = p.rowNum; 
+        
+        var infoSekAsal = (BACKEND_OPS.senaraiSekolah || []).find(s => s.kod === p.kod_sek_asal) || {};
+        var namaSekAsal = infoSekAsal.nama ? `${p.kod_sek_asal} - ${infoSekAsal.nama}` : p.kod_sek_asal;
+        var daerahSek = getNamaDaerahPenuh(p.daerah || infoSekAsal.ppd || infoSekAsal.daerah);
+
+        html += `
+          <tr>
+            <td style="text-align:center; vertical-align:middle;">
+              <input type="checkbox" class="chk-pk-item" value="${p.no_kp || p.id || ''}" style="cursor: pointer;">
+            </td>
+            <td style="text-align:center; font-weight:bold; color:var(--purple-700); vertical-align:middle;">${bil}</td>
+            <td>
+              <div class="td-title" style="font-size:0.83rem;">${namaSekAsal}</div>
+              <div class="td-subtitle" style="font-size:0.75rem;"><i class="fas fa-map-marker-alt me-1"></i>${daerahSek}</div>
+            </td>
+            <td>
+              <div class="td-title" style="font-size:0.83rem;">${p.nama_pk}</div>
+              <div class="td-subtitle" style="color:var(--purple-700); font-weight:bold; font-size:0.75rem;">${p.jawatan_pk}</div>
+            </td>
+            <td>
+              <div class="td-subtitle" style="font-size:0.78rem;"><i class="far fa-id-card"></i> ${p.no_kp} | <i class="fas fa-phone"></i> ${p.no_tel}</div>
+              <div class="td-subtitle" style="font-size:0.73rem; opacity:0.8;">${p.alamat_rumah || "TIADA ALAMAT"}</div>
+            </td>
+            <td style="text-align:center; vertical-align:middle;">
+              <div class="d-flex flex-column align-items-center gap-1">
+                <!-- Butang Kemaskini -->
+                <button type="button" style="border: none; background: transparent; font-size: 0.75rem; font-weight: 600; color: #334155; padding: 4px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;" onmouseover="this.style.color='#7e22ce';" onmouseout="this.style.color='#334155';" onclick="bukaModalPk(${rowNumAsal})"><i class="fas fa-edit me-1"></i> Kemaskini</button>
+                
+                <!-- Butang Cetak -->
+                <button type="button" class="btn btn-sm py-1 px-2 fw-bold" style="font-size:0.75rem; border-radius:6px; border: 1px solid #7e22ce; color: #7e22ce; background: transparent; transition: 0.2s; width: 90px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;" onmouseover="this.style.background='#7e22ce'; this.style.color='white';" onmouseout="this.style.background='transparent'; this.style.color='#7e22ce';" onclick="cetakSuratPk('${p.no_kp}', '${tahunSemasa}', '${tahapSurat}')"><i class="fas fa-print me-1"></i> CETAK</button>
+                
+                <!-- Butang Padam -->
+                <button type="button" class="btn btn-sm py-1 px-2 fw-bold mt-1" style="font-size:0.75rem; border-radius:6px; border: 1px solid #dc2626; color: #dc2626; background: transparent; transition: 0.2s; width: 90px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;" onmouseover="this.style.background='#dc2626'; this.style.color='white';" onmouseout="this.style.background='transparent'; this.style.color='#dc2626';" onclick="padamRekodPkSelamat('${p.no_kp}', '${tahunSemasa}', '${tahapSurat}')"><i class="fas fa-trash-alt me-1"></i> PADAM</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+    }
+    document.getElementById('tblPkBody').innerHTML = html;
+    binaPagination(PG_PK, 'renderTabPK', 'pg-info-pk', 'pg-ctrl-pk');
+  }
+
+  function tapisJadualPk() { 
+    PG_PK.page = 1; 
+    renderTabPK(); 
+  }
+
+  // 🌟 FUNGSI PADAM PK (KALIS ROW-SHIFT)
+  function padamRekodPkSelamat(noKp, tahun, tahap) {
+    Swal.fire({
+      title: 'Anda Pasti?',
+      text: "Maklumat Penyelia Kawasan ini akan dipadamkan sepenuhnya!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Ya, Padam!',
+      cancelButtonText: 'Batal'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({ title: 'Memadam...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res.status === "SUCCESS") {
+              Swal.fire('Dipadam!', 'Rekod PK berjaya dipadamkan.', 'success');
+              initModulOperasi(); // Muat semula jadual dengan data segar
+            } else {
+              Swal.fire('Gagal', res.message, 'error');
+            }
+          })
+          .withFailureHandler(function(err) {
+            Swal.fire('Ralat Pelayan', err.message, 'error');
+          })
+          .padamPkBerdasarkanKunci(noKp, tahun, tahap);
+      }
+    });
+  }
+
+  // ====================================================================
+  // 3. RENDER TAB KP OPS (KEMASKINI: STATISTIK KEKAL & FILTER STATUS)
+  // ====================================================================
+  function renderTabKPOps(action) {
+    if (action === 'next') PG_KP.page++; 
+    else if (action === 'prev') PG_KP.page--;
+
+    var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+    var tahapSurat = TAHAP_OPS === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+    var senaraiKp = (BACKEND_OPS.senaraiKp || []).filter(k => k.tahun === tahunSemasa && k.matrik_tahap === tahapSurat);
+
+    // 1. TAPISAN DROPDOWN DAERAH DAHULU (UNTUK KAD STATISTIK)
+    var filterDaerah = document.getElementById('selFilterDaerahKp') ? document.getElementById('selFilterDaerahKp').value.toUpperCase() : "";
+    if (filterDaerah !== "") {
+        senaraiKp = senaraiKp.filter(k => {
+            var infoSekAsal = (BACKEND_OPS.senaraiSekolah || []).find(s => s.kod === k.kod_sek_asal) || {};
+            var dae = (infoSekAsal.ppd || infoSekAsal.daerah || "").toUpperCase();
+            return dae === filterDaerah;
+        });
+    }
+
+    // UPDATE STATISTIK BERDASARKAN DAERAH SAHAJA (SEBELUM CARIAN / STATUS LAIN)
+    var disahkan = senaraiKp.filter(k => k.status_penetapan === 'DISAHKAN').length;
+    var cadangan = senaraiKp.length - disahkan;
+    
+    var sekTahapIni = (BACKEND_OPS.senaraiSekolah || []).filter(s => s.kategori_sekolah === TAHAP_OPS);
+    if (filterDaerah !== "") {
+        sekTahapIni = sekTahapIni.filter(s => (s.ppd || s.daerah || "").toUpperCase() === filterDaerah);
+    }
+    var skmCount = sekTahapIni.filter(s => parseInt(s.jum_calon || 0) > 0 && parseInt(s.jum_calon || 0) < 20).length;
+
+    document.getElementById('ops-stat-total').innerText = senaraiKp.length;
+    document.getElementById('ops-stat-disahkan').innerText = disahkan;
+    document.getElementById('ops-stat-cadangan').innerText = cadangan;
+    document.getElementById('ops-stat-skm').innerText = skmCount;
+
+    // 2. TAPISAN STATUS PENGESAHAN
+    var filterStatus = document.getElementById('selFilterStatusKp') ? document.getElementById('selFilterStatusKp').value.toUpperCase() : "";
+    if (filterStatus !== "") {
+        senaraiKp = senaraiKp.filter(k => (k.status_penetapan || "CADANGAN").toUpperCase() === filterStatus);
+    }
+
+    // 3. TAPISAN KOTAK CARIAN (NAMA, NO KP, KOD SEKOLAH)
+    var inputCarian = document.getElementById('cariKpInput') ? document.getElementById('cariKpInput').value.toLowerCase().trim() : "";
+    if (inputCarian !== "") {
+        senaraiKp = senaraiKp.filter(k => {
+            return (k.nama_guru || "").toLowerCase().includes(inputCarian) || 
+                   (k.no_kp || "").toLowerCase().includes(inputCarian) ||
+                   (k.kod_sek_asal || "").toLowerCase().includes(inputCarian);
+        });
+    }
+
+    PG_KP.total = senaraiKp.length;
+    var startIdx = (PG_KP.page - 1) * PG_KP.limit;
+    var paginatedData = senaraiKp.slice(startIdx, startIdx + PG_KP.limit);
+
+    var kpKiraanTerkini = {};
+    senaraiKp.forEach(kpItem => {
+      var kod = (kpItem.kod_sek_tetap && kpItem.kod_sek_tetap.trim() !== "") ? kpItem.kod_sek_tetap : "";
+      if (kod !== "") kpKiraanTerkini[kod] = (kpKiraanTerkini[kod] || 0) + 1;
+    });
+
+    var html = "";
+    if (paginatedData.length === 0) {
+      html = '<tr><td colspan="4" style="text-align:center; padding:20px; color: var(--text-muted);">Tiada calon KP dikesan untuk tapisan ini.</td></tr>';
+    } else {
+      paginatedData.forEach((k, idx) => {
+        var bil = startIdx + idx + 1;
+        var rowNumAsal = k.rowNum; 
+        
+        var infoSekAsal = BACKEND_OPS.senaraiSekolah.find(s => s.kod === k.kod_sek_asal) || {};
+        
+        // SIFU TAMBAH: Semak status lokasi pedalaman
+        var statusLokasiAsal = infoSekAsal.status_lokasi ? infoSekAsal.status_lokasi.toUpperCase() : "";
+        var isSkmAsal = (infoSekAsal && parseInt(infoSekAsal.jum_calon || 0) > 0 && parseInt(infoSekAsal.jum_calon || 0) < 20);
+        var isPedalamanAsal = (statusLokasiAsal === "PEDALAMAN");
+        var isSkmAtauPedalaman = isSkmAsal || isPedalamanAsal;
+        
+        var ppdCalon = infoSekAsal ? (infoSekAsal.ppd || infoSekAsal.daerah || "") : "";
+        
+        var sekDaerahSama = [];
+        if (isSkmAtauPedalaman) {
+          sekDaerahSama = [infoSekAsal];
+        } else {
+          sekDaerahSama = BACKEND_OPS.senaraiSekolah.filter(s => {
+            var ppdS = s.ppd || s.daerah || "";
+            var isSkmDest = (parseInt(s.jum_calon || 0) > 0 && parseInt(s.jum_calon || 0) < 20);
+            var isPedalamanDest = (s.status_lokasi && s.status_lokasi.toUpperCase() === "PEDALAMAN");
+            // Jangan senaraikan SKM atau Pedalaman orang lain dalam pilihan biasa
+            return ppdS.toUpperCase() === ppdCalon.toUpperCase() && s.kod.toUpperCase() !== k.kod_sek_asal.toUpperCase() && !isSkmDest && !isPedalamanDest;
+          });
+        }
+
+        var kodTerpilih = isSkmAtauPedalaman ? k.kod_sek_asal : ((k.kod_sek_tetap && k.kod_sek_tetap.trim() !== "") ? k.kod_sek_tetap : (k.kod_sek_cadangan || ""));
+        var optionsHtml = isSkmAtauPedalaman ? "" : `<option value="">-- Pilih Pusat Penugasan (Muktamad) --</option>`;
+        
+        sekDaerahSama.forEach(s => {
+          var isSelected = (s.kod === kodTerpilih) ? "selected" : "";
+          var kuotaGuna = kpKiraanTerkini[s.kod] || 0;
+          
+          var teksKuota = "";
+          if (isSkmAsal) teksKuota = "[GURU BESAR/SKM]";
+          else if (isPedalamanAsal) teksKuota = "[GURU BESAR/PEDALAMAN]";
+          else teksKuota = `[${kuotaGuna}/1]`;
+
+          var disabledTeks = "";
+          
+          if (!isSkmAtauPedalaman && kuotaGuna >= 1 && s.kod !== kodTerpilih) {
+              disabledTeks = "disabled"; teksKuota = "[1/1 - PENUH]";
+          }
+          optionsHtml += `<option value="${s.kod}" ${isSelected} ${disabledTeks}>${s.kod} - ${s.nama.toUpperCase()} ${teksKuota}</option>`;
+        });
+
+        var infoSekCadangan = BACKEND_OPS.senaraiSekolah.find(s => s.kod === k.kod_sek_cadangan) || {};
+        var namaSekCadangan = infoSekCadangan.nama ? `${k.kod_sek_cadangan} - ${infoSekCadangan.nama}` : (k.kod_sek_cadangan || "Tiada Maklumat Cadangan");
+
+        var modeKunci = (k.status_penetapan === 'DISAHKAN' || isSkmAtauPedalaman) ? 'disabled' : '';
+        var badgeStyle = (k.status_penetapan === 'DISAHKAN') ? "" : "background: #FEF9C3; color: #854D0E;";
+
+        var teksCadanganHtml = "";
+        if (isSkmAsal) {
+            teksCadanganHtml = `<div style="font-size: 0.75rem; color: #b45309; margin-bottom: 8px; font-weight: 600;"><i class="fas fa-info-circle me-1"></i> Penempatan Kekal (Sekolah SKM)</div>`;
+        } else if (isPedalamanAsal) {
+            teksCadanganHtml = `<div style="font-size: 0.75rem; color: #b45309; margin-bottom: 8px; font-weight: 600;"><i class="fas fa-info-circle me-1"></i> Penempatan Kekal (Pedalaman)</div>`;
+        } else {
+            teksCadanganHtml = `<div style="font-size: 0.75rem; color: var(--purple-700); margin-bottom: 8px; font-weight: 600;"><i class="fas fa-map-pin me-1"></i> Cadangan: ${namaSekCadangan}</div>`;
+        }
+
+        var selectInline = `
+          ${teksCadanganHtml}
+          <div class="mb-1">
+            <select id="sel_inline_${rowNumAsal}" class="form-select form-select-sm fw-bold border-purple" style="border-radius:6px; font-size:0.85rem;" ${modeKunci}>
+              ${optionsHtml}
+            </select>
+          </div>
+          <div><span class="badge-status" style="${badgeStyle}">${k.status_penetapan}</span></div>
+        `;
+
+        var butangAksi = '<div class="d-flex flex-column gap-1 align-items-center">';
+        if (k.status_penetapan === 'DISAHKAN') {
+          butangAksi += `<button class="btn btn-sm py-1 px-2 fw-bold" style="font-size: 0.75rem; border-radius: 6px; border: 1px solid #dc3545; color: #dc3545; background: transparent; cursor: pointer; transition: 0.2s; width: 90px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;" onmouseover="this.style.background='#dc3545'; this.style.color='white';" onmouseout="this.style.background='transparent'; this.style.color='#dc3545';" onclick="batalPengesahanMatriks(${rowNumAsal}, '${k.no_kp}')"><i class="fas fa-unlock me-1"></i> Batal</button>`;
+        } else {
+          butangAksi += `<button class="btn btn-sm py-1 px-2 fw-bold" style="font-size: 0.75rem; border-radius: 6px; border: 1px solid #198754; color: #198754; background: transparent; cursor: pointer; transition: 0.2s; width: 90px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;" onmouseover="this.style.background='#198754'; this.style.color='white';" onmouseout="this.style.background='transparent'; this.style.color='#198754';" onclick="sahkanSatuPenempatan(${rowNumAsal}, '${k.kod_sek_asal}', '${k.no_kp}')"><i class="fas fa-check me-1"></i> Sahkan</button>`;
+        }
+        butangAksi += `<button type="button" class="btn btn-sm py-1 px-2 fw-bold" style="font-size: 0.75rem; border-radius: 6px; border: 1px solid #7e22ce; color: #7e22ce; background: transparent; cursor: pointer; transition: 0.2s; width: 90px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;" onmouseover="this.style.background='#7e22ce'; this.style.color='white';" onmouseout="this.style.background='transparent'; this.style.color='#7e22ce';" onclick="cetakSuratMatriks('${k.no_kp}', '${k.tahun}', '${k.matrik_tahap}', '${k.status_penetapan}')"><i class="fas fa-print me-1"></i> CETAK</button></div>`;
+
+        html += `
+          <tr>
+            <td style="text-align:center; font-weight:bold; color:var(--purple-700); vertical-align:middle;">${bil}</td>
+            <td>
+              <div class="td-title">${k.nama_guru}</div>
+              <div class="td-subtitle mb-1"><i class="far fa-id-card"></i> ${k.no_kp}</div>
+              <div class="td-subtitle mb-1" style="font-size:0.78rem; font-weight: 600;"><i class="fas fa-school"></i> ${k.kod_sek_asal} - ${infoSekAsal.nama || "-"}</div>
+              <div class="td-subtitle" style="font-size:0.75rem; opacity: 0.8;"><i class="fas fa-home"></i> ${k.alamat_rumah || "TIADA ALAMAT"}</div>
+            </td>
+            <td style="vertical-align:middle;">${selectInline}</td>
+            <td style="text-align: center; vertical-align: middle;">${butangAksi}</td>
+          </tr>
+        `;
+      });
+    }
+    
+    document.getElementById('tblKpOpsBody').innerHTML = html;
+    binaPagination(PG_KP, 'renderTabKPOps', 'pg-info-kp', 'pg-ctrl-kp');
+  }
+
+  function tapisJadualKpOps() { 
+    PG_KP.page = 1; 
+    renderTabKPOps(); 
+  }
+
+  // 4. RENDER TAB PENGAWAS
+  function isiFilterPengawas() {
+    if(!BACKEND_OPS) return;
+    var isPPD = G_USER && G_USER.role === 'PPD';
+    var kodDaerahSemasa = (G_USER && G_USER.kod_daerah) ? G_USER.kod_daerah : (G_USER ? G_USER.username : "");
+    
+    var optionDaerah = '<option value="">-- Semua Daerah / PPD --</option>';
+    if(BACKEND_OPS.senaraiDaerah && BACKEND_OPS.senaraiDaerah.length > 0) {
+      var sortedDaerah = BACKEND_OPS.senaraiDaerah.sort((a,b) => {
+        var kodA = a.ppd ? a.ppd : a.kod; var kodB = b.ppd ? b.ppd : b.kod; return kodA.localeCompare(kodB);
+      });
+      sortedDaerah.forEach(d => {
+        var kodPpdAktif = d.ppd ? d.ppd : d.kod;
+        var namaTunjuk = d.nama || kodPpdAktif;
+        optionDaerah += `<option value="${kodPpdAktif.toUpperCase()}">${kodPpdAktif.toUpperCase()} - ${namaTunjuk.toUpperCase()}</option>`; 
+      });
+    }
+    $('#filterDaerahPgws').html(optionDaerah);
+    
+    if (isPPD) {
+       $('#filterDaerahPgws').val(kodDaerahSemasa).prop('disabled', true);
+    }
+
+    var optionSekolah = '';
+    var sekTapis = BACKEND_OPS.senaraiSekolah.filter(s => s.kategori_sekolah === TAHAP_OPS);
+    if (isPPD) {
+        sekTapis = sekTapis.filter(s => (s.ppd || s.daerah || "").toUpperCase() === kodDaerahSemasa.toUpperCase());
+    }
+    var sortedSekolah = [...sekTapis].sort((a,b) => a.kod.localeCompare(b.kod));
+    sortedSekolah.forEach(s => { optionSekolah += `<option value="${s.kod} - ${s.nama.toUpperCase()}"></option>`; });
+    $('#listSekPgws').html(optionSekolah);
+  }
+
+  function renderTabPengawas(action) {
+    if (action === 'next') PG_PGWS.page++; 
+    else if (action === 'prev') PG_PGWS.page--;
+
+    var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+    var tahapSurat = TAHAP_OPS === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+    
+    var dVal = $('#filterDaerahPgws').val() || "";
+    var sVal = $('#filterSekolahPgws').val() || "";
+    var sekTapis = sVal.indexOf(" - ") > -1 ? sVal.split(" - ")[0].trim() : sVal.trim();
+    var carian = $('#cariNamaPgws').val().toLowerCase().trim();
+
+    var dataPgws = (BACKEND_OPS.senaraiPgws || []).filter(p => p.tahun === tahunSemasa && p.matrik_tahap === tahapSurat);
+
+    if (dVal !== "") dataPgws = dataPgws.filter(p => (p.daerah || "").toUpperCase() === dVal.toUpperCase());
+    if (sekTapis !== "") dataPgws = dataPgws.filter(p => (p.kod_sekolah || "").toUpperCase() === sekTapis.toUpperCase());
+    if (carian !== "") dataPgws = dataPgws.filter(p => (p.nama || "").toLowerCase().includes(carian) || (p.no_kp || "").includes(carian));
+
+    PG_PGWS.total = dataPgws.length;
+    var startIdx = (PG_PGWS.page - 1) * PG_PGWS.limit;
+    var paginatedData = dataPgws.slice(startIdx, startIdx + PG_PGWS.limit);
+
+    var html = "";
+    if (paginatedData.length === 0) {
+      html = '<tr><td colspan="4" style="text-align:center; padding:20px; color: var(--text-muted);">Tiada rekod pengawas dikesan bagi tapisan ini.</td></tr>';
+    } else {
+      paginatedData.forEach((p, idx) => {
+        var bil = startIdx + idx + 1;
+        var infoSek = (BACKEND_OPS.senaraiSekolah || []).find(s => s.kod === p.kod_sekolah) || {};
+        var namaSek = infoSek.nama ? `${p.kod_sekolah} - ${infoSek.nama}` : p.kod_sekolah;
+        var daerahSek = getNamaDaerahPenuh(p.daerah || infoSek.ppd || infoSek.daerah);
+        var jantinaBadge = p.jantina === 'L' ? '<span class="badge bg-primary">LELAKI</span>' : (p.jantina === 'P' ? '<span class="badge" style="background:#e879f9;">PEREMPUAN</span>' : '-');
+
+        html += `
+          <tr>
+            <td style="text-align:center; font-weight:bold; color: var(--purple-700);">${bil}</td>
+            <td>
+              <div class="td-title" style="font-size:0.83rem;">${namaSek}</div>
+              <div class="td-subtitle" style="font-size:0.75rem;"><i class="fas fa-map-marker-alt me-1 text-purple"></i>${daerahSek}</div>
+            </td>
+            <td>
+              <div class="td-title" style="font-size:0.83rem; margin-bottom: 2px;">${p.nama}</div>
+              <div class="td-subtitle" style="font-size:0.78rem; color: #1e293b; margin-bottom: 4px;"><i class="far fa-id-card text-purple"></i> ${p.no_kp}</div>
+              <div class="td-subtitle">${jantinaBadge}</div>
+            </td>
+            <td style="vertical-align: middle;">
+              <div class="td-subtitle" style="font-size:0.78rem; color: #1e293b; margin-bottom: 4px;"><i class="fas fa-phone text-purple"></i> ${p.no_tel}</div>
+              <div class="td-subtitle" style="font-size:0.78rem; opacity:0.8;"><i class="fas fa-envelope text-purple"></i> ${p.emel}</div>
+            </td>
+          </tr>
+        `;
+      });
+    }
+    document.getElementById('tblPgwsBody').innerHTML = html;
+    binaPagination(PG_PGWS, 'renderTabPengawas', 'pg-info-pgws', 'pg-ctrl-pgws');
+  }
+
+  function tapisJadualPengawas() {
+    PG_PGWS.page = 1;
+    renderTabPengawas();
+  }
+
+  function resetFilterPengawas() {
+    var isPPD = G_USER && G_USER.role === 'PPD';
+    if (!isPPD) $('#filterDaerahPgws').val("");
+    $('#filterSekolahPgws').val("");
+    $('#cariNamaPgws').val("");
+    tapisJadualPengawas();
+  }
+
+  // EKSPORT JADUAL KE EXCEL
+  function eksportJadualKeExcel(tableId, filename) {
+    try {
+      var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+      var tahapSurat = TAHAP_OPS === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+      
+      // EXCEL PENYELIA KAWASAN
+      if (tableId === 'tblPkUtama' && BACKEND_OPS && BACKEND_OPS.senaraiPk) {
+        var dataPk = (BACKEND_OPS.senaraiPk || []).filter(p => p.tahun === tahunSemasa && p.matrik_tahap === tahapSurat);
+        
+        var filterDaerah = document.getElementById('selFilterDaerahPk') ? document.getElementById('selFilterDaerahPk').value.toUpperCase() : "";
+        if (filterDaerah !== "") {
+            dataPk = dataPk.filter(p => {
+                var infoSekAsal = (BACKEND_OPS.senaraiSekolah || []).find(s => s.kod === p.kod_sek_asal) || {};
+                var dae = (p.daerah || infoSekAsal.ppd || infoSekAsal.daerah || "").toUpperCase();
+                return dae === filterDaerah;
+            });
+        }
+        var inputCarian = document.getElementById('cariPkInput') ? document.getElementById('cariPkInput').value.toLowerCase().trim() : "";
+        if (inputCarian !== "") {
+            dataPk = dataPk.filter(p => (p.nama_pk || "").toLowerCase().includes(inputCarian) || (p.no_kp || "").toLowerCase().includes(inputCarian) || (p.kod_sek_asal || "").toLowerCase().includes(inputCarian));
+        }
+        
+        if (dataPk.length === 0) { Swal.fire('Perhatian', 'Tiada data Penyelia Kawasan untuk dieksport.', 'warning'); return; }
+
+        var csvContent = "\uFEFFBil,Tahun,Tahap,Kod Sekolah Asal,Nama Sekolah Asal,Daerah,Jawatan PK,Nama PK,No. KP,No. Telefon,Emel,Alamat Rumah\n";
+
+        dataPk.forEach(function(p, idx) {
+          var infoSekAsal = (BACKEND_OPS.senaraiSekolah || []).find(s => s.kod === p.kod_sek_asal) || {};
+          var namaSekAsal = infoSekAsal.nama ? infoSekAsal.nama.toUpperCase() : p.kod_sek_asal;
+          var daerahSek = getNamaDaerahPenuh(p.daerah || infoSekAsal.ppd || infoSekAsal.daerah);
+
+          var row = [
+            idx + 1, p.tahun || tahunSemasa, p.matrik_tahap || tahapSurat, p.kod_sek_asal || '',
+            '"' + namaSekAsal.replace(/"/g, '""') + '"', '"' + daerahSek.replace(/"/g, '""') + '"', '"' + (p.jawatan_pk || '') + '"', 
+            '"' + (p.nama_pk || '').replace(/"/g, '""') + '"', '="' + (p.no_kp || '') + '"', '="' + (p.no_tel || '') + '"', 
+            '"' + (p.emel || '') + '"', '"' + (p.alamat_rumah || 'TIADA ALAMAT').replace(/"/g, '""') + '"'
+          ];
+          csvContent += row.join(",") + "\n";
+        });
+        muatTurunCSVBlob(csvContent, (filename || 'Senarai_PK') + '_' + TAHAP_OPS + '_' + tahunSemasa + '.csv');
+        return;
+      }
+      
+      // EXCEL KETUA PENGAWAS
+      else if (tableId === 'tblKpUtama' && BACKEND_OPS && BACKEND_OPS.senaraiKp) {
+        var dataKp = (BACKEND_OPS.senaraiKp || []).filter(k => k.tahun === tahunSemasa && k.matrik_tahap === tahapSurat);
+        
+        var filterDaerah = document.getElementById('selFilterDaerahKp') ? document.getElementById('selFilterDaerahKp').value.toUpperCase() : "";
+        if (filterDaerah !== "") {
+            dataKp = dataKp.filter(k => {
+                var infoSekAsal = (BACKEND_OPS.senaraiSekolah || []).find(s => s.kod === k.kod_sek_asal) || {};
+                var dae = (infoSekAsal.ppd || infoSekAsal.daerah || "").toUpperCase();
+                return dae === filterDaerah;
+            });
+        }
+        
+        var filterStatus = document.getElementById('selFilterStatusKp') ? document.getElementById('selFilterStatusKp').value.toUpperCase() : "";
+        if (filterStatus !== "") {
+            dataKp = dataKp.filter(k => (k.status_penetapan || "CADANGAN").toUpperCase() === filterStatus);
+        }
+        
+        var inputCarian = document.getElementById('cariKpInput') ? document.getElementById('cariKpInput').value.toLowerCase().trim() : "";
+        if (inputCarian !== "") {
+            dataKp = dataKp.filter(k => (k.nama_guru || "").toLowerCase().includes(inputCarian) || (k.no_kp || "").toLowerCase().includes(inputCarian) || (k.kod_sek_asal || "").toLowerCase().includes(inputCarian));
+        }
+        
+        if (dataKp.length === 0) { Swal.fire('Perhatian', 'Tiada data Ketua Pengawas untuk dieksport.', 'warning'); return; }
+
+        var csvContent = "\uFEFFBil,Tahun,Tahap,Kod Sekolah Asal,Nama Sekolah Asal,Daerah,Nama Guru (KP),No. KP,No. Telefon,Emel,Alamat Rumah,Sekolah Cadangan,Sekolah Tetap (Muktamad),Status Penetapan\n";
+
+        dataKp.forEach(function(k, idx) {
+          var infoSekAsal = (BACKEND_OPS.senaraiSekolah || []).find(s => s.kod === k.kod_sek_asal) || {};
+          var namaSekAsal = infoSekAsal.nama ? infoSekAsal.nama.toUpperCase() : k.kod_sek_asal;
+          var daerahSek = getNamaDaerahPenuh(infoSekAsal.ppd || infoSekAsal.daerah);
+          var infoSekCadang = (BACKEND_OPS.senaraiSekolah || []).find(s => s.kod === k.kod_sek_cadangan) || {};
+          var infoSekTetap = (BACKEND_OPS.senaraiSekolah || []).find(s => s.kod === k.kod_sek_tetap) || {};
+
+          var row = [
+            idx + 1, k.tahun || tahunSemasa, k.matrik_tahap || tahapSurat, k.kod_sek_asal || '',
+            '"' + namaSekAsal.replace(/"/g, '""') + '"', '"' + daerahSek.replace(/"/g, '""') + '"', '"' + (k.nama_guru || '').replace(/"/g, '""') + '"', 
+            '="' + (k.no_kp || '') + '"', '="' + (k.no_tel || '') + '"', '"' + (k.emel || '') + '"', 
+            '"' + (k.alamat_rumah || 'TIADA ALAMAT').replace(/"/g, '""') + '"', 
+            '"' + (infoSekCadang.nama ? `${k.kod_sek_cadangan} - ${infoSekCadang.nama.toUpperCase()}` : (k.kod_sek_cadangan || '-')).replace(/"/g, '""') + '"', 
+            '"' + (infoSekTetap.nama ? `${k.kod_sek_tetap} - ${infoSekTetap.nama.toUpperCase()}` : (k.kod_sek_tetap || '-')).replace(/"/g, '""') + '"', 
+            '"' + (k.status_penetapan || '') + '"'
+          ];
+          csvContent += row.join(",") + "\n";
+        });
+        muatTurunCSVBlob(csvContent, (filename || 'Senarai_KP') + '_' + TAHAP_OPS + '_' + tahunSemasa + '.csv');
+        return;
+      }
+      
+      // EXCEL SENARAI PENGAWAS
+      else if (tableId === 'tblPgwsUtama' && BACKEND_OPS && BACKEND_OPS.senaraiPgws) {
+        var dataPgws = (BACKEND_OPS.senaraiPgws || []).filter(p => p.tahun === tahunSemasa && p.matrik_tahap === tahapSurat);
+        
+        var dVal = $('#filterDaerahPgws').val() || "";
+        var sVal = $('#filterSekolahPgws').val() || "";
+        var sekTapis = sVal.indexOf(" - ") > -1 ? sVal.split(" - ")[0].trim() : sVal.trim();
+        var carian = $('#cariNamaPgws').val().toLowerCase().trim();
+        
+        if (dVal !== "") dataPgws = dataPgws.filter(p => (p.daerah || "").toUpperCase() === dVal.toUpperCase());
+        if (sekTapis !== "") dataPgws = dataPgws.filter(p => (p.kod_sekolah || "").toUpperCase() === sekTapis.toUpperCase());
+        if (carian !== "") dataPgws = dataPgws.filter(p => (p.nama || "").toLowerCase().includes(carian) || (p.no_kp || "").includes(carian));
+
+        if (dataPgws.length === 0) { Swal.fire('Perhatian', 'Tiada data Pengawas untuk dieksport bagi tapisan ini.', 'warning'); return; }
+
+        var csvContent = "\uFEFFBil,Tahun,Tahap,Kod Sekolah,Nama Sekolah,Daerah,Nama Pengawas,No. KP,Jantina,No. Telefon,Emel\n";
+
+        dataPgws.forEach(function(p, idx) {
+          var infoSek = (BACKEND_OPS.senaraiSekolah || []).find(s => s.kod === p.kod_sekolah) || {};
+          var namaSek = infoSek.nama ? infoSek.nama.toUpperCase() : p.kod_sekolah;
+          var daerahSek = getNamaDaerahPenuh(p.daerah || infoSek.ppd || infoSek.daerah);
+
+          var row = [
+            idx + 1, p.tahun || tahunSemasa, p.matrik_tahap || tahapSurat, p.kod_sekolah || '',
+            '"' + namaSek.replace(/"/g, '""') + '"', '"' + daerahSek.replace(/"/g, '""') + '"', '"' + (p.nama || '').replace(/"/g, '""') + '"', 
+            '="' + (p.no_kp || '') + '"', (p.jantina || ''), '="' + (p.no_tel || '') + '"', '"' + (p.emel || '') + '"'
+          ];
+          csvContent += row.join(",") + "\n";
+        });
+        muatTurunCSVBlob(csvContent, (filename || 'Senarai_Pengawas') + '_' + TAHAP_OPS + '_' + tahunSemasa + '.csv');
+        return;
+      }
+
+    } catch (err) {
+      Swal.fire('Ralat Eksport', err.message, 'error');
+    }
+  }
+
+  function muatTurunCSVBlob(content, filenamePenuh) {
+    var blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    var link = document.createElement("a");
+    var url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", filenamePenuh);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    Swal.fire({ icon: 'success', title: 'Berjaya!', text: 'Fail Excel berjaya dimuat turun.', confirmButtonColor: '#6366f1', timer: 2000 });
+  }
+
+  // CETAK SURAT PK
+  function cetakSuratPk(noKp, tahun, tahap) {
+    var tabMenunggu = window.open('about:blank', '_blank');
+    if (tabMenunggu) {
+      tabMenunggu.document.write(`<html><body style="font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f8f9fa;"><div style="text-align: center; padding: 30px; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);"><h2>🖨️ Menjana Surat PK...</h2><p>Sila tunggu seketika sementara dokumen anda disiapkan.</p></div></body></html>`);
+    } else {
+      Swal.fire('Halangan Pop-up', 'Sila benarkan pop-up pada pelayar anda.', 'warning'); return;
+    }
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.status === "SUCCESS") {
+          var byteCharacters = atob(res.base64); var byteNumbers = new Array(byteCharacters.length);
+          for (var i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
+          var blob = new Blob([new Uint8Array(byteNumbers)], { type: 'application/pdf' });
+          tabMenunggu.location.href = URL.createObjectURL(blob);
+        } else { tabMenunggu.close(); Swal.fire('Gagal', res.message || "Ralat tidak diketahui.", 'error'); }
+      })
+      .withFailureHandler(function(err) {
+        tabMenunggu.close();
+        Swal.fire('Ralat Pelayan (Code.gs)', 'Punca ralat: ' + err.message, 'error');
+      })
+      .janaSuratLantikanPDF(noKp.toString(), tahun, tahap);
+  }
+
+  // 🌟 BUKA MODAL KEMASKINI OPERASI MATRIKS
+  function bukaModalKemaskiniOperasi(kodSekolah) {
+    if (!BACKEND_OPS) return;
+    var sek = (BACKEND_OPS.senaraiSekolah || []).filter(s => s.kod === kodSekolah)[0];
+    if (!sek) {
+      Swal.fire('Ralat', 'Maklumat sekolah tidak dijumpai.', 'error');
+      return;
+    }
+
+    var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+    var tahapSurat = TAHAP_OPS === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+
+    $('#txtOpsKodSek').val(sek.kod);
+    $('#txtOpsNamaSek').val(sek.kod + ' - ' + sek.nama);
+    var kodDaerahSek = (sek.ppd || sek.daerah || "").toString().trim().toUpperCase();
+    var namaDaerah = getNamaDaerahPenuh(kodDaerahSek);
+    $('#txtOpsNamaDaerah').val(namaDaerah);
+    $('#txtOpsDaerah').val(kodDaerahSek);
+    $('#lblOpsSekolahSub').text(sek.kod + ' - ' + sek.nama);
+
+    var ops = (BACKEND_OPS.senaraiMatrik || []).filter(m => m.kod_sekolah === sek.kod && m.tahun == tahunSemasa && m.matrik_tahap === tahapSurat)[0];
+
+    // 1. TAPIS BILIK KEBAL MENGIKUT DAERAH SEKOLAH SAHAJA
+    var bkOptions = '<option value="">-- Pilih Bilik Kebal --</option>';
+    (BACKEND_OPS.senaraiBilikKebal || []).forEach(bk => {
+      var daerahBk = (bk.daerah || "").toString().trim().toUpperCase();
+      if (daerahBk === kodDaerahSek || kodDaerahSek === "" || daerahBk === "") {
+        var sel = (ops && ops.id_bilik_kebal === bk.id_bilik_kebal) ? 'selected' : '';
+        bkOptions += `<option value="${bk.id_bilik_kebal}" ${sel}>${bk.id_bilik_kebal} - ${bk.nama_bilik_kebal}</option>`;
+      }
+    });
+    $('#selOpsBilikKebal').html(bkOptions);
+
+    // 2. KIRA KUOTA PENGGUNAAN PUSAT OLEH PENYELIA KAWASAN (MAKSIMUM 8 PUSAT)
+    var pkCountMap = {};
+    (BACKEND_OPS.senaraiMatrik || []).forEach(m => {
+      if (m.tahun == tahunSemasa && m.matrik_tahap === tahapSurat) {
+        if (m.no_kp_pk1) pkCountMap[m.no_kp_pk1] = (pkCountMap[m.no_kp_pk1] || 0) + 1;
+        if (m.no_kp_pk2) pkCountMap[m.no_kp_pk2] = (pkCountMap[m.no_kp_pk2] || 0) + 1;
+      }
+    });
+
+    // 3. DROPDOWN PENYELIA KAWASAN (PK1 & PK2) - TAPISAN DAERAH SEKTOR & KUOTA
+    var senaraiPkTahap = (BACKEND_OPS.senaraiPk || []).filter(p => {
+      if (p.tahun != tahunSemasa || p.matrik_tahap !== tahapSurat) return false;
+      
+      var pkDaerah = (p.daerah || "").toString().trim().toUpperCase();
+      var infoSekPk = (BACKEND_OPS.senaraiSekolah || []).filter(s => s.kod === p.kod_sek_asal)[0];
+      if (infoSekPk) {
+        var ppdSekPk = (infoSekPk.ppd || infoSekPk.daerah || "").toString().trim().toUpperCase();
+        if (ppdSekPk) pkDaerah = ppdSekPk;
+      }
+      
+      return (pkDaerah === kodDaerahSek || kodDaerahSek === "" || pkDaerah === "");
+    });
+
+    var pk1Options = '<option value="">-- Tiada PK 1 Ditetapkan --</option>';
+    var pk2Options = '<option value="">-- Tiada PK 2 Ditetapkan --</option>';
+
+    senaraiPkTahap.forEach(pk => {
+      var sel1 = (ops && ops.no_kp_pk1 === pk.no_kp) ? 'selected' : '';
+      var sel2 = (ops && ops.no_kp_pk2 === pk.no_kp) ? 'selected' : '';
+      
+      var guna = pkCountMap[pk.no_kp] || 0;
+      var maxKuota = 10;
+      var kuotaText = `[${guna}/${maxKuota}]`;
+
+      var dis1 = (guna >= maxKuota && !sel1) ? 'disabled' : '';
+      var dis2 = (guna >= maxKuota && !sel2) ? 'disabled' : '';
+
+      if (guna >= maxKuota) {
+        kuotaText = `[${guna}/${maxKuota} - PENUH]`;
+      }
+
+      var labelPk = `${pk.nama_pk} - ${pk.jawatan_pk} ${kuotaText}`;
+
+      pk1Options += `<option value="${pk.no_kp}" ${sel1} ${dis1}>${labelPk}</option>`;
+      pk2Options += `<option value="${pk.no_kp}" ${sel2} ${dis2}>${labelPk}</option>`;
+    });
+
+    $('#selOpsPk1').html(pk1Options);
+    $('#selOpsPk2').html(pk2Options);
+
+    // Kawal paparan butang PK2 bila modal dibuka
+    if (ops && ops.no_kp_pk2) {
+      $('#boxOpsPk2').show();
+      $('#boxButangTambahPk2').hide();
+    } else {
+      $('#boxOpsPk2').hide();
+      $('#boxButangTambahPk2').show();
+    }
+
+    // 4. READ-ONLY KETUA PENGAWAS (KP)
+    var senaraiKpTahap = (BACKEND_OPS.senaraiKp || []).filter(k => k.tahun == tahunSemasa && k.matrik_tahap === tahapSurat);
+    var existingKp = senaraiKpTahap.filter(k => k.kod_sek_tetap === sek.kod || (k.kod_sek_tetap === "" && k.kod_sek_cadangan === sek.kod))[0];
+
+    if (existingKp) {
+      var infoSekAsalKp = (BACKEND_OPS.senaraiSekolah || []).filter(s => s.kod === existingKp.kod_sek_asal)[0];
+      
+      var namaSekAsalKp = infoSekAsalKp && infoSekAsalKp.nama ? infoSekAsalKp.nama : existingKp.kod_sek_asal;
+      $('#txtOpsKp').val(`${existingKp.nama_guru} [${namaSekAsalKp}]`);
+      
+      $('#txtOpsStatusKp').val(existingKp.status_penetapan || 'CADANGAN');
+      $('#txtOpsNoKpKp').val(existingKp.no_kp || '');
+    } else {
+      $('#txtOpsKp').val('BELUM DITETAPKAN');
+      $('#txtOpsStatusKp').val('BELUM DITETAPKAN');
+      $('#txtOpsNoKpKp').val('');
+    }
+
+    var modalEl = document.getElementById('modalOps');
+    if (modalEl) {
+      var myModal = new bootstrap.Modal(modalEl);
+      myModal.show();
+    }
+  }
+
+  // 🌟 SIMPAN OPERASI PPD (TAB 1: MENGGUNAKAN SWEETALERT POPUP LENGKAP)
+  function simpanOperasiPPD() {
+    var kodSekolah = $('#txtOpsKodSek').val();
+    var daerah = $('#txtOpsDaerah').val();
+    var idBilikKebal = $('#selOpsBilikKebal').val();
+    var noKpPk1 = $('#selOpsPk1').val();
+    
+    // Ambil nilai PK2 hanya jika kotak PK2 sedang dipaparkan, kalau tak kosongkan terus
+    var noKpPk2 = $('#boxOpsPk2').is(':visible') ? $('#selOpsPk2').val() : "";
+    
+    var noKpKp = $('#txtOpsNoKpKp').val() || "";
+    var statusKp = $('#txtOpsStatusKp').val() || "CADANGAN";
+
+    var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+    var tahapSurat = TAHAP_OPS === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+
+    if (!idBilikKebal) {
+      Swal.fire('Amaran', 'Sila pilih Bilik Kebal terlebih dahulu!', 'warning');
+      return;
+    }
+
+    if (noKpPk1 && noKpPk2 && noKpPk1 === noKpPk2) {
+      Swal.fire('Amaran', 'Penyelia Kawasan 1 dan 2 tidak boleh orang yang sama!', 'warning');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Memproses...',
+      text: 'Sedang menyimpan penetapan operasi...',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    var dataPayload = {
+      tahun: tahunSemasa,
+      kod_sekolah: kodSekolah,
+      daerah: daerah,
+      tahap: tahapSurat,
+      id_bilik_kebal: idBilikKebal,
+      no_kp_pk1: noKpPk1,
+      no_kp_pk2: noKpPk2,
+      no_kp_kp: noKpKp,
+      status_kp: statusKp
+    };
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        Swal.close();
+        if (res && res.status === "SUCCESS") {
+          if (BACKEND_OPS && BACKEND_OPS.senaraiMatrik) {
+            var opsObj = BACKEND_OPS.senaraiMatrik.filter(m => 
+              m.kod_sekolah === kodSekolah && 
+              m.tahun == tahunSemasa && 
+              m.matrik_tahap === tahapSurat
+            )[0];
+
+            if (opsObj) {
+              opsObj.id_bilik_kebal = idBilikKebal;
+              opsObj.no_kp_pk1 = noKpPk1;
+              opsObj.no_kp_pk2 = noKpPk2;
+            } else {
+              BACKEND_OPS.senaraiMatrik.push({
+                tahun: tahunSemasa,
+                kod_sekolah: kodSekolah,
+                daerah: daerah,
+                matrik_tahap: tahapSurat,
+                id_bilik_kebal: idBilikKebal,
+                no_kp_pk1: noKpPk1,
+                no_kp_pk2: noKpPk2
+              });
+            }
+          }
+          $('#modalOps').modal('hide');
+          renderSemuaTabOps();
+          Swal.fire({
+            icon: 'success',
+            title: 'Berjaya!',
+            text: 'Penetapan operasi bagi pusat peperiksaan ini berjaya disimpan.',
+            confirmButtonColor: '#6366f1'
+          });
+        } else {
+          Swal.fire('Gagal', res ? res.message : 'Ralat tidak diketahui.', 'error');
+        }
+      })
+      .withFailureHandler(function(err) {
+        Swal.close();
+        Swal.fire('Ralat Pelayan', err.message, 'error');
+      })
+      .simpanDataOperasiPPD(dataPayload);
+  }
+
+  // 🌟 SIMPAN DATA PK INDIVIDU (TAB 2)
+  function simpanDataPk() {
+    var rowNum = $('#txtPkRow').val();
+    var tahun = $('#txtPkTahun').val() || window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+    var tahap = $('#txtPkTahap').val() || (TAHAP_OPS === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3');
+    var rawSekAsal = $('#txtPkSekAsal').val() || "";
+    var jawatan = $('#txtPkJawatan').val() || "";
+    var nama = $('#txtPkNama').val() || "";
+    var kp = $('#txtPkKp').val() || "";
+    var tel = $('#txtPkTel').val() || "";
+    var emel = $('#txtPkEmel').val() || "";
+    var alamat = $('#txtPkAlamat').val() || "";
+
+    var kodSekAsal = rawSekAsal.split(' - ')[0].trim().toUpperCase();
+
+    if (!kodSekAsal || !jawatan || !nama || !kp || !tel) {
+      Swal.fire('Amaran', 'Sila isi semua ruangan yang bertanda (*) dengan lengkap!', 'warning');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Memproses...',
+      text: 'Sedang menyimpan maklumat Penyelia Kawasan...',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    var dataPayload = {
+      rowNum: rowNum,
+      tahun: tahun,
+      matrik_tahap: tahap,
+      kod_sek_asal: kodSekAsal,
+      jawatan_pk: jawatan,
+      nama_pk: nama.toUpperCase(),
+      no_kp: kp,
+      no_tel: tel,
+      emel: emel,
+      alamat_rumah: alamat.toUpperCase()
+    };
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        Swal.close();
+        if (res && res.status === "SUCCESS") {
+          $('#modalPk').modal('hide');
+          
+          Swal.fire({
+            icon: 'success',
+            title: 'Berjaya!',
+            text: res.message || 'Maklumat Penyelia Kawasan telah berjaya disimpan.',
+            confirmButtonColor: '#6366f1'
+          }).then(function() {
+            initModulOperasi();
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: res ? res.message : 'Ralat tidak diketahui.',
+            confirmButtonColor: '#ef4444'
+          });
+        }
+      })
+      .withFailureHandler(function(err) {
+        Swal.close();
+        Swal.fire('Ralat Pelayan!', err.message, 'error');
+      })
+      .simpanDataPkBackend(dataPayload);
+  }
+
+  // FUNGSI BUKA MODAL PK
+  function bukaModalPk(rowNum) {
+    try {
+      var modalNode = document.getElementById('modalPk');
+      if (!modalNode) {
+        Swal.fire('Ralat HTML', 'Modal id="modalPk" tidak dijumpai!', 'error');
+        return;
+      }
+
+      $('#formPk')[0].reset();
+      $('#txtPkTahun').val(window.G_TAHUN_AKTIF || new Date().getFullYear().toString()); 
+      $('#txtPkRow').val(rowNum || "");
+      
+      var tahapSurat = TAHAP_OPS === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+      $('#txtPkTahap').val(tahapSurat);
+      
+      if (rowNum) {
+        $('#pkModalTitle').html('<i class="fa-solid fa-user-pen me-2"></i>Kemaskini Penyelia Kawasan');
+        
+        var p = null;
+        if (BACKEND_OPS.senaraiPk) {
+            p = BACKEND_OPS.senaraiPk.find(function(item) { return item.rowNum == rowNum; });
+        }
+        
+        if (p) { 
+          var infoSek = (BACKEND_OPS.senaraiSekolah || []).find(s => s.kod === p.kod_sek_asal);
+          var valSek = infoSek ? `${p.kod_sek_asal} - ${infoSek.nama.toUpperCase()}` : p.kod_sek_asal;
+          
+          $('#txtPkSekAsal').val(valSek); 
+          $('#txtPkJawatan').val(p.jawatan_pk); 
+          $('#txtPkNama').val(p.nama_pk); 
+          $('#txtPkKp').val(p.no_kp); 
+          $('#txtPkTel').val(p.no_tel); 
+          $('#txtPkEmel').val(p.emel); 
+          $('#txtPkAlamat').val(p.alamat_rumah || "");
+        }
+      } else {
+        $('#pkModalTitle').html('<i class="fa-solid fa-user-ninja me-2"></i>Tambah Penyelia Kawasan');
+      }
+      
+      var myModal = new bootstrap.Modal(modalNode);
+      myModal.show();
+    } catch (err) {
+      Swal.fire('Ralat Modal', err.message, 'error');
+    }
+  }
+
+  // 🌟 FUNGSI AKSI KP (TAB 3: MENGEKALKAN NOTIFIKASI TOAST DENGAN LENGKAP)
+  function simpanAutosaveMatriks(rowNum, kodSekAsal, noKp, kodSekTetapBaru) {
+    if (!kodSekTetapBaru || kodSekTetapBaru === "") return; 
+
+    $(`#sel_inline_${rowNum}`).prop('disabled', true);
+
+    const Toast = Swal.mixin({
+      toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, timerProgressBar: true
+    });
+    Toast.fire({ icon: 'info', title: 'Menyimpan Penempatan...' });
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res.status === "SUCCESS") {
+          Toast.fire({ icon: 'success', title: 'Penempatan Disahkan!' });
+          var kpObj = BACKEND_OPS.senaraiKp.find(x => x.no_kp === noKp);
+          if (kpObj) {
+            kpObj.kod_sek_tetap = kodSekTetapBaru;
+            kpObj.status_penetapan = 'DISAHKAN';
+          }
+          renderTabKPOps();
+        } else { 
+          Swal.fire('Gagal', res.message, 'error'); 
+          $(`#sel_inline_${rowNum}`).prop('disabled', false); 
+        }
+      })
+      .simpanPenempatanInlineKp(rowNum, kodSekTetapBaru, 'DISAHKAN', kodSekAsal);
+  }
+
+  function batalPengesahanMatriks(rowNum, noKp) {
+    Swal.fire({
+      title: 'Batal Pengesahan?',
+      text: "Mod kunci akan dimatikan. Adakah anda pasti?",
+      icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Ya, Batal Sah!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({title: 'Membatalkan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res.status === "SUCCESS") {
+              var kpObj = BACKEND_OPS.senaraiKp.find(x => x.no_kp === noKp);
+              if (kpObj) { kpObj.kod_sek_tetap = ""; kpObj.status_penetapan = 'CADANGAN'; }
+              renderTabKPOps();
+              Swal.fire('Dibatalkan!', 'Pilihan dibuka semula.', 'success');
+            } else { Swal.fire('Gagal', res.message, 'error'); }
+          })
+          .simpanPenempatanInlineKp(rowNum, "", "CADANGAN", ""); 
+      }
+    });
+  }
+
+  function cetakSuratMatriks(noKp, tahun, tahap, statusSemasa) {
+    if (statusSemasa && statusSemasa.toString().toUpperCase() !== 'DISAHKAN') {
+      Swal.fire({ title: '⛔ Belum Disahkan!', text: 'Surat hanya boleh dicetak setelah status penempatan DISAHKAN.', icon: 'warning' }); 
+      return;
+    }
+    
+    var tabMenunggu = window.open('about:blank', '_blank');
+    if (tabMenunggu) {
+      tabMenunggu.document.write(`<html><body style="font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f8f9fa;"><div style="text-align: center; padding: 30px; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);"><h2>🖨️ Menjana Surat...</h2><p>Sila tunggu seketika sementara dokumen anda disiapkan.</p></div></body></html>`);
+    } else {
+      Swal.fire('Halangan Pop-up', 'Sila benarkan pop-up pada pelayar anda.', 'warning'); return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.status === "SUCCESS") {
+          var byteCharacters = atob(res.base64); var byteNumbers = new Array(byteCharacters.length);
+          for (var i = 0; i < byteCharacters.length; i++) { byteNumbers[i] = byteCharacters.charCodeAt(i); }
+          var blob = new Blob([new Uint8Array(byteNumbers)], { type: 'application/pdf' });
+          tabMenunggu.location.href = URL.createObjectURL(blob);
+        } else { tabMenunggu.close(); Swal.fire('Gagal', res.message, 'error'); }
+      })
+      .janaSuratLantikanKPPDF(noKp.toString(), tahun, tahap);
+  }
+
+  function sahkanSatuPenempatan(rowNum, kodSekAsal, noKp) {
+    var elSelect = document.getElementById('sel_inline_' + rowNum);
+    var kodSekTetapBaru = elSelect ? elSelect.value : "";
+    if (!kodSekTetapBaru || kodSekTetapBaru === "") { Swal.fire({ title: 'Perhatian', text: 'Sila pilih sekolah penempatan (muktamad) dari senarai terlebih dahulu.', icon: 'warning' }); return; }
+    simpanAutosaveMatriks(rowNum, kodSekAsal, noKp, kodSekTetapBaru);
+  }
+</script>

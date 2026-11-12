@@ -1,0 +1,509 @@
+<div class="w-100 animate__animated animate__fadeIn">
+  
+  <!-- HEADER UTAMA -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-3 border-bottom pb-2">
+    <div class="mb-3 mb-md-0">
+      <h4 class="fw-bold text-dark mb-0"><i class="fa-solid fa-users-gear text-primary me-2"></i>Ketua Pentaksir (KPN & KPKw)</h4>
+      <div class="text-muted small fw-bold mt-1">Lantikan Rasmi Ketua Pentaksir Mata Pelajaran Negeri & Kawasan</div>
+    </div>
+    
+    <div class="d-flex align-items-center gap-2">
+      <!-- SUIS MENU SEGI EMPAT -->
+      <div class="btn-group shadow-sm bg-white p-1 border border-primary border-opacity-25" style="border-radius: 6px;" role="group">
+        <input type="radio" class="btn-check" name="btnTahapKpn" id="btnT4Kpn" autocomplete="off" checked onchange="tukarTahapKpn('RENDAH')">
+        <label class="btn btn-outline-primary fw-bold fs-6 py-1 px-3 border-0 rounded-1" for="btnT4Kpn"><i class="fa-solid fa-child-reaching me-2"></i>TAHUN 4</label>
+
+        <input type="radio" class="btn-check" name="btnTahapKpn" id="btnT3Kpn" autocomplete="off" onchange="tukarTahapKpn('MENENGAH')">
+        <label class="btn btn-outline-primary fw-bold fs-6 py-1 px-3 border-0 rounded-1" for="btnT3Kpn"><i class="fa-solid fa-user-graduate me-2"></i>TINGKATAN 3</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-4 shadow-sm border-0 bg-white" style="border-radius:6px; width: 100%;">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
+      <h5 class="fw-bold text-primary mb-0"><i class="fa-solid fa-book-open-reader me-2"></i>Senarai Lantikan Mengikut Subjek (<span id="lblTahapSubjek" class="text-uppercase">RENDAH</span>)</h5>
+      
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <!-- 🌟 KEMASKINI: 2 BUTANG MUAT TURUN EXCEL YANG BERASINGAN -->
+        <div class="btn-group shadow-sm rounded-1">
+          <button type="button" class="btn btn-sm btn-success fw-bold px-3 border-end" onclick="eksportDataKpnKpkw('KPKW')"><i class="fa-solid fa-file-excel me-1"></i>Excel KPKw</button>
+          <button type="button" class="btn btn-sm btn-info fw-bold px-3 text-dark" style="background-color: #0dcaf0;" onclick="eksportDataKpnKpkw('KPN')"><i class="fa-solid fa-file-excel me-1"></i>Excel KPN</button>
+        </div>
+        
+        <div class="input-group input-group-sm shadow-sm" style="width: 250px;">
+          <span class="input-group-text bg-primary text-white border-0"><i class="fa-solid fa-magnifying-glass"></i></span>
+          <input type="text" id="cariSubjekInput" class="form-control border-primary fw-bold" placeholder="Cari Mata Pelajaran..." onkeyup="tapisJadualKpn()">
+        </div>
+      </div>
+    </div>
+    
+    <div class="table-responsive w-100">
+      <table id="tblKpnUtama" class="table table-hover table-bordered table-striped align-middle w-100">
+        <thead class="table-dark small">
+          <tr>
+            <th class="text-center" style="width: 6%;">Bil.</th>
+            <th style="width: 26%;">Mata Pelajaran (Subjek)</th>
+            <th style="width: 36%;">Ketua Pentaksir Kawasan (KPKw)<br><span class="text-warning fw-normal">Lantikan PPD (1 Orang Setiap Daerah)</span></th>
+            <th style="width: 32%;">Ketua Pentaksir Negeri (KPN)<br><span class="text-info fw-normal">Lantikan JPN (1 Orang Sahaja Keseluruhan)</span></th>
+          </tr>
+        </thead>
+        <tbody id="tblReportKpnBody">
+          <tr><td colspan="4" class="text-center text-muted py-4">Memuatkan senarai mata pelajaran...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LANTIKAN KPN / KPKW -->
+<div class="modal fade" id="modalLantikKpn" data-bs-backdrop="static" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <form id="formLantikKpn" onsubmit="event.preventDefault(); simpanLantikanKpn();">
+      <div class="modal-content shadow-lg border-0" style="border-radius: 6px;">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold" id="kpnModalTitle">Lantikan Pentaksir</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 bg-light text-dark">
+          <input type="hidden" id="txtLantikRow">
+          <input type="hidden" id="txtLantikMp">
+          <input type="hidden" id="txtLantikPeringkat">
+          <input type="hidden" id="kpnPpd">
+          
+          <div class="alert alert-primary border-primary border-start border-4 fw-bold shadow-sm mb-4 rounded-1 d-flex align-items-center">
+            <i class="fa-solid fa-user-check fs-4 me-3 text-primary"></i>
+            <div class="small text-dark fw-normal">
+              Sila cari dan pilih calon guru berdaftar yang mengajar mata pelajaran ini bagi tahun semasa. Maklumat perhubungan akan diisi secara automatik.
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label small fw-bold text-primary"><i class="fa-solid fa-magnifying-glass me-1"></i>Cari & Pilih Calon Guru (Taip Nama / No. KP / Kod Sekolah)</label>
+            <input type="text" id="txtCarianCalon" class="form-control border-primary shadow-sm fw-bold rounded-1 text-uppercase" list="listCalonGuru" placeholder="TAIP ATAU PILIH NAMA GURU DI SINI..." required autocomplete="off" onfocus="this.select()" onchange="pilihCalonGuruDariList()">
+            <datalist id="listCalonGuru"></datalist>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Nama Penuh Calon</label>
+              <input type="text" id="kpnNama" class="form-control fw-bold bg-white rounded-1" readonly required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">No. Kad Pengenalan</label>
+              <input type="text" id="kpnNoKp" class="form-control fw-bold bg-white rounded-1" readonly required>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold text-muted"><i class="fa-solid fa-school me-1"></i>Kod dan Nama Sekolah</label>
+              <input type="text" id="kpnSek" class="form-control fw-bold bg-white rounded-1 text-uppercase" readonly required>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold text-muted"><i class="fa-solid fa-map-location-dot me-1"></i>Kod dan Nama Daerah</label>
+              <input type="text" id="kpnPpdPaparan" class="form-control fw-bold bg-white rounded-1 text-uppercase" readonly required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">No. Telefon</label>
+              <input type="text" id="kpnTel" class="form-control bg-white rounded-1" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Emel Calon</label>
+              <input type="text" id="kpnEmel" class="form-control bg-white rounded-1" readonly>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer bg-white d-flex justify-content-between">
+          <button type="button" class="btn btn-outline-danger btn-sm px-3 fw-bold rounded-1 d-none" id="btnPadamLantikan" onclick="padamLantikan()"><i class="fa-solid fa-trash me-2"></i>Padam Lantikan</button>
+          <div>
+            <button type="button" class="btn btn-secondary btn-sm px-3 fw-bold rounded-1 me-2" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold rounded-1"><i class="fa-solid fa-floppy-disk me-2"></i>Simpan Lantikan</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+var BACKEND_DATA = null;
+var G_TAHAP_KPN = 'RENDAH';
+var DATA_SUBJEK_SEMASA = [];
+window.POOL_CALON_SEMASA = {};
+
+function initKetuaPentaksir() {
+  muatDataLaporanKpn();
+}
+
+function tukarTahapKpn(tahap) {
+  G_TAHAP_KPN = tahap;
+  $('#lblTahapSubjek').text(tahap);
+  saringDataIkutTahapKpn();
+}
+
+function muatDataLaporanKpn() {
+  var roleSemasa = G_USER.role;
+  var kodDaerahSemasa = G_USER.kod_daerah ? G_USER.kod_daerah : G_USER.username;
+  google.script.run.withSuccessHandler(function(respon) {
+    if (respon && respon.status === "SUCCESS") {
+      BACKEND_DATA = respon.data;
+      tukarTahapKpn('RENDAH');
+    } else Swal.fire('Ralat', 'Gagal memproses data KPN/KPKw.', 'error');
+  }).mendapatkanDataPPD_JPN(roleSemasa, kodDaerahSemasa, kodDaerahSemasa); 
+}
+
+function saringDataIkutTahapKpn() {
+  if (!BACKEND_DATA) return;
+  DATA_SUBJEK_SEMASA = BACKEND_DATA.senaraiMp
+    .filter(m => m.kategori.toUpperCase() === G_TAHAP_KPN || m.kategori.toUpperCase() === 'UMUM')
+    .sort((a,b) => a.nama.localeCompare(b.nama));
+  
+  $('#cariSubjekInput').val('');
+  renderJadualKpn();
+}
+
+function tapisJadualKpn() {
+  var carian = $('#cariSubjekInput').val().toLowerCase().trim();
+  var subjekTapis = BACKEND_DATA.senaraiMp.filter(m => m.kategori.toUpperCase() === G_TAHAP_KPN || m.kategori.toUpperCase() === 'UMUM');
+  
+  if (carian === "") {
+    DATA_SUBJEK_SEMASA = [...subjekTapis];
+  } else {
+    DATA_SUBJEK_SEMASA = subjekTapis.filter(m => m.nama.toLowerCase().indexOf(carian) > -1 || m.kod.toLowerCase().indexOf(carian) > -1);
+  }
+  renderJadualKpn();
+}
+
+function renderJadualKpn() {
+  var html = '';
+  var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+  var tahapSurat = G_TAHAP_KPN === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+  var isPPD = G_USER.role === 'PPD';
+  var isSuperAdmin = (G_USER.role === 'ADMIN' || G_USER.role === 'JPN');
+  var kodDaerahSemasa = G_USER.kod_daerah ? G_USER.kod_daerah : G_USER.username;
+
+  if (DATA_SUBJEK_SEMASA.length === 0) {
+    html = '<tr><td colspan="4" class="text-center text-muted py-4">Tiada subjek dijumpai untuk kategori ini.</td></tr>';
+  } else {
+    DATA_SUBJEK_SEMASA.forEach((mp, index) => {
+      
+      var kpkwList = (BACKEND_DATA.senaraiKpnKpkw || []).filter(k => k.kod_mp === mp.kod && k.peringkat === 'DAERAH' && k.tahun === tahunSemasa && k.matrik_tahap === tahapSurat);
+      var kpkwDisplay = "";
+
+      if (isPPD) {
+        var kpkw = kpkwList.find(k => k.daerah === kodDaerahSemasa);
+        if (kpkw) {
+          var namaSekKpkw = BACKEND_DATA.senaraiSekolah.find(s => s.kod === kpkw.kod_sekolah) ? BACKEND_DATA.senaraiSekolah.find(s => s.kod === kpkw.kod_sekolah).nama : kpkw.kod_sekolah;
+          kpkwDisplay = `
+            <div class="fw-bold text-dark text-uppercase small mb-1">${kpkw.nama_guru}</div>
+            <div class="small text-muted mb-2"><i class="fa-solid fa-school text-primary me-1"></i>${kpkw.kod_sekolah} - ${namaSekKpkw}</div>
+            <button class="btn btn-sm btn-warning py-1 px-3 fw-bold rounded-1 shadow-sm" style="font-size:0.75rem;" onclick="bukaModalLantik('${mp.kod}', '${mp.nama}', 'DAERAH', ${kpkw.rowNum}, '${kpkw.no_kp}')"><i class="fa-solid fa-pen me-1"></i>Urus Lantikan</button>
+          `;
+        } else {
+          kpkwDisplay = `<div class="text-muted small fst-italic mb-2">Belum Dilantik</div><button class="btn btn-sm btn-outline-primary py-1 px-3 fw-bold rounded-1" style="font-size:0.75rem;" onclick="bukaModalLantik('${mp.kod}', '${mp.nama}', 'DAERAH', null)"><i class="fa-solid fa-plus me-1"></i>Lantik KPKw</button>`;
+        }
+      } else {
+        if (kpkwList.length === 0) {
+          kpkwDisplay = `<div class="text-muted small fst-italic mb-2">Belum Dilantik (0 / 12 Daerah)</div><button class="btn btn-sm btn-outline-primary py-1 px-3 fw-bold rounded-1" style="font-size:0.75rem;" onclick="bukaModalLantik('${mp.kod}', '${mp.nama}', 'DAERAH', null)"><i class="fa-solid fa-plus me-1"></i>Lantik KPKw</button>`;
+        } else {
+          kpkwDisplay = `<div class="mb-2"><span class="badge bg-primary">${kpkwList.length} / 12 Daerah Dilantik</span></div>`;
+          kpkwList.forEach(k => {
+            var namaSek = BACKEND_DATA.senaraiSekolah.find(s => s.kod === k.kod_sekolah) ? BACKEND_DATA.senaraiSekolah.find(s => s.kod === k.kod_sekolah).nama : k.kod_sekolah;
+            var namaDaerahTunjuk = k.daerah;
+            var daeObj = (BACKEND_DATA.senaraiDaerah || []).find(d => d.ppd === k.daerah || d.kod === k.daerah || d.nama === k.daerah);
+            if (daeObj && daeObj.nama) namaDaerahTunjuk = daeObj.nama.toUpperCase();
+
+            kpkwDisplay += `
+              <div class="p-2 mb-1 bg-light border rounded-1 small d-flex justify-content-between align-items-center" style="font-size:0.78rem;">
+                <div>
+                  <b class="text-dark text-uppercase">${k.nama_guru}</b> <span class="badge bg-secondary ms-1">${namaDaerahTunjuk}</span><br>
+                  <span class="text-muted" style="font-size:0.7rem;">${k.kod_sekolah} - ${namaSek}</span>
+                </div>
+                <button class="btn btn-sm btn-outline-warning py-0 px-2 fw-bold text-dark" onclick="bukaModalLantik('${mp.kod}', '${mp.nama}', 'DAERAH', ${k.rowNum}, '${k.no_kp}')" title="Urus"><i class="fa-solid fa-pen"></i></button>
+              </div>
+            `;
+          });
+          if (kpkwList.length < 12) {
+            kpkwDisplay += `<button class="btn btn-sm btn-outline-primary py-1 px-3 fw-bold rounded-1 mt-1 w-100 shadow-sm" style="font-size:0.75rem;" onclick="bukaModalLantik('${mp.kod}', '${mp.nama}', 'DAERAH', null)"><i class="fa-solid fa-plus me-1"></i>+ Tambah KPKw Daerah Lain</button>`;
+          }
+        }
+      }
+
+      var kpn = (BACKEND_DATA.senaraiKpnKpkw || []).find(k => k.kod_mp === mp.kod && k.peringkat === 'NEGERI' && k.tahun === tahunSemasa && k.matrik_tahap === tahapSurat);
+      var kpnBtn = isPPD ? `<span class="badge bg-secondary opacity-50 px-2 py-1"><i class="fa-solid fa-lock me-1"></i>Akses JPN Sahaja</span>` : `<button class="btn btn-sm btn-outline-info py-1 px-3 fw-bold rounded-1 text-dark" style="font-size:0.75rem;" onclick="bukaModalLantik('${mp.kod}', '${mp.nama}', 'NEGERI', null)"><i class="fa-solid fa-plus me-1"></i>Lantik KPN</button>`;
+      
+      var kpnDisplay = `<div class="text-muted small fst-italic mb-2">Belum Dilantik</div>${kpnBtn}`;
+      
+      if (kpn) {
+        var namaSekKpn = BACKEND_DATA.senaraiSekolah.find(s => s.kod === kpn.kod_sekolah) ? BACKEND_DATA.senaraiSekolah.find(s => s.kod === kpn.kod_sekolah).nama : kpn.kod_sekolah;
+        var editKpnBtn = isPPD ? `` : `<button class="btn btn-sm btn-info py-1 px-3 fw-bold rounded-1 shadow-sm text-dark" style="font-size:0.75rem;" onclick="bukaModalLantik('${mp.kod}', '${mp.nama}', 'NEGERI', ${kpn.rowNum}, '${kpn.no_kp}')"><i class="fa-solid fa-pen me-1"></i>Urus Lantikan</button>`;
+        
+        kpnDisplay = `
+          <div class="fw-bold text-dark text-uppercase small mb-1">${kpn.nama_guru} <span class="badge bg-info text-dark ms-1 shadow-sm"><i class="fa-solid fa-crown me-1"></i>KPN</span></div>
+          <div class="small text-muted mb-2"><i class="fa-solid fa-school text-info me-1"></i>${kpn.kod_sekolah} - ${namaSekKpn}</div>
+          ${editKpnBtn}
+        `;
+      }
+
+      html += `<tr>
+        <td class="text-center fw-bold text-muted">${index + 1}</td>
+        <td>
+          <span class="badge bg-primary bg-opacity-10 text-primary border border-primary rounded-1 mb-1">${mp.kod}</span>
+          <div class="fw-bold text-dark small text-uppercase">${mp.nama}</div>
+        </td>
+        <td class="align-middle">${kpkwDisplay}</td>
+        <td class="align-middle">${kpnDisplay}</td>
+      </tr>`;
+    });
+  }
+  $('#tblReportKpnBody').html(html);
+}
+
+// ==========================================================
+// 🌟 FUNGSI EKSPORT MAGIS: ASINGKAN KPN DAN KPKW (BERDASARKAN MEMORI DB)
+// ==========================================================
+function eksportDataKpnKpkw(jenis) {
+  if (typeof XLSX === 'undefined') {
+    Swal.fire('Ralat Library', 'Sila pastikan library SheetJS telah dimasukkan ke dalam Index.html!', 'error');
+    return;
+  }
+
+  var tahunSemasa = window.G_TAHUN_AKTIF || new Date().getFullYear().toString();
+  var tahapSurat = G_TAHAP_KPN === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3';
+  var peringkatCari = jenis === 'KPN' ? 'NEGERI' : 'DAERAH';
+
+  // Saring data berdasarkan peringkat yang ditekan (KPN atau KPKW)
+  var dataSenarai = (BACKEND_DATA.senaraiKpnKpkw || []).filter(k => 
+    k.tahun === tahunSemasa && 
+    k.matrik_tahap === tahapSurat && 
+    k.peringkat === peringkatCari
+  );
+
+  if (dataSenarai.length === 0) {
+    Swal.fire('Perhatian', `Tiada data lantikan ${jenis} untuk dieksport pada sesi ini!`, 'warning');
+    return;
+  }
+
+  var dataExcel = [];
+  
+  dataSenarai.forEach((k) => {
+    // 1. Cari Nama Subjek
+    var mp = BACKEND_DATA.senaraiMp.find(m => m.kod === k.kod_mp);
+    var namaMp = mp ? mp.nama.toUpperCase() : k.kod_mp;
+    
+    // 2. Cari Nama Sekolah
+    var sek = BACKEND_DATA.senaraiSekolah.find(s => s.kod === k.kod_sekolah);
+    var namaSek = sek ? sek.nama.toUpperCase() : "-";
+    
+    // 3. Cari Nama PPD / Daerah Penuh
+    var namaDaerah = k.daerah;
+    var daeObj = (BACKEND_DATA.senaraiDaerah || []).find(d => d.ppd === k.daerah || d.kod === k.daerah || d.nama === k.daerah);
+    if (daeObj && daeObj.nama) {
+      namaDaerah = daeObj.nama.toUpperCase();
+    }
+
+    // 4. Masukkan susunan kolum yang bersih dan terasing
+    dataExcel.push({
+      "Bil.": 0, // Akan diupdate selepas sort
+      "Sesi": k.tahun || "",
+      "Tahap": k.matrik_tahap || "",
+      "Jawatan": peringkatCari === 'NEGERI' ? "KETUA PENTAKSIR NEGERI (KPN)" : "KETUA PENTAKSIR KAWASAN (KPKW)",
+      "Kod Subjek": k.kod_mp || "",
+      "Mata Pelajaran": namaMp,
+      "Daerah Lantikan": namaDaerah,
+      "Kod Sekolah": k.kod_sekolah || "",
+      "Nama Sekolah": namaSek,
+      "Nama Guru": k.nama_guru || "",
+      "No. Kad Pengenalan": k.no_kp || "",
+      "No. Telefon": k.no_tel || "-",
+      "Emel": k.emel || "-"
+    });
+  });
+
+  // 5. Susun mengikut Mata Pelajaran, kemudian Daerah
+  dataExcel.sort((a, b) => {
+    if(a["Mata Pelajaran"] === b["Mata Pelajaran"]) {
+       return a["Daerah Lantikan"].localeCompare(b["Daerah Lantikan"]);
+    }
+    return a["Mata Pelajaran"].localeCompare(b["Mata Pelajaran"]);
+  });
+
+  // 6. Update nombor Bilangan (Bil.) selepas disusun
+  dataExcel.forEach((d, i) => d["Bil."] = i + 1);
+
+  // 7. Jana fail Excel dengan Auto-fit Column
+  var ws = XLSX.utils.json_to_sheet(dataExcel);
+  var colWidths = Object.keys(dataExcel[0]).map(k => ({ wch: Math.max(k.length + 5, 20) }));
+  ws['!cols'] = colWidths;
+
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Lantikan_" + jenis);
+  
+  var tarikh = new Date().toISOString().slice(0, 10);
+  var namaFailTulis = `Senarai_Lantikan_${jenis}_${G_TAHAP_KPN}_${tarikh}.xlsx`;
+  
+  XLSX.writeFile(wb, namaFailTulis);
+}
+
+// ==========================================================
+// PUSAT BAKAT LANTIKAN
+// ==========================================================
+function bukaModalLantik(kodMp, namaMp, peringkat, rowNum, rekodNoKpSediaAda) {
+  $('#formLantikKpn')[0].reset();
+  $('#txtLantikMp').val(kodMp);
+  $('#txtLantikPeringkat').val(peringkat);
+  $('#txtLantikRow').val(rowNum || "");
+  $('#txtCarianCalon').val("");
+  kosongkanBorangCalon();
+  
+  var tajuk = peringkat === 'NEGERI' ? 'Ketua Pentaksir Negeri (KPN)' : 'Ketua Pentaksir Kawasan (KPKw)';
+  $('#kpnModalTitle').html(`<i class="fa-solid fa-user-tie me-2"></i>Lantikan ${tajuk} <br><span class="fs-6 fw-normal text-light opacity-75">Subjek: ${namaMp}</span>`);
+
+  if (rowNum) $('#btnPadamLantikan').removeClass('d-none'); else $('#btnPadamLantikan').addClass('d-none');
+
+  var isSuperAdmin = (G_USER.role === 'ADMIN' || G_USER.role === 'JPN');
+  var kodDaerahSemasa = G_USER.kod_daerah ? G_USER.kod_daerah : G_USER.username;
+  
+  var senaraiPpdSah = [kodDaerahSemasa.toUpperCase()];
+  var infoDae = (BACKEND_DATA.senaraiDaerah || []).find(d => d.ppd === kodDaerahSemasa || d.nama === kodDaerahSemasa || d.kod === kodDaerahSemasa);
+  if (infoDae) {
+    if (infoDae.ppd) senaraiPpdSah.push(infoDae.ppd.toUpperCase());
+    if (infoDae.nama) senaraiPpdSah.push(infoDae.nama.toUpperCase());
+    if (infoDae.kod) senaraiPpdSah.push(infoDae.kod.toUpperCase());
+  }
+
+  var pool = [...BACKEND_DATA.senaraiKpmp, ...BACKEND_DATA.senaraiPmp];
+  var calonUnik = {};
+
+  pool.forEach(p => {
+    if (p.kod_mp.toUpperCase() === kodMp.toUpperCase()) {
+      var sek = BACKEND_DATA.senaraiSekolah.find(s => s.kod === p.kod_sekolah);
+      var ppdSek = sek ? (sek.ppd || sek.daerah || "").toUpperCase() : "";
+      var ppdGuru = (p.ppd || "").toUpperCase();
+      var ppdSah = ppdSek || ppdGuru || "PPD";
+      
+      if (!isSuperAdmin && peringkat === 'DAERAH' && !senaraiPpdSah.includes(ppdSah)) return;
+      
+      if (!calonUnik[p.no_kp]) {
+        calonUnik[p.no_kp] = { nama: p.nama_kpmp || p.nama_pmp, no_kp: p.no_kp, kod_sekolah: p.kod_sekolah, no_tel: p.no_tel, emel: p.emel, ppd: ppdSah };
+      }
+    }
+  });
+
+  window.POOL_CALON_SEMASA = calonUnik;
+  var htmlDatalist = '';
+
+  for (var ic in calonUnik) {
+    var c = calonUnik[ic];
+    var sekObj = BACKEND_DATA.senaraiSekolah.find(s => s.kod === c.kod_sekolah);
+    var namaSek = sekObj ? sekObj.nama.toUpperCase() : "SEKOLAH";
+    var paparanRingkas = `${c.no_kp} - ${c.nama}`;
+    c.paparan = paparanRingkas; 
+    htmlDatalist += `<option value="${paparanRingkas}">Kod Sekolah: ${c.kod_sekolah} (${namaSek})</option>`;
+  }
+  
+  $('#listCalonGuru').html(htmlDatalist);
+  
+  if (rekodNoKpSediaAda && window.POOL_CALON_SEMASA[rekodNoKpSediaAda]) {
+    var calonSediaAda = window.POOL_CALON_SEMASA[rekodNoKpSediaAda];
+    $('#txtCarianCalon').val(calonSediaAda.paparan);
+    pilihCalonGuruDariList();
+  }
+
+  var myModal = new bootstrap.Modal(document.getElementById('modalLantikKpn'));
+  myModal.show();
+}
+
+function pilihCalonGuruDariList() {
+  var val = $('#txtCarianCalon').val().trim();
+  if (!val) { kosongkanBorangCalon(); return; }
+  
+  var noKp = val.indexOf(" - ") > -1 ? val.split(" - ")[0].trim() : val.trim();
+  var c = window.POOL_CALON_SEMASA[noKp];
+  
+  if (!c) {
+    for (var ic in window.POOL_CALON_SEMASA) {
+      var item = window.POOL_CALON_SEMASA[ic];
+      if (item.paparan === val || item.no_kp === noKp || item.nama === val) {
+        c = item; break;
+      }
+    }
+  }
+  
+  if (c) {
+    var sekObj = BACKEND_DATA.senaraiSekolah.find(s => s.kod === c.kod_sekolah);
+    var namaSek = sekObj ? sekObj.nama.toUpperCase() : "";
+    $('#kpnSek').val(namaSek ? `${c.kod_sekolah} - ${namaSek}` : c.kod_sekolah);
+    
+    var kodPpd = c.ppd || (sekObj ? sekObj.ppd : "");
+    var namaPpdPaparan = kodPpd;
+    var daeObj = (BACKEND_DATA.senaraiDaerah || []).find(d => d.ppd === kodPpd || d.nama === kodPpd || d.kod === kodPpd);
+    if (daeObj) {
+      var kD = daeObj.ppd || daeObj.kod || kodPpd;
+      var nD = daeObj.nama || "";
+      if (kD && nD && kD !== nD) { namaPpdPaparan = `${kD} - ${nD}`; } else { namaPpdPaparan = kD || nD; }
+    } else if (sekObj && sekObj.daerah && sekObj.ppd !== sekObj.daerah) {
+      namaPpdPaparan = `${sekObj.ppd} - ${sekObj.daerah}`;
+    }
+    
+    $('#kpnPpdPaparan').val(namaPpdPaparan);
+    $('#kpnPpd').val(kodPpd); 
+    $('#kpnNama').val(c.nama);
+    $('#kpnNoKp').val(c.no_kp);
+    $('#kpnTel').val(c.no_tel || "-");
+    $('#kpnEmel').val(c.emel || "-");
+  } else {
+    kosongkanBorangCalon();
+  }
+}
+
+function kosongkanBorangCalon() {
+  $('#kpnNama').val(""); $('#kpnNoKp').val(""); $('#kpnSek').val(""); $('#kpnPpdPaparan').val(""); $('#kpnPpd').val(""); $('#kpnTel').val(""); $('#kpnEmel').val("");
+}
+
+function simpanLantikanKpn() {
+  var peringkat = $('#txtLantikPeringkat').val();
+  var ppdGuruTerpilih = $('#kpnPpd').val().trim();
+  
+  var daerahSimpan = "";
+  if (peringkat === 'NEGERI') {
+    daerahSimpan = 'NEGERI PERAK';
+  } else {
+    daerahSimpan = ppdGuruTerpilih !== "" ? ppdGuruTerpilih : (G_USER.kod_daerah ? G_USER.kod_daerah : G_USER.username);
+  }
+
+  var rawSek = $('#kpnSek').val() || "";
+  var kodSekolahSimpan = rawSek.indexOf(" - ") > -1 ? rawSek.split(" - ")[0].trim() : rawSek.trim();
+
+  var d = {
+    tahun: window.G_TAHUN_AKTIF || new Date().getFullYear().toString(),
+    matrik_tahap: G_TAHAP_KPN === 'RENDAH' ? 'TAHUN 4' : 'TINGKATAN 3',
+    peringkat: peringkat,
+    daerah: daerahSimpan, 
+    kod_mp: $('#txtLantikMp').val(),
+    nama_guru: $('#kpnNama').val(),
+    no_kp: $('#kpnNoKp').val(),
+    kod_sekolah: kodSekolahSimpan,
+    no_tel: $('#kpnTel').val(),
+    emel: $('#kpnEmel').val()
+  };
+  
+  Swal.fire({ title: 'Menyimpan Lantikan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+  var kodDaerahSemasa = G_USER.kod_daerah ? G_USER.kod_daerah : G_USER.username;
+
+  google.script.run.withSuccessHandler(function(res) { 
+    if (res.status === "SUCCESS") { Swal.fire('Berjaya', 'Lantikan Disahkan!', 'success'); $('#modalLantikKpn').modal('hide'); muatDataLaporanKpn(); } 
+    else Swal.fire('Gagal', res.message, 'error'); 
+  }).urusDataKpnKpkwPPD(kodDaerahSemasa, d, $('#txtLantikRow').val());
+}
+
+function padamLantikan() {
+  var rowNum = $('#txtLantikRow').val();
+  if (!rowNum) return;
+  Swal.fire({ title: 'Batalkan Lantikan?', text: "Rekod lantikan KPN/KPKw ini akan dipadamkan!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#858796', confirmButtonText: 'Ya, Padam!', cancelButtonText: 'Batal' })
+  .then((r) => {
+    if (r.isConfirmed) { 
+      Swal.fire({title:'Memadam...', allowOutsideClick: false, didOpen:()=>{Swal.showLoading();}}); 
+      google.script.run.withSuccessHandler(()=>{ Swal.fire('Dipadam!', 'Lantikan terbatal.', 'success'); $('#modalLantikKpn').modal('hide'); muatDataLaporanKpn(); }).padamRekod('tbkpn_kpkw', rowNum); 
+    }
+  });
+}
+</script>

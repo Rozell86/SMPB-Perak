@@ -1,0 +1,346 @@
+<style>
+  /* GAYA JADUAL BERSKROL & KORPORAT (Diambil dari ProfilSekolah) */
+  .table-card-scroll { border: 1px solid var(--purple-200); border-radius: var(--radius-md); background: #ffffff; box-shadow: var(--shadow-sm); overflow-x: auto; }
+  .table-card-scroll table thead th { position: sticky; top: 0; z-index: 2; background-color: var(--purple-50, #f8f5ff); border-bottom: 2px solid var(--purple-200); color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 14px 16px; }
+  .table-card-scroll table tbody td { padding: 14px 16px; border-bottom: 1px solid var(--border-color); vertical-align: middle; color: var(--text-main); font-size: 0.85rem; }
+  
+  /* GAYA TABS KORPORAT (Menyamai ProfilSekolah) */
+  .nav-tabs-ungu { display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px; flex-wrap: wrap; list-style: none; padding-left: 0; }
+  .btn-toggle-tab { background: #ffffff; color: var(--purple-700); border: 1px solid var(--purple-100); padding: 10px 20px; font-weight: 700; font-size: 0.9rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; transition: all 0.2s ease; text-decoration: none; }
+  .btn-toggle-tab.active { background: var(--purple-700) !important; color: #ffffff !important; border-color: var(--purple-700) !important; box-shadow: 0 4px 6px -1px rgba(89, 42, 142, 0.2) !important; }
+  .btn-toggle-tab:hover:not(.active) { background: var(--purple-50); }
+
+  /* GAYA INPUT & FORM MODEN */
+  .form-section-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--purple-700); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .form-section-title::after { content: ""; flex: 1; height: 1px; background: var(--border-color); }
+  .input-moden { border: 1px solid #cbd5e1 !important; border-radius: 8px !important; padding: 8px 12px !important; font-size: 0.88rem !important; transition: all 0.2s ease-in-out !important; background-color: #ffffff !important; }
+  .input-moden:focus { border-color: var(--purple-500) !important; box-shadow: 0 0 0 3px rgba(136, 69, 201, 0.15) !important; outline: none !important; }
+  
+  /* GAYA MODAL KHAS */
+  #modalKpmp, #modalPmp { background: rgba(15, 23, 42, 0.55) !important; backdrop-filter: blur(4px); }
+  .modal-content { border: none !important; border-radius: 16px !important; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2) !important; overflow: hidden; }
+  .modal-header-ungu { background: linear-gradient(135deg, var(--purple-500) 0%, var(--purple-700) 100%) !important; padding: 18px 24px !important; color: white !important; }
+
+  /* BUTANG UNGU KHAS */
+  .btn-ungu { background: var(--purple-700); color: white; border: none; font-weight: 600; padding: 8px 20px; border-radius: 50px; transition: 0.2s; }
+  .btn-ungu:hover { background: var(--purple-900); color: white; }
+</style>
+
+<div id="modul-matriks-ungu" class="container-fluid animate__animated animate__fadeIn pb-4">
+  <!-- PANGGIL STYLE GLOBAL -->
+  <?!= include('StyleGlobal'); ?>
+
+  <!-- HEADER MAKLUMAT SEKOLAH (KORPORAT MINIMALIS) -->
+  <div class="card border-0 shadow-sm rounded-3 mb-4 bg-white p-3" style="border-top: 4px solid var(--purple-500) !important;">
+    <!-- HEADER SEKSYEN -->
+    <div class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom">
+      <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: var(--purple-50); color: var(--purple-700);">
+        <i class="fa-solid fa-school" style="font-size: 0.85rem;"></i>
+      </div>
+      <div>
+        <h6 class="fw-bold mb-0" style="color: var(--purple-900); font-size: 0.88rem;">Maklumat Pendaftaran Sekolah</h6>
+        <small class="text-muted fw-semibold" style="font-size: 0.72rem;">Profil dan butiran rasmi institusi</small>
+      </div>
+    </div>
+    
+    <!-- GRID RINGKASAN (3 KOTAK UTAMA) -->
+    <div class="row g-2 mb-2">
+      <div class="col-md-3">
+        <div class="p-2 rounded-2 bg-light border">
+          <div class="text-muted fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.5px;">
+            <i class="fa-solid fa-fingerprint me-1" style="color: var(--purple-500);"></i> KOD SEKOLAH
+          </div>
+          <div id="lblKodSek" class="fw-bold text-dark mt-1" style="font-size: 0.88rem;">-</div>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="p-2 rounded-2 bg-light border">
+          <div class="text-muted fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.5px;">
+            <i class="fa-solid fa-building-columns me-1" style="color: var(--purple-500);"></i> NAMA SEKOLAH
+          </div>
+          <div id="lblNamaSek" class="fw-bold text-dark text-uppercase mt-1 text-truncate" style="font-size: 0.88rem;">-</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="p-2 rounded-2 bg-light border">
+          <div class="text-muted fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.5px;">
+            <i class="fa-solid fa-map-location-dot me-1" style="color: var(--purple-500);"></i> DAERAH / PPD
+          </div>
+          <div id="lblDaerahSek" class="fw-bold text-dark text-uppercase mt-1" style="font-size: 0.88rem;">-</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALAMAT LENGKAP SEBARIS -->
+    <div class="p-2 rounded-2 bg-light border">
+      <div class="text-muted fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.5px;">
+        <i class="fa-solid fa-location-dot me-1" style="color: var(--purple-500);"></i> ALAMAT LENGKAP
+      </div>
+      <div class="fw-bold text-dark mt-1" style="font-size: 0.88rem;">
+        <span id="lblAlamatSek">-</span>, <span id="lblPoskodSek">-</span> <span id="lblBandarSek" class="text-uppercase">-</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MENU TABS DISERAGAMKAN -->
+  <ul class="nav nav-pills nav-tabs-ungu" id="pendaftaran-tab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link btn-toggle-tab active" id="tab-profil-btn" data-bs-toggle="pill" data-bs-target="#tab-profil" type="button" role="tab">
+        <i class="fa-solid fa-hotel me-2"></i>Profil Pentadbiran
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link btn-toggle-tab" id="tab-senarai-btn" data-bs-toggle="pill" data-bs-target="#tab-senarai" type="button" role="tab">
+        <i class="fa-solid fa-users-viewfinder me-2"></i>Senarai KPMP & PMP
+      </button>
+    </li>
+  </ul>
+
+  <!-- KANDUNGAN TABS -->
+  <div class="tab-content" id="pendaftaran-tabContent">
+    
+    <!-- TAB 1: PROFIL PENTADBIRAN -->
+    <div class="tab-pane fade show active" id="tab-profil" role="tabpanel" aria-labelledby="tab-profil-btn">
+      <div class="card p-4 shadow-sm border-0 mb-4 bg-white" style="border-radius:15px;">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+          <h5 class="fw-bold mb-0" style="color: var(--purple-900);"><i class="fa-solid fa-id-card me-2 text-primary"></i>Profil Pentadbiran & Pengurusan Pentaksiran</h5>
+          <span class="badge bg-primary p-2" id="lblNamaSekolahBadge">Memuatkan data...</span>
+        </div>
+        
+        <form id="formProfilSekolah" onsubmit="event.preventDefault(); kemaskiniProfilSekolah();">
+          <input type="hidden" id="txtSekRow">
+          
+          <div class="row g-4 mb-4">
+            <!-- PROFIL PENTADBIR -->
+            <div class="col-md-6 border-end pe-md-4">
+              <div class="form-section-title"><i class="fa-solid fa-user-tie"></i> PROFIL PENTADBIR</div>
+              <div class="mb-3"><label class="small fw-bold text-muted mb-1">Nama Pentadbir</label><input type="text" id="gb_nama" class="form-control input-moden" required></div>
+              <div class="mb-3"><label class="small fw-bold text-muted mb-1">No. Kad Pengenalan</label><input type="text" id="gb_kp" class="form-control input-moden" required></div>
+              <div class="mb-3"><label class="small fw-bold text-muted mb-1">No. Telefon</label><input type="text" id="gb_tel" class="form-control input-moden" required></div>
+              <div class="mb-3"><label class="small fw-bold text-muted mb-1">EMEL RASMI DELIMA</label><input type="email" id="gb_emel" class="form-control input-moden" required></div>
+            </div>
+            
+            <!-- PROFIL SUP -->
+            <div class="col-md-6 ps-md-4">
+              <div class="form-section-title"><i class="fa-solid fa-user-gear"></i> PROFIL SETIAUSAHA PENTAKSIRAN</div>
+              <div class="mb-3"><label class="small fw-bold text-muted mb-1">Nama SUP</label><input type="text" id="sup_nama" class="form-control input-moden" required></div>
+              <div class="mb-3"><label class="small fw-bold text-muted mb-1">No. Kad Pengenalan</label><input type="text" id="sup_kp" class="form-control input-moden" required onkeyup="autoKesanJantina(this.value, 'sup_jantina')"></div>
+              <div class="mb-3">
+                <label class="small fw-bold text-muted mb-1">Jantina SUP</label>
+                <select id="sup_jantina" class="form-select input-moden" required>
+                  <option value="">-- Pilih Jantina --</option>
+                  <option value="LELAKI">LELAKI</option>
+                  <option value="PEREMPUAN">PEREMPUAN</option>
+                </select>
+              </div>
+              <div class="mb-3"><label class="small fw-bold text-muted mb-1">No. Telefon</label><input type="text" id="sup_tel" class="form-control input-moden" required></div>
+              <div class="mb-3"><label class="small fw-bold text-muted mb-1">EMEL RASMI DELIMA</label><input type="email" id="sup_emel" class="form-control input-moden" required></div>
+            </div>
+          </div>
+
+          <!-- TAJUK DINAMIK OPERASI MURID -->
+          <div class="form-section-title" id="tajukOperasiMurid"><i class="fa-solid fa-calculator"></i> MAKLUMAT OPERASI MURID</div>
+          <div class="row g-3">
+             <div class="col-md-6">
+              <div class="mb-2">
+                <label class="small fw-bold text-muted mb-1">Bilangan Kelas Terlibat</label>
+                <input type="number" id="txtBilKelas" class="form-control input-moden" min="0" required>
+              </div>
+            </div>
+             <div class="col-md-6">
+              <div class="mb-2">
+                <label class="small fw-bold text-muted mb-1">Jumlah Calon Terlibat</label>
+                <input type="number" id="txtJumCalon" class="form-control input-moden" min="0" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-end mt-4 pt-3 border-top border-secondary border-opacity-25">
+            <button type="submit" class="btn btn-ungu"><i class="fa-solid fa-floppy-disk me-2"></i>Simpan Profil</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- TAB 2: SENARAI KPMP & PMP -->
+    <div class="tab-pane fade" id="tab-senarai" role="tabpanel" aria-labelledby="tab-senarai-btn">
+      <div class="card p-4 shadow-sm border-0 mb-4 bg-white" style="border-radius:15px;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0" style="color: var(--purple-900);"><i class="fa-solid fa-clipboard-user me-2 text-success"></i>Ketua Pentaksir Mata Pelajaran (KPMP)</h5>
+          <button class="btn btn-sm btn-ungu" onclick="bukaModalKPMP(null)"><i class="fa-solid fa-plus me-1"></i>Tambah KPMP</button>
+        </div>
+        <div class="table-card-scroll">
+          <table>
+            <thead>
+              <tr><th style="width:25%">Mata Pelajaran</th><th style="width:30%">Nama Guru</th><th style="width:20%">No. KP</th><th style="width:15%">No. Tel</th><th style="width:10%" class="text-center">Tindakan</th></tr>
+            </thead>
+            <tbody id="tblKpmpBody"><tr><td colspan="5" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin me-2"></i>Memuatkan data...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card p-4 shadow-sm border-0 mb-4 bg-white" style="border-radius:15px;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0" style="color: var(--purple-900);"><i class="fa-solid fa-users-gear me-2 text-warning"></i>Pentaksir Mata Pelajaran (PMP)</h5>
+          <button class="btn btn-sm btn-ungu" onclick="bukaModalPMP(null)"><i class="fa-solid fa-plus me-1"></i>Tambah PMP</button>
+        </div>
+        <div class="table-card-scroll">
+          <table>
+            <thead>
+              <tr><th style="width:25%">Mata Pelajaran</th><th style="width:30%">Nama Guru</th><th style="width:20%">No. KP</th><th style="width:15%">No. Tel</th><th style="width:10%" class="text-center">Tindakan</th></tr>
+            </thead>
+            <tbody id="tblPmpBody"><tr><td colspan="5" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin me-2"></i>Memuatkan data...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div> 
+  </div> <!-- PENUTUP TAB CONTENT -->
+
+  <!-- KAD PENGESAHAN (DIKELUARKAN DARI DALAM TAB SUPAYA SENTIASA MUNCUL DI BAWAH) -->
+  <div class="card p-4 shadow-sm border-0 bg-light mb-4" style="border-radius:15px; border-left: 5px solid var(--purple-500) !important;">
+    <div class="d-flex align-items-start">
+      <div class="fs-2 me-3 pt-1" style="color: var(--purple-500);"><i class="fa-solid fa-clipboard-check"></i></div>
+      <div class="w-100">
+        <h5 class="fw-bold mb-1" style="color: var(--purple-900);">Pengesahan Pendaftaran Selesai</h5>
+        <p class="text-muted small mb-3">Tandakan butang di bawah apabila pihak sekolah telah melengkapkan kesemua maklumat yang diperlukan. Status ini akan digunakan oleh pihak JPN/PPD untuk tujuan pemantauan.</p>
+        
+        <div class="form-check form-switch fs-5 mb-0">
+          <input class="form-check-input" type="checkbox" id="chkPengesahanSelesai" onchange="ubahStatusPengesahan(this)" style="cursor: pointer;">
+          <label class="form-check-label fw-bold text-dark ms-2" for="chkPengesahanSelesai" style="font-size: 1rem; cursor: pointer;">
+            Saya mengesahkan pendaftaran maklumat profil, KPMP dan PMP bagi sekolah ini telah lengkap.
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div> 
+
+<!-- MODAL KHAS KPMP -->
+<div class="modal fade" id="modalKpmp" data-bs-backdrop="static" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form id="formKpmp" onsubmit="event.preventDefault(); simpanDataKpmp();" class="w-100">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+        <div class="modal-header text-white" style="background: linear-gradient(135deg, #8845C9 0%, #592A8E 100%); padding: 18px 24px; border: none;">
+          <h5 class="modal-title fw-bold fs-6 mb-0" id="kpmpModalTitle"><i class="fa-solid fa-user-tie me-2"></i>Tambah Data KPMP</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 bg-white text-dark">
+          <input type="hidden" id="txtKpmpRow">
+          
+          <div class="mb-2">
+            <label class="form-label small fw-bold text-muted mb-1">Mata Pelajaran</label>
+            <select id="selKpmpMp" class="form-select input-moden" required></select>
+          </div>
+          
+          <div class="form-check mb-3 mt-2 bg-light p-2 rounded border" style="padding-left: 2.2rem !important;">
+            <input class="form-check-input" type="checkbox" id="chkTiadaGuruKpmp" onchange="urusTiadaGuru('KPMP')" style="cursor: pointer;">
+            <label class="form-check-label small fw-bold text-danger" for="chkTiadaGuruKpmp" style="cursor: pointer;">
+              Tanda jika tiada guru (atau telah berpindah) untuk subjek ini.
+            </label>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted mb-1">Nama Guru</label>
+            <input type="text" id="txtKpmpNama" class="form-control input-moden text-uppercase" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted mb-1">No. Kad Pengenalan</label>
+            <input type="text" id="txtKpmpKp" class="form-control input-moden" required onkeyup="autoKesanJantina(this.value, 'selKpmpJantina')">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted mb-1">Jantina</label>
+            <select id="selKpmpJantina" class="form-select input-moden" required>
+              <option value="">-- Pilih Jantina --</option>
+              <option value="LELAKI">LELAKI</option>
+              <option value="PEREMPUAN">PEREMPUAN</option>
+              <option value="-">-</option> 
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted mb-1">No. Telefon</label>
+            <input type="text" id="txtKpmpTel" class="form-control input-moden" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted mb-1">Emel Delima</label>
+            <input type="email" id="txtKpmpEmel" class="form-control input-moden" required>
+          </div>
+        </div>
+        <div class="modal-footer bg-light border-top px-4 py-3">
+          <button type="button" class="btn btn-light btn-sm px-4 fw-semibold text-secondary rounded-pill border" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-sm px-4 rounded-pill text-white shadow-sm" style="background: #592A8E; font-weight: 600;"><i class="fa-solid fa-floppy-disk me-1"></i> Simpan Data</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL KHAS PMP -->
+<div class="modal fade" id="modalPmp" data-bs-backdrop="static" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form id="formPmp" onsubmit="event.preventDefault(); simpanDataPmp();" class="w-100">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+        <div class="modal-header text-white" style="background: linear-gradient(135deg, #8845C9 0%, #592A8E 100%); padding: 18px 24px; border: none;">
+          <h5 class="modal-title fw-bold fs-6 mb-0" id="pmpModalTitle"><i class="fa-solid fa-user-pen me-2"></i>Tambah Data PMP</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 bg-white text-dark">
+          <input type="hidden" id="txtPmpRow">
+          
+          <div class="mb-2">
+            <label class="form-label small fw-bold text-muted mb-1">Mata Pelajaran</label>
+            <select id="selPmpMp" class="form-select input-moden" required></select>
+          </div>
+          
+          <div class="form-check mb-3 mt-2 bg-light p-2 rounded border" style="padding-left: 2.2rem !important;">
+            <input class="form-check-input" type="checkbox" id="chkTiadaGuruPmp" onchange="urusTiadaGuru('PMP')" style="cursor: pointer;">
+            <label class="form-check-label small fw-bold text-danger" for="chkTiadaGuruPmp" style="cursor: pointer;">
+              Tanda jika tiada guru (atau telah berpindah) untuk subjek ini.
+            </label>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted mb-1">Nama Guru</label>
+            <input type="text" id="txtPmpNama" class="form-control input-moden text-uppercase" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted mb-1">No. Kad Pengenalan</label>
+            <input type="text" id="txtPmpKp" class="form-control input-moden" required onkeyup="autoKesanJantina(this.value, 'selPmpJantina')">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted mb-1">Jantina</label>
+            <select id="selPmpJantina" class="form-select input-moden" required>
+              <option value="">-- Pilih Jantina --</option>
+              <option value="LELAKI">LELAKI</option>
+              <option value="PEREMPUAN">PEREMPUAN</option>
+              <option value="-">-</option> 
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted mb-1">No. Telefon</label>
+            <input type="text" id="txtPmpTel" class="form-control input-moden" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted mb-1">Emel Delima</label>
+            <input type="email" id="txtPmpEmel" class="form-control input-moden" required>
+          </div>
+        </div>
+        <div class="modal-footer bg-light border-top px-4 py-3">
+          <button type="button" class="btn btn-light btn-sm px-4 fw-semibold text-secondary rounded-pill border" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-sm px-4 rounded-pill text-white shadow-sm" style="background: #592A8E; font-weight: 600;"><i class="fa-solid fa-floppy-disk me-1"></i> Simpan Data</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  /* CSS KHAS UNTUK KUNCI DATA */
+  body.mod-terkunci button[onclick^="bukaModal"],
+  body.mod-terkunci button[onclick^="hapusRekod"] {
+    display: none !important;
+  }
+</style>
+
+<!-- MEMANGGIL SKRIP DARI FAIL ASING -->
+<?!= typeof include === 'function' ? include('ScriptSekolah') : ''; ?>

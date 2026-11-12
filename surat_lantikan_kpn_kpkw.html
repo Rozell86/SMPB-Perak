@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <title>Surat Pelantikan Peperiksaan - Pentaksir</title>
+    <style>
+        body {
+            background-color: #525659;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+
+        .a4-page {
+            background-color: white;
+            width: 210mm;
+            min-height: 297mm; 
+            padding: 12mm 20mm 15mm 20mm;
+            box-sizing: border-box;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            font-size: 11pt; 
+            line-height: 1.15;
+            color: #000;
+            display: block;
+        }
+
+        /* HEADER / KOP SURAT */
+        .kop-surat {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 5px;
+        }
+        .kop-surat td { vertical-align: middle; }
+        .kop-teks { font-family: 'Times New Roman', Times, serif; color: #666; }
+        .kop-teks-kementerian { font-size: 11.5pt; font-weight: bold; margin-bottom: 2px; }
+        .kop-teks-alamat { font-size: 10pt; line-height: 1.2; }
+        .kop-info { font-size: 8pt; color: #666; vertical-align: bottom !important; padding-bottom: 2px; }
+        .kop-info-table { width: 100%; border-collapse: collapse; }
+        .kop-info-label { white-space: nowrap; width: 65px; }
+        .kop-info-colon { width: 15px; }
+        .header-line { width: 100%; border-bottom: 1px solid #000 !important; margin-bottom: 12px; }
+
+        /* PERENGGAN & INDEN UTAMA */
+        .para-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6px;
+        }
+        .para-table td {
+            vertical-align: top;
+            padding: 0;
+            text-align: justify;
+        }
+        .col-num { width: 6%; } 
+        .col-text { width: 94%; }
+
+        /* JADUAL SUB-ITEM (2.1, 2.2, 3.1, 4.1 dll) */
+        .sub-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+        }
+        .sub-table td {
+            vertical-align: top;
+            padding: 1px 0;
+            text-align: justify !important;
+        }
+        .sub-num { width: 6%; text-align: left !important; } 
+        .sub-label { width: 25%; text-align: left !important; } 
+        .sub-colon { width: 3%; text-align: center !important; }
+        .sub-val { width: 66%; } 
+
+        /* ELEMEN LAIN */
+        .ref-date { margin-left: 51%; margin-top: 0; margin-bottom: 10px; }
+        .ref-date table { text-align: left; font-size: 11pt; }
+        .recipient { margin-bottom: 6px; }
+        .subject { font-weight: bold; text-transform: uppercase; margin-top: 8px; margin-bottom: 12px; }
+        .signature-block { margin-top: 10px; page-break-inside: avoid; }
+        .signature-space { display: none; } 
+        
+        .slogan-perak { 
+            text-align: center; 
+            font-weight: bold; 
+            font-style: italic; 
+            margin-top: 15px; 
+            margin-bottom: 8px; 
+        } 
+        .footer-line { width: 100%; border-top: 1px solid #000 !important; margin-bottom: 0; }
+
+        @media print {
+            body { background: none; padding: 0; display: block; }
+            .a4-page { box-shadow: none; width: auto; min-height: 0 !important; padding: 0; }
+            @page { size: A4; margin: 12mm 20mm 15mm 20mm; } 
+        }
+    </style>
+</head>
+<body>
+    <div class="a4-page">
+        <!-- HEADER -->
+        <table class="kop-surat">
+            <tr>
+                <td style="width: 15%; text-align: left;">
+                    <img src="https://drive.google.com/uc?export=view&id=14zGZT0UygTFlAHoZmzxAxnds51mLC6VZ" alt="Logo KPM" style="width: 90px; height: auto;">
+                </td>
+                <td style="width: 50%;" class="kop-teks">
+                    <div class="kop-teks-kementerian">KEMENTERIAN PENDIDIKAN</div>
+                    <div class="kop-teks-alamat">
+                        Jabatan Pendidikan Negeri Perak<br>
+                        Persiaran Meru Utama, Bandar Meru Raya<br>
+                        30020 Ipoh, Perak Darul Ridzuan
+                    </div>
+                </td>
+                <td style="width: 35%;" class="kop-info">
+                    <table class="kop-info-table">
+                        <tr><td class="kop-info-label">Tel</td><td class="kop-info-colon">:</td><td>605 525 6000</td></tr>
+                        <tr><td class="kop-info-label">Laman Web</td><td class="kop-info-colon">:</td><td><i>http://jpnperak.moe.gov.my</i></td></tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        
+        <div class="header-line"></div> 
+
+        <!-- KANDUNGAN -->
+        <div>
+            <div class="ref-date">
+                <table border="0" cellpadding="0" cellspacing="0">
+                    <tr><td style="width: 75px;">Ruj. Kami</td><td style="width: 15px;">:</td><td>{{RUJUKAN}}</td></tr>
+                    <tr><td>Tarikh</td><td>:</td><td>{{TARIKH}}</td></tr>
+                </table>
+            </div>
+
+            <div class="recipient">
+                <b>{{NAMA}} ({{NO_KP}})</b><br>
+                Melalui:<br>
+                Pengetua / Guru Besar<br>
+                {{SEKOLAH_ASAL}}<br>
+                {{POSKOD}} {{BANDAR}}<br><br>
+                Tuan,
+            </div>
+
+            <div class="subject">
+                PELANTIKAN PENTAKSIR<br>
+                {{NAMA_SURAT}} TAHUN {{TAHUN}} NEGERI PERAK
+            </div>
+
+            <p style="margin-top: 0; margin-bottom: 8px; text-align: justify;">Dengan hormatnya perkara di atas dirujuk.</p>
+
+            <div style="text-align: justify; margin-bottom: 5px;">
+                <span style="display:inline-block; width: 6%;">2.</span>Sehubungan dengan Akta Pendidikan 1996 (Akta 550) Peraturan-Peraturan (Penilaian Dan Peperiksaan) Fasal 4(g), tuan telah dilantik seperti maklumat yang berikut:
+            </div>
+            
+            <table class="para-table">
+                <tr>
+                    <td class="col-num"></td> 
+                    <td class="col-text">
+                        <table class="sub-table">
+                            <tr>
+                                <td class="sub-num">2.1</td>
+                                <td class="sub-label">Jawatan</td>
+                                <td class="sub-colon">:</td>
+                                <td class="sub-val"><b>{{JAWATAN_TITLE}}</b></td>
+                            </tr>
+                            <tr>
+                                <td class="sub-num">2.2</td>
+                                <td class="sub-label">Mata Pelajaran</td>
+                                <td class="sub-colon">:</td>
+                                <td class="sub-val"><b>{{MATA_PELAJARAN}}</b></td>
+                            </tr>
+                            <tr>
+                                <td class="sub-num">2.3</td>
+                                <td class="sub-label">Daerah</td>
+                                <td class="sub-colon">:</td>
+                                <td class="sub-val"><b>{{KAWASAN}}</b></td>
+                            </tr>
+                            <tr>
+                                <td class="sub-num">2.4</td>
+                                <td class="sub-label">Bayaran Ikhtisas</td>
+                                <td class="sub-colon">:</td>
+                                <td class="sub-val"><b>{{BAYARAN}}</b></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <table class="para-table">
+                <tr>
+                    <td class="col-num">3.</td>
+                    <td class="col-text">
+                        Sehubungan itu, tuan hendaklah mematuhi perkara-perkara berikut:
+                        <table class="sub-table">
+                            <tr>
+                                <td class="sub-num">3.1</td>
+                                <td colspan="3">merahsiakan pelantikan dan segala urusan berkaitan pemeriksaan yang diklasifikasikan <b>TERHAD</b> seperti termaktub di bawah Akta Rahsia Rasmi 1972. Tuan/puan dilarang membocorkan atau menghebahkan maklumat rasmi berkaitan tugasan ini kepada sesiapa dalam apa jua bentuk dan dengan apa cara pun;</td>
+                            </tr>
+                            <tr>
+                                <td class="sub-num">3.2</td>
+                                <td colspan="3">menjalankan pentaksiran mata pelajaran yang diajar sahaja;</td>
+                            </tr>
+                            <tr>
+                                <td class="sub-num">3.3</td>
+                                <td colspan="3">meminta kebenaran Pengetua/Guru Besar sekiranya penjaminan mutu berkenaan diadakan pada hari sekolah;</td>
+                            </tr>
+                            <tr>
+                                <td class="sub-num">3.4</td>
+                                <td colspan="3">melaksanakan tugas pentaksiran dan aktiviti penjaminan mutu dalam tempoh yang ditetapkan oleh Lembaga Peperiksaan.</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <p style="margin-top: 5px; margin-bottom: 25px; text-align: justify;">Kerjasama tuan berhubung perkara ini amatlah dihargai.</p>
+
+            <p style="margin-top: 0; margin-bottom: 25px;">Sekian, terima kasih.</p>
+
+            <div style="font-weight: bold; margin-bottom: 25px;">
+                <div style="margin-bottom: 8px;">"MALAYSIA MADANI"</div>
+                <div>"BERKHIDMAT UNTUK NEGARA"</div>
+            </div>
+
+            <div class="signature-block">
+                <p style="margin-bottom: 0;">Saya yang menjalankan amanah,</p>
+                <div class="signature-space"></div>
+                <p style="line-height: 1.15; margin-top: 0;">
+                    {{SAIN_PENGARAH}}<br>
+                    <b>({{NAMA_PENGARAH}} {{PINGAT_PENGARAH}})</b><br>
+                    {{JAWATAN_PENGARAH}}<br>
+                    {{NAMA_JABATAN}}
+                </p>
+            </div>
+        </div>
+
+        <div class="slogan-perak">
+            "PERAK SEJAHTERA 2030"
+        </div>
+
+        <div class="footer-line"></div>
+    </div>
+</body>
+</html>

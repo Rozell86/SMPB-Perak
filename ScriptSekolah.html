@@ -1,0 +1,523 @@
+<script>
+var DATA_MASTER = null;
+window.isSekolahInit = false; 
+
+// ==========================================
+// AUTO-LOAD SCRIPT & FORMATTER
+// ==========================================
+$(function() {
+  setTimeout(function() {
+    if (typeof initSekolah === 'function') {
+      initSekolah();
+    }
+  }, 100); 
+});
+
+$(document).ready(function() {
+  $('#gb_kp, #sup_kp, #txtKpmpKp, #txtPmpKp').on('input', function() {
+    var val = $(this).val().replace(/\D/g, ''); 
+    if (val.length > 12) val = val.substring(0, 12); 
+    var formatted = '';
+    if (val.length > 0) formatted += val.substring(0, 6);
+    if (val.length > 6) formatted += '-' + val.substring(6, 8);
+    if (val.length > 8) formatted += '-' + val.substring(8, 12);
+    $(this).val(formatted);
+  });
+
+  $('#gb_tel, #sup_tel, #txtKpmpTel, #txtPmpTel').on('input', function() {
+    var val = $(this).val().replace(/\D/g, ''); 
+    if (val.length > 11) val = val.substring(0, 11); 
+    var formatted = '';
+    var kodTengah = 3; 
+    if (val.startsWith('03') || val.startsWith('04') || val.startsWith('05') || val.startsWith('06') || val.startsWith('07') || val.startsWith('09')) {
+      if (!val.startsWith('01')) kodTengah = 2; 
+    }
+    if (val.length > 0) formatted += val.substring(0, kodTengah);
+    if (val.length > kodTengah) formatted += '-' + val.substring(kodTengah, val.length);
+    $(this).val(formatted);
+  });
+  
+  // SIFU TAMBAH: Live Listener untuk lepaskan syarat Wajib Isi jika 0 Murid
+  $('#txtJumCalon').on('input', function() {
+    lumpuhkanSyaratJikaKosongMurid();
+  });
+});
+
+$('#gb_nama, #sup_nama, #txtKpmpNama, #txtPmpNama').on('input', function() {
+  var posisiKursor = this.selectionStart; 
+  $(this).val($(this).val().toUpperCase()); 
+  this.setSelectionRange(posisiKursor, posisiKursor); 
+});
+
+// LOGIK PINTAR: Lepaskan atribut 'Required' pada HTML form jika Murid = 0
+function lumpuhkanSyaratJikaKosongMurid() {
+  var jum = parseInt($('#txtJumCalon').val() || 0);
+  var medanSupDanKelas = $('#sup_nama, #sup_kp, #sup_jantina, #sup_tel, #sup_emel, #txtBilKelas');
+  
+  if (jum === 0) {
+    medanSupDanKelas.removeAttr('required');
+  } else {
+    medanSupDanKelas.attr('required', true);
+  }
+}
+
+function initSekolah() {
+  if (window.isSekolahInit) return;
+  window.isSekolahInit = true;
+  
+  $('#lblTahunSemasa').text(window.G_TAHUN_AKTIF || new Date().getFullYear().toString());
+  muatSemulaDataDirect();
+}
+
+function muatSemulaDataDirect() {
+  if(typeof G_USER === 'undefined' || !G_USER) {
+     Swal.fire({
+       icon: "error", title: "Sesi Tamat", text: "Sistem tidak dapat mengesan ID Pengguna. Sila log masuk semula.",
+       confirmButtonText: "Log Masuk", allowOutsideClick: false
+     }).then(() => { window.top.location.reload(); });
+     return;
+  }
+
+  var idBase = G_USER.username || "";
+  if (idBase.indexOf('@') > -1) { idBase = idBase.split('@')[0]; }
+  var hantarEmel = G_USER.emel || (idBase + "@moe.edu.my");
+  var kunciMemori = "SMPB_PASS_" + idBase;
+  var passDalamMemori = localStorage.getItem(kunciMemori);
+  
+  if (!passDalamMemori) {
+     Swal.fire({
+       icon: 'warning', title: 'Sesi Tidak Sah', text: 'Maklumat log masuk (cache) tidak dijumpai. Sila log masuk semula.',
+       confirmButtonText: 'Ke Log Masuk', confirmButtonColor: '#dc2626', allowOutsideClick: false
+     }).then(() => { window.top.location.reload(); });
+     return;
+  }
+
+  var hantarPass = passDalamMemori;
+
+  google.script.run
+    .withSuccessHandler(function(respon) {
+      if (respon && respon.status === "SUCCESS") {
+        
+        DATA_MASTER = respon.dataSistem; 
+        
+        if(DATA_MASTER && DATA_MASTER.profilSekolah) {
+          var prof = DATA_MASTER.profilSekolah;
+          
+          $('#lblKodSek').text(prof.kod || "-");
+          $('#lblNamaSek').text(prof.nama || "-");
+          $('#lblDaerahSek').text((prof.daerah || "-") + " (" + (prof.ppd || "-") + ")");
+          $('#lblAlamatSek').text(prof.alamat || "-");
+          $('#lblPoskodSek').text(prof.poskod || "-");
+          $('#lblBandarSek').text(prof.bandar || "-");
+          $('#lblNamaSekolahBadge').text(prof.nama || "Sekolah");
+          $('#txtSekRow').val(prof.rowNum);
+          
+          $('#gb_nama').val(prof.nama_gb || ""); 
+          $('#gb_kp').val(prof.kp_gb || ""); 
+          $('#gb_tel').val(prof.tel_gb || ""); 
+          $('#gb_emel').val(prof.emel_gb || "");
+          
+          $('#sup_nama').val(prof.nama_sup || ""); 
+          $('#sup_kp').val(prof.kp_sup || ""); 
+          $('#sup_jantina').val(prof.jantina_sup || ""); 
+          $('#sup_tel').val(prof.tel_sup || ""); 
+          $('#sup_emel').val(prof.emel_sup || "");
+          
+          $('#txtBilKelas').val(prof.bil_kelas || "0");   
+          $('#txtJumCalon').val(prof.jum_calon || "0");
+          
+          lumpuhkanSyaratJikaKosongMurid(); // Terapkan logik sebaik data dimuatkan
+
+          var jumCalon = parseInt(prof.jum_calon || 0);
+          
+          if (jumCalon === 0) {
+            $('#tab-senarai-btn').hide();
+            $('#chkPengesahanSelesai').next('label').text('Saya mengesahkan pendaftaran maklumat profil bagi sekolah ini (0 Murid) telah lengkap.');
+          } else {
+            $('#tab-senarai-btn').show();
+            $('#chkPengesahanSelesai').next('label').text('Saya mengesahkan pendaftaran maklumat profil, KPMP dan PMP bagi sekolah ini telah lengkap.');
+          }
+
+          var statusSelesai = prof.pengesahan_selesai || prof.pengesahan || "";
+          var masterProfil = (DATA_MASTER.tetapan && DATA_MASTER.tetapan['KUNCI_PROFIL']) ? DATA_MASTER.tetapan['KUNCI_PROFIL'] : 'BUKA';
+
+          if (masterProfil === 'TUTUP') {
+            $('#chkPengesahanSelesai').prop('checked', (statusSelesai.toUpperCase() === "SELESAI" || statusSelesai.toUpperCase() === "YA"));
+            kawalKunciDataBorang(true, true);
+          } else {
+            if (statusSelesai.toUpperCase() === "SELESAI" || statusSelesai.toUpperCase() === "YA") {
+              $('#chkPengesahanSelesai').prop('checked', true);
+              kawalKunciDataBorang(true, false); 
+            } else {
+              $('#chkPengesahanSelesai').prop('checked', false);
+              kawalKunciDataBorang(false, false);
+            }
+          }
+
+          var kategoriSekolahSemasa = (prof.kategori_sekolah || "RENDAH").toUpperCase();
+          if (kategoriSekolahSemasa === 'MENENGAH') {
+            $('#tajukOperasiMurid').html('<i class="fa-solid fa-calculator"></i> MAKLUMAT OPERASI MURID TINGKATAN 3');
+          } else {
+            $('#tajukOperasiMurid').html('<i class="fa-solid fa-calculator"></i> MAKLUMAT OPERASI MURID TAHUN 4');
+          }
+
+          var mpOptions = '<option value="">-- Pilih Mata Pelajaran --</option>';
+          if (DATA_MASTER.senaraiMp) {
+            DATA_MASTER.senaraiMp.forEach(mp => {
+              var kategoriMp = (mp.kategori || "UMUM").toUpperCase();
+              if (kategoriMp === "UMUM" || kategoriMp === kategoriSekolahSemasa) {
+                mpOptions += `<option value="${mp.kod}">${mp.nama}</option>`;
+              }
+            });
+          }
+          $('#selKpmpMp').html(mpOptions);
+          $('#selPmpMp').html(mpOptions);
+
+          var htmlKp = '';
+          if(!DATA_MASTER.kpmSekolahList || DATA_MASTER.kpmSekolahList.length === 0) {
+            htmlKp = '<tr><td colspan="5" class="text-center text-muted py-4">Tiada data didaftarkan</td></tr>';
+          } else {
+            DATA_MASTER.kpmSekolahList.forEach(k => {
+              var nMp = DATA_MASTER.senaraiMp.find(m => m.kod === k.kod_mp)?.nama || k.kod_mp;
+              htmlKp += `<tr>
+                <td><b style="color:var(--purple-900);">${nMp}</b></td>
+                <td class="fw-bold">${k.nama_kpmp}</td>
+                <td>${k.no_kp}</td>
+                <td>${k.no_tel}</td>
+                <td class="text-center">
+                  <button type="button" class="btn btn-outline-primary btn-sm py-1 px-2 me-1" onclick="bukaModalKPMP(${k.rowNum})"><i class="fa-solid fa-pen-to-square"></i></button>
+                  <button type="button" class="btn btn-outline-danger btn-sm py-1 px-2" onclick="hapusRekod('tbkpmp', ${k.rowNum})"><i class="fa-solid fa-trash"></i></button>
+                </td>
+              </tr>`;
+            });
+          }
+          $('#tblKpmpBody').html(htmlKp);
+
+          var htmlPm = '';
+          if(!DATA_MASTER.pmpSekolahList || DATA_MASTER.pmpSekolahList.length === 0) {
+            htmlPm = '<tr><td colspan="5" class="text-center text-muted py-4">Tiada data didaftarkan</td></tr>';
+          } else {
+            DATA_MASTER.pmpSekolahList.forEach(p => {
+              var nMp = DATA_MASTER.senaraiMp.find(m => m.kod === p.kod_mp)?.nama || p.kod_mp;
+              htmlPm += `<tr>
+                <td><b style="color:var(--purple-900);">${nMp}</b></td>
+                <td class="fw-bold">${p.nama_pmp}</td>
+                <td>${p.no_kp}</td>
+                <td>${p.no_tel}</td>
+                <td class="text-center">
+                  <button type="button" class="btn btn-outline-primary btn-sm py-1 px-2 me-1" onclick="bukaModalPMP(${p.rowNum})"><i class="fa-solid fa-pen-to-square"></i></button>
+                  <button type="button" class="btn btn-outline-danger btn-sm py-1 px-2" onclick="hapusRekod('tbpmp', ${p.rowNum})"><i class="fa-solid fa-trash"></i></button>
+                </td>
+              </tr>`;
+            });
+          }
+          $('#tblPmpBody').html(htmlPm);
+        }
+      } else {
+        localStorage.removeItem(kunciMemori);
+        Swal.fire({
+          icon: 'warning', title: 'Sesi Tamat', text: 'Sesi anda telah tamat atau tidak sah. Sila log masuk semula.',
+          confirmButtonText: 'Ke Log Masuk', confirmButtonColor: '#dc2626', allowOutsideClick: false
+        }).then(() => { window.top.location.reload(); });
+      }
+    })
+    .withFailureHandler(function(error) {
+      Swal.fire("Ralat Sistem", "Gagal berhubung dengan pangkalan data: " + error.message, "error");
+    })
+    .prosesLogin(hantarEmel, hantarPass); 
+}
+
+// =================================================================
+// KEMASKINI PENYIMPANAN: ABAIKAN SYARAT SUP JIKA 0 MURID
+// =================================================================
+function kemaskiniProfilSekolah() {
+  var row = $('#txtSekRow').val();
+  var d = {
+    nama_gb: $('#gb_nama').val(), kp_gb: $('#gb_kp').val(), tel_gb: $('#gb_tel').val(), emel_gb: $('#gb_emel').val(),
+    nama_sup: $('#sup_nama').val(), kp_sup: $('#sup_kp').val(), jantina_sup: $('#sup_jantina').val(), tel_sup: $('#sup_tel').val(), emel_sup: $('#sup_emel').val(),
+    bil_kelas: $('#txtBilKelas').val(), jum_calon: $('#txtJumCalon').val()
+  };
+  
+  var isKosongCalon = (parseInt(d.jum_calon || 0) === 0);
+  var gbLengkap = (d.nama_gb && d.kp_gb && d.tel_gb && d.emel_gb);
+  var supLengkap = (d.nama_sup && d.kp_sup && d.jantina_sup && d.tel_sup && d.emel_sup);
+  
+  if (isKosongCalon) {
+     if (!gbLengkap) {
+        Swal.fire('Borang Tidak Lengkap', 'Bagi sekolah 0 Murid, maklumat Profil Pentadbir (Guru Besar/Pengetua) wajib diisi.', 'warning');
+        return;
+     }
+  } else {
+     if (!gbLengkap || !supLengkap || !d.bil_kelas || d.bil_kelas === "0") {
+        Swal.fire('Borang Tidak Lengkap', 'Sila isi semua maklumat Pentadbir, SUP dan Bilangan Kelas.', 'warning');
+        return;
+     }
+  }
+
+  Swal.fire({ title: 'Menyimpan Profil...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+  
+  google.script.run
+    .withSuccessHandler(function(res){
+      try {
+        if(res && res.status === "SUCCESS") {
+          DATA_MASTER = res.dataSistem; 
+          $('#lblTahunSemasa').text(window.G_TAHUN_AKTIF || new Date().getFullYear().toString());
+          Swal.fire({ icon: 'success', title: 'Berjaya', text: 'Profil Sekolah berjaya dikemaskini!', timer: 2000, showConfirmButton: false });
+          muatSemulaDataDirect();
+        } else {
+          Swal.fire('Gagal', (res ? res.message : 'Sistem menghadapi masalah menyimpan data.'), 'error');
+        }
+      } catch(err) {
+        Swal.fire('Ralat Paparan', 'Data disimpan tetapi skrin gagal di-refresh: ' + err.message, 'error');
+      }
+    })
+    .withFailureHandler(function(err){ Swal.fire('Ralat Pelayan', 'Gagal berhubung dengan database: ' + err.message, 'error'); })
+    .simpanProfilSekolah(row, d);
+}
+
+// =========================================================
+// KEMASKINI PENGESAHAN: LOGIK SEMAKAN LULUS 100% UNTUK 0 MURID
+// =========================================================
+function ubahStatusPengesahan(checkboxElem) {
+  var rowDB = $('#txtSekRow').val();
+  if (!rowDB) return;
+  
+  var isChecked = $(checkboxElem).is(':checked');
+  if (isChecked) {
+    var p = DATA_MASTER.profilSekolah;
+    var jumCalon = parseInt(p.jum_calon || 0);
+    
+    // Semakan sah: tidak boleh kosong, undefined, atau mengandungi tanda sempang '-'
+    var semakSah = function(val) {
+        return val && val.toString().trim() !== "" && val.toString().trim() !== "-";
+    };
+
+    var gbLengkap = semakSah(p.nama_gb) && semakSah(p.kp_gb) && semakSah(p.tel_gb) && semakSah(p.emel_gb);
+    var supLengkap = semakSah(p.nama_sup) && semakSah(p.kp_sup) && semakSah(p.jantina_sup) && semakSah(p.tel_sup) && semakSah(p.emel_sup);
+    var kelasSah = (p.bil_kelas && p.bil_kelas.toString() !== "0");
+    
+    var profilLengkap = false;
+    
+    if (jumCalon === 0) {
+        profilLengkap = gbLengkap; // Jika 0 Murid, lupakan SUP dan Kelas
+    } else {
+        profilLengkap = gbLengkap && supLengkap && kelasSah; // Normal wajib semua
+    }
+    
+    var bilKpmp = DATA_MASTER.kpmSekolahList ? DATA_MASTER.kpmSekolahList.length : 0;
+    var bilPmp = DATA_MASTER.pmpSekolahList ? DATA_MASTER.pmpSekolahList.length : 0;
+    
+    // Tolak pengesahan jika profil tak lengkap ATAU (murid>0 tapi tak isi KPMP/PMP)
+    if (!profilLengkap || (jumCalon > 0 && (bilKpmp === 0 || bilPmp === 0))) {
+      var teksError = (jumCalon > 0) 
+         ? 'Sila pastikan perkara berikut selesai terlebih dahulu:<br><br><ul class="text-start"><li>Telah mengisi dengan lengkap <b>dan MENYIMPAN</b> Profil Pentadbir & SUP.</li><li>Telah mendaftar minimum 1 orang KPMP.</li><li>Telah mendaftar minimum 1 orang PMP.</li></ul>'
+         : 'Sila pastikan anda <b>mengisi dengan lengkap dan MENYIMPAN</b> Profil Pentadbir (Guru Besar/Pengetua) terlebih dahulu.';
+         
+      Swal.fire({
+        icon: 'error', title: 'Pengesahan Ditolak!',
+        html: teksError
+      });
+      $(checkboxElem).prop('checked', false);
+      return;
+    }
+  }
+
+  var statusDipilih = isChecked ? 'SELESAI' : '';
+  Swal.fire({title:'Mengemaskini Status...', allowOutsideClick: false, didOpen:()=>{Swal.showLoading();}});
+  
+  google.script.run
+    .withSuccessHandler(function(res){
+      if(statusDipilih === 'SELESAI') {
+        Swal.fire({ icon: 'success', title: 'Terima Kasih', text: 'Data sekolah anda telah disahkan dan dikunci.', timer: 2000, showConfirmButton: false });
+      } else {
+        Swal.fire({ icon: 'info', title: 'Batal Pengesahan', text: 'Kunci data telah dibuka semula.', timer: 2000, showConfirmButton: false });
+      }
+      kawalKunciDataBorang(isChecked, false);
+      if(DATA_MASTER && DATA_MASTER.profilSekolah) { DATA_MASTER.profilSekolah.pengesahan_selesai = statusDipilih; }
+    })
+    .withFailureHandler(function(err){
+      Swal.fire('Ralat', 'Sistem tidak dapat mengemaskini status: ' + err.message, 'error');
+      $(checkboxElem).prop('checked', !isChecked); 
+    })
+    .kemaskiniStatusPengesahanSekolah(rowDB, statusDipilih);
+}
+
+function kawalKunciDataBorang(isTerkunci, isMasterSwitch) {
+  if (isTerkunci) {
+    $('#formProfilSekolah input, #formProfilSekolah select, #formProfilSekolah button[type="submit"]').prop('disabled', true);
+    $('body').addClass('mod-terkunci');
+    $('#chkPengesahanSelesai').prop('disabled', isMasterSwitch);
+    
+    if (isMasterSwitch) {
+       $('#amaranMasterProfil').remove();
+       $('#pendaftaran-tab').before('<div id="amaranMasterProfil" class="alert alert-danger fw-bold shadow-sm mb-4 border-danger border-start border-4"><i class="fa-solid fa-lock me-2"></i>PENGISIAN DITUTUP: Tarikh akhir pengisian maklumat Profil & Pentaksir telah tamat mengikut jadual kerja JPN.</div>');
+    }
+  } else {
+    $('#formProfilSekolah input, #formProfilSekolah select, #formProfilSekolah button[type="submit"]').prop('disabled', false);
+    $('body').removeClass('mod-terkunci');
+    $('#chkPengesahanSelesai').prop('disabled', false);
+    $('#amaranMasterProfil').remove();
+  }
+}
+
+function bukaModalKPMP(rowNum) { 
+  $('#formKpmp')[0].reset(); 
+  $('#txtKpmpRow').val(rowNum || ''); 
+  
+  $('#chkTiadaGuruKpmp').prop('checked', false);
+  urusTiadaGuru('KPMP');
+
+  if(rowNum) { 
+    $('#kpmpModalTitle').html('<i class="fa-solid fa-user-tie me-2"></i>Edit Data KPMP'); 
+    var k = DATA_MASTER.kpmSekolahList.find(x => x.rowNum === rowNum); 
+    
+    if (k.nama_kpmp === 'TIADA GURU') {
+      $('#chkTiadaGuruKpmp').prop('checked', true);
+      urusTiadaGuru('KPMP');
+      $('#selKpmpMp').val(k.kod_mp); 
+    } else {
+      $('#selKpmpMp').val(k.kod_mp); 
+      $('#txtKpmpNama').val(k.nama_kpmp); 
+      $('#txtKpmpKp').val(k.no_kp); 
+      $('#selKpmpJantina').val(k.jantina); 
+      $('#txtKpmpTel').val(k.no_tel); 
+      $('#txtKpmpEmel').val(k.emel); 
+    }
+  } else { 
+    $('#kpmpModalTitle').html('<i class="fa-solid fa-user-tie me-2"></i>Tambah Data KPMP'); 
+  } 
+  $('#modalKpmp').modal('show'); 
+}
+
+function simpanDataKpmp() { 
+  var row = $('#txtKpmpRow').val(); 
+  var d = { 
+    kod_mp: $('#selKpmpMp').val(), 
+    nama_kpmp: $('#txtKpmpNama').val(), 
+    no_kp: $('#txtKpmpKp').val(), 
+    jantina: $('#selKpmpJantina').val() || '-',
+    no_tel: $('#txtKpmpTel').val(), 
+    emel: $('#txtKpmpEmel').val() 
+  }; 
+  $('#modalKpmp').modal('hide'); 
+  
+  Swal.fire({title:'Memproses...', didOpen:()=>{Swal.showLoading();}}); 
+  
+  google.script.run.withSuccessHandler(function(res){ 
+    if(res.status === "SUCCESS") { 
+      Swal.fire('Berjaya', 'Data KPMP Berjaya Disimpan!', 'success'); 
+      muatSemulaDataDirect(); 
+    } else { 
+      Swal.fire('Gagal', res.message, 'error'); 
+    } 
+  }).urusKpmp(G_USER.username, d, row); 
+}
+
+function bukaModalPMP(rowNum) { 
+  $('#formPmp')[0].reset(); 
+  $('#txtPmpRow').val(rowNum || ''); 
+  
+  $('#chkTiadaGuruPmp').prop('checked', false);
+  urusTiadaGuru('PMP');
+
+  if(rowNum) { 
+    $('#pmpModalTitle').html('<i class="fa-solid fa-user-pen me-2"></i>Edit Data PMP'); 
+    var p = DATA_MASTER.pmpSekolahList.find(x => x.rowNum === rowNum); 
+    
+    if (p.nama_pmp === 'TIADA GURU') {
+      $('#chkTiadaGuruPmp').prop('checked', true);
+      urusTiadaGuru('PMP');
+      $('#selPmpMp').val(p.kod_mp); 
+    } else {
+      $('#selPmpMp').val(p.kod_mp); 
+      $('#txtPmpNama').val(p.nama_pmp); 
+      $('#txtPmpKp').val(p.no_kp); 
+      $('#selPmpJantina').val(p.jantina); 
+      $('#txtPmpTel').val(p.no_tel); 
+      $('#txtPmpEmel').val(p.emel); 
+    }
+  } else { 
+    $('#pmpModalTitle').html('<i class="fa-solid fa-user-pen me-2"></i>Tambah Data PMP'); 
+  } 
+  $('#modalPmp').modal('show'); 
+}
+
+function simpanDataPmp() { 
+  var row = $('#txtPmpRow').val(); 
+  var d = { 
+    kod_mp: $('#selPmpMp').val(), 
+    nama_pmp: $('#txtPmpNama').val(), 
+    no_kp: $('#txtPmpKp').val(), 
+    jantina: $('#selPmpJantina').val() || '-',
+    no_tel: $('#txtPmpTel').val(), 
+    emel: $('#txtPmpEmel').val() 
+  }; 
+  $('#modalPmp').modal('hide'); 
+  
+  Swal.fire({title:'Memproses...', didOpen:()=>{Swal.showLoading();}}); 
+  
+  google.script.run.withSuccessHandler(function(res){ 
+    if(res.status === "SUCCESS") { 
+      Swal.fire('Berjaya', 'Data PMP Berjaya Disimpan!', 'success'); 
+      muatSemulaDataDirect(); 
+    } else { 
+      Swal.fire('Gagal', res.message, 'error'); 
+    } 
+  }).urusPmp(G_USER.username, d, row); 
+}
+
+function hapusRekod(sheetName, rowNum) { 
+  Swal.fire({ 
+    title: 'Anda Pasti?', 
+    text: "Rekod ini akan dipadamkan selama-lamanya!", 
+    icon: 'warning', 
+    showCancelButton: true, 
+    confirmButtonColor: '#d33', 
+    cancelButtonColor: '#3085d6', 
+    confirmButtonText: 'Ya, Padam!', 
+    cancelButtonText: 'Batal' 
+  }).then((result) => { 
+    if (result.isConfirmed) { 
+      Swal.fire({title:'Memadam...', didOpen:()=>{Swal.showLoading();}}); 
+      
+      google.script.run.withSuccessHandler(function(res){ 
+        Swal.fire('Dipadam!', 'Rekod telah berjaya dipadam.', 'success'); 
+        muatSemulaDataDirect(); 
+      }).padamRekod(sheetName, rowNum); 
+    } 
+  }); 
+}
+
+function autoKesanJantina(icVal, selectId) {
+  var numOnly = icVal.replace(/[^0-9]/g, '');
+  if (numOnly.length >= 12) {
+    var digitAkhir = parseInt(numOnly.slice(-1), 10);
+    var jantina = (digitAkhir % 2 === 0) ? 'PEREMPUAN' : 'LELAKI';
+    $('#' + selectId).val(jantina);
+  }
+}
+
+// ==========================================
+// FUNGSI TIADA GURU
+// ==========================================
+function urusTiadaGuru(jenis) {
+  var chkId = jenis === 'KPMP' ? 'chkTiadaGuruKpmp' : 'chkTiadaGuruPmp';
+  var prefix = jenis === 'KPMP' ? 'txtKpmp' : 'txtPmp';
+  var selJantina = jenis === 'KPMP' ? 'selKpmpJantina' : 'selPmpJantina';
+  
+  var isChecked = $('#' + chkId).is(':checked');
+  var senaraiKotak = '#' + prefix + 'Nama, #' + prefix + 'Kp, #' + selJantina + ', #' + prefix + 'Tel, #' + prefix + 'Emel';
+
+  if (isChecked) {
+    $('#' + prefix + 'Nama').val('TIADA GURU');
+    $('#' + prefix + 'Kp').val('-');
+    $('#' + selJantina).val('-');
+    $('#' + prefix + 'Tel').val('-');
+    $('#' + prefix + 'Emel').val('tiada@moe.edu.my');
+    $(senaraiKotak).prop('disabled', true);
+  } else {
+    $(senaraiKotak).val('');
+    $(senaraiKotak).prop('disabled', false);
+  }
+}
+</script>

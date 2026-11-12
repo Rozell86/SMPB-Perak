@@ -1,0 +1,411 @@
+<style>
+  /* Container Jadual Boleh Scroll (Scrollable Table) */
+  .table-card-scroll {
+    border: 1px solid var(--purple-200);
+    border-radius: var(--radius-md);
+    background: #fff;
+  }
+  
+  /* Melekatkan Tajuk Jadual (Sticky Header) */
+  .table-card-scroll table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: var(--purple-50, #f8f5ff);
+    border-bottom: 2px solid var(--purple-200);
+  }
+
+  /* Gaya Pagination (Halaman & Navigasi) */
+  .pagination-footer { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 12px 16px; 
+    background: #fafafa; 
+    border-top: 1px solid var(--purple-200); 
+    border-radius: 0 0 var(--radius-md) var(--radius-md); 
+  }
+  .pagination-info { 
+    font-size: 0.85rem; 
+    color: var(--purple-700); 
+    font-weight: 500; 
+  }
+  .pagination-ctrl button { 
+    padding: 4px 12px; 
+    font-size: 0.85rem; 
+    border-radius: 4px; 
+    border: 1px solid var(--purple-300); 
+    background: white; 
+    color: var(--purple-700); 
+    cursor: pointer; 
+    transition: 0.2s; 
+  }
+  .pagination-ctrl button:hover:not(:disabled) { 
+    background: var(--purple-100); 
+  }
+  .pagination-ctrl button:disabled { 
+    opacity: 0.5; 
+    cursor: not-allowed; 
+  }
+
+  /* GAYA KHAS MODAL CENTER & KORPORAT MINIMALIS */
+  #modalProfilSekolah {
+    background: rgba(15, 23, 42, 0.55) !important;
+    backdrop-filter: blur(4px);
+  }
+
+  #modalProfilSekolah .modal-dialog {
+    display: flex !important;
+    align-items: center !important;
+    min-height: calc(100% - 3.5rem) !important;
+    margin: 1.75rem auto !important;
+    max-width: 800px !important;
+  }
+
+  #modalProfilSekolah .modal-content {
+    border: none !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    overflow: hidden;
+  }
+
+  .modal-header-ungu {
+    background: linear-gradient(135deg, #6f42c1 0%, #4c1d95 100%) !important;
+    padding: 16px 20px !important;
+  }
+
+  /* GAYA PAPARAN TEKS READ-ONLY (KORPORAT) */
+  .korporat-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+  .korporat-nilai {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.3;
+  }
+  .korporat-grid-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    height: 100%;
+  }
+  
+  .form-section-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6f42c1;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .form-section-title::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+  }
+
+  /* GAYA TABS KORPORAT BARU (Diseragamkan dengan Operasi Matriks) */
+  .nav-tabs-ungu { 
+    display: flex; 
+    gap: 12px; 
+    margin-bottom: 24px; 
+    border-bottom: 1px solid var(--border-color, #e2e8f0); 
+    padding-bottom: 16px; 
+    flex-wrap: wrap; 
+    list-style: none; 
+    padding-left: 0; 
+  }
+  .btn-toggle-tab { 
+    background: #ffffff; 
+    color: var(--purple-700); 
+    border: 1px solid var(--purple-100); 
+    padding: 10px 20px; 
+    font-weight: 700; 
+    font-size: 0.9rem; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    transition: all 0.2s ease; 
+    text-decoration: none; 
+  }
+  .btn-toggle-tab.active { 
+    background: var(--purple-700) !important; 
+    color: #ffffff !important; 
+    border-color: var(--purple-700) !important; 
+    box-shadow: 0 4px 6px -1px rgba(89, 42, 142, 0.2) !important; 
+  }
+  .btn-toggle-tab:hover:not(.active) { 
+    background: var(--purple-50); 
+  }
+
+</style>
+
+<div id="modul-matriks-ungu" class="animate__animated animate__fadeIn">
+  <!-- PANGGIL STYLE GLOBAL -->
+  <?!= include('StyleGlobal'); ?>
+  
+  <!-- HEADER MODUL -->
+  <div class="page-header">
+    <div>
+      <h2><i class="far fa-calendar-check" style="color: var(--purple-500);"></i> PANGKALAN DATA AKTIF SESI <span id="lblTahunSemasa" style="margin-left:6px;"></span></h2>
+    </div>
+    <div class="btn-group-ungu">
+      <button class="btn-toggle active" id="btnTahap4" onclick="tukarTahapUtama('RENDAH')"><i class="fas fa-child"></i> TAHUN 4</button>
+      <button class="btn-toggle" id="btnTing3" onclick="tukarTahapUtama('MENENGAH')"><i class="fas fa-user-graduate"></i> TINGKATAN 3</button>
+    </div>
+  </div>
+
+  <!-- PANEL KAWALAN JADUAL KERJA JPN (DIPERBAIKI) -->
+  <div id="panelKawalanJPN" class="card border-0 shadow-sm mb-4" style="background: #f8f5ff; border-left: 5px solid var(--purple-700) !important; display: none;">
+    <div class="card-body d-flex flex-wrap justify-content-between align-items-center p-3 gap-3">
+      <div class="mb-2 mb-md-0">
+        <h6 class="fw-bold mb-1" style="color: var(--purple-900);"><i class="fa-solid fa-lock me-2 text-danger"></i>Kawalan Jadual Kerja (Master Switch JPN)</h6>
+        <small class="text-muted fw-semibold">Buka atau tutup akses pengisian borang di pihak sekolah mengikut fasa jadual kerja.</small>
+      </div>
+      
+      <div class="d-flex align-items-center gap-3 bg-white py-2 px-3 rounded-3 border shadow-sm flex-wrap">
+        <!-- Suis 1 (Kotak Berasingan) -->
+        <div class="pe-3 border-end">
+          <div class="form-check form-switch fs-5 mb-0">
+            <input class="form-check-input" type="checkbox" id="suisProfil" onchange="ubahMasterSwitch('PROFIL', this)" style="cursor:pointer;">
+            <label class="form-check-label fw-bold text-nowrap pt-1" style="font-size: 0.85rem; color: var(--purple-700);" for="suisProfil">Profil & Pentaksir</label>
+          </div>
+        </div>
+        <!-- Suis 2 (Kotak Berasingan) -->
+        <div>
+          <div class="form-check form-switch fs-5 mb-0">
+            <input class="form-check-input" type="checkbox" id="suisOperasi" onchange="ubahMasterSwitch('OPERASI', this)" style="cursor:pointer;">
+            <label class="form-check-label fw-bold text-nowrap pt-1" style="font-size: 0.85rem; color: var(--purple-700);" for="suisOperasi">Operasi Pengawas</label>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- NAV TABS OPERASI DISERAGAMKAN -->
+  <ul class="nav nav-pills nav-tabs-ungu" id="nav-tabs-container" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="btn-toggle-tab active" id="tab-btn-sek" onclick="tukarTabProfil('sek')" type="button" role="tab">
+        <i class="fas fa-desktop me-2"></i> 1. Status Profil Sekolah
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="btn-toggle-tab" id="tab-btn-kpmp" onclick="tukarTabProfil('kpmp')" type="button" role="tab">
+        <i class="fas fa-user-shield me-2"></i> 2. Senarai Penuh KPMP
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="btn-toggle-tab" id="tab-btn-pmp" onclick="tukarTabProfil('pmp')" type="button" role="tab">
+        <i class="fas fa-users-gear me-2"></i> 3. Senarai Penuh PMP
+      </button>
+    </li>
+  </ul>
+
+  <!-- SECTION TAB 1: STATUS PROFIL SEKOLAH -->
+  <div id="pane-sek" class="tab-pane-profil">
+    
+    <!-- KAD STATISTIK (DIPINDAHKAN KE DALAM TAB 1) -->
+    <div class="summary-grid mb-3">
+      <div class="sum-card">
+        <div class="sum-icon-box"><i class="far fa-building"></i></div>
+        <div class="sum-info">
+          <h4>JUMLAH SEKOLAH</h4>
+          <h2 id="statSekolah">0</h2>
+        </div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon-box" style="color: #16a34a; background: #dcfce7;"><i class="far fa-id-card"></i></div>
+        <div class="sum-info">
+          <h4>PROFIL & PENTAKSIR</h4>
+          <h2 id="statPeratusProfil">0 / 0</h2>
+        </div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon-box" style="color: #ca8a04; background: #fef08a;"><i class="fas fa-clipboard-check"></i></div>
+        <div class="sum-info">
+          <h4>OPERASI PENGAWAS</h4>
+          <h2 id="statPeratusOperasi">0 / 0</h2>
+        </div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon-box"><i class="fas fa-users"></i></div>
+        <div class="sum-info">
+          <h4>JUMLAH PETUGAS</h4>
+          <h2 id="statPetugas">0</h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- KOTAK CARIAN & FILTER (TAB 1) -->
+    <div style="margin-bottom: 16px; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;">
+      <!-- Filter Daerah Khas ADMIN/JPN -->
+      <div id="boxFilterDaerahSek" style="display: none; min-width: 220px;">
+        <select id="selFilterDaerahSek" class="form-select" style="padding: 8px 12px; border-radius: var(--radius-md); border: 1px solid var(--purple-300); background-color: #f8fafc;" onchange="tapisJadualSekolah()">
+          <option value="">-- Semua Daerah --</option>
+        </select>
+      </div>
+
+      <!-- Kotak Carian Kod/Nama -->
+      <div class="position-relative" style="width: 100%; max-width: 320px;">
+        <i class="fas fa-search position-absolute text-muted" style="top: 50%; transform: translateY(-50%); left: 14px;"></i>
+        <input type="text" id="cariSekolahInput" class="form-control" placeholder="Cari Kod / Nama Sekolah..." style="padding: 8px 12px 8px 36px; border-radius: var(--radius-md); border: 1px solid var(--purple-300);" onkeyup="tapisJadualSekolah()">
+      </div>
+    </div>
+
+    <!-- JADUAL -->
+    <div class="table-card table-card-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 5%; text-align: center;">BIL.</th>
+            <th style="cursor: pointer; width: 30%;" onclick="urusIsianSekolah('nama')">NAMA SEKOLAH <span id="sortIcon_nama"><i class="fa-solid fa-sort ms-1" style="opacity:0.4"></i></span></th>
+            <th style="cursor: pointer; text-align: center; width: 10%;" onclick="urusIsianSekolah('bil_kelas')">KELAS <span id="sortIcon_bil_kelas"><i class="fa-solid fa-sort ms-1" style="opacity:0.4"></i></span></th>
+            <th style="cursor: pointer; text-align: center; width: 10%;" onclick="urusIsianSekolah('jum_calon')">MURID <span id="sortIcon_jum_calon"><i class="fa-solid fa-sort ms-1" style="opacity:0.4"></i></span></th>
+            <th style="cursor: pointer; text-align: center; width: 15%;" onclick="urusIsianSekolah('pengesahan_selesai')">STATUS PROFIL <span id="sortIcon_pengesahan_selesai"><i class="fa-solid fa-sort ms-1" style="opacity:0.4"></i></span></th>
+            <th style="cursor: pointer; text-align: center; width: 15%;" onclick="urusIsianSekolah('pengesahan_pengawas')">STATUS OPERASI <span id="sortIcon_pengesahan_pengawas"><i class="fa-solid fa-sort ms-1" style="opacity:0.4"></i></span></th>
+            <th style="text-align: center; width: 15%;">TINDAKAN</th>
+          </tr>
+        </thead>
+        <tbody id="tblReportSekBody">
+          <tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--purple-500);"><i class="fas fa-spinner fa-spin"></i> Memuatkan data...</td></tr>
+        </tbody>
+      </table>
+      <div class="pagination-footer">
+        <div id="pg-info-sek" class="pagination-info">Jumlah Rekod: 0</div>
+        <div id="pg-ctrl-sek" class="pagination-ctrl"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION TAB 2: SENARAI PENUH KPMP -->
+  <div id="pane-kpmp" class="tab-pane-profil" style="display: none;">
+    <div style="display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
+      <div class="id-filter-daerah-kpmp" style="flex: 1; min-width: 200px;">
+        <select id="filterDaerahKpmp" class="form-select" style="padding: 8px 12px; border-radius: var(--radius-md); border-color: #cbd5e1;" onchange="jalankanPenapisKpmp()">
+          <option value="">-- Semua Daerah / PPD --</option>
+        </select>
+      </div>
+      <div style="flex: 1; min-width: 200px;">
+         <input type="text" class="form-control" style="padding: 8px 12px; border-radius: var(--radius-md); border-color: #cbd5e1;" list="listSekKpmp" id="filterSekolahKpmp" placeholder="Cari / Pilih Sekolah..." onchange="jalankanPenapisKpmp()">
+        <datalist id="listSekKpmp"></datalist>
+      </div>
+      <div style="flex: 1; min-width: 200px;">
+        <select id="filterMpKpmp" class="form-select" style="padding: 8px 12px; border-radius: var(--radius-md); border-color: #cbd5e1;" onchange="jalankanPenapisKpmp()">
+          <option value="">-- Semua Mata Pelajaran --</option>
+        </select>
+      </div>
+      <div>
+        <button class="btn btn-outline-danger shadow-sm" style="padding: 8px 16px; border-radius: var(--radius-md); font-size:0.85rem; font-weight: 700;" onclick="resetPenapis('kpmp')">
+          <i class="fa-solid fa-rotate-left me-1"></i> Reset
+        </button>
+      </div>
+    </div>
+
+    <div class="table-card table-card-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 5%; text-align: center;">BIL.</th>
+            <th style="width: 33%;">MAKLUMAT SEKOLAH & DAERAH</th>
+            <th style="width: 38%;">MAKLUMAT PENTAKSIR</th>
+            <th style="width: 24%;">MATA PELAJARAN (MP)</th>
+          </tr>
+        </thead>
+        <tbody id="tblReportKpmpBody">
+          <tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--purple-500);"><i class="fas fa-spinner fa-spin"></i> Memuatkan data...</td></tr>
+        </tbody>
+      </table>
+      <div class="pagination-footer">
+        <div id="pg-info-kpmp" class="pagination-info">Jumlah Rekod: 0</div>
+        <div id="pg-ctrl-kpmp" class="pagination-ctrl"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION TAB 3: SENARAI PENUH PMP -->
+  <div id="pane-pmp" class="tab-pane-profil" style="display: none;">
+    <div style="display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
+      <div class="id-filter-daerah-pmp" style="flex: 1; min-width: 200px;">
+        <select id="filterDaerahPmp" class="form-select" style="padding: 8px 12px; border-radius: var(--radius-md); border-color: #cbd5e1;" onchange="jalankanPenapisPmp()">
+          <option value="">-- Semua Daerah / PPD --</option>
+        </select>
+      </div>
+      <div style="flex: 1; min-width: 200px;">
+        <input type="text" class="form-control" style="padding: 8px 12px; border-radius: var(--radius-md); border-color: #cbd5e1;" list="listSekPmp" id="filterSekolahPmp" placeholder="Cari / Pilih Sekolah..." onchange="jalankanPenapisPmp()">
+         <datalist id="listSekPmp"></datalist>
+      </div>
+      <div style="flex: 1; min-width: 200px;">
+        <select id="filterMpPmp" class="form-select" style="padding: 8px 12px; border-radius: var(--radius-md); border-color: #cbd5e1;" onchange="jalankanPenapisPmp()">
+          <option value="">-- Semua Mata Pelajaran --</option>
+        </select>
+       </div>
+       <div>
+         <button class="btn btn-outline-danger shadow-sm" style="padding: 8px 16px; border-radius: var(--radius-md); font-size:0.85rem; font-weight: 700;" onclick="resetPenapis('pmp')">
+          <i class="fa-solid fa-rotate-left me-1"></i> Reset
+         </button>
+       </div>
+    </div>
+
+    <div class="table-card table-card-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 5%; text-align: center;">BIL.</th>
+            <th style="width: 33%;">MAKLUMAT SEKOLAH & DAERAH</th>
+            <th style="width: 38%;">MAKLUMAT PENTAKSIR</th>
+            <th style="width: 24%;">MATA PELAJARAN (MP)</th>
+          </tr>
+        </thead>
+        <tbody id="tblReportPmpBody">
+          <tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--purple-500);"><i class="fas fa-spinner fa-spin"></i> Memuatkan data...</td></tr>
+        </tbody>
+      </table>
+      <div class="pagination-footer">
+        <div id="pg-info-pmp" class="pagination-info">Jumlah Rekod: 0</div>
+        <div id="pg-ctrl-pmp" class="pagination-ctrl"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL MAKLUMAT PROFIL PENUH SEKOLAH (KORPORAT MINIMALIS) -->
+<div class="modal fade" id="modalProfilSekolah" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header modal-header-ungu text-white border-0">
+        <div class="d-flex align-items-center gap-2">
+          <div class="p-2 rounded-circle bg-white bg-opacity-20 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+            <i class="fa-solid fa-circle-info fs-6 text-white"></i>
+          </div>
+          <div>
+            <h5 class="modal-title fw-bold fs-6 mb-0">Maklumat Keseluruhan Profil Sekolah</h5>
+            <small class="text-white-50" style="font-size: 0.72rem;" id="lblSubProfilModal">Sistem Matriks Pembelajaran</small>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3 bg-white text-dark" id="modalProfilKandungan">
+         <!-- Data HTML di-inject oleh JS -->
+      </div>
+      <div class="modal-footer bg-light border-top px-3 py-2">
+        <button type="button" class="btn btn-light btn-sm px-4 fw-semibold text-secondary rounded-2 border" data-bs-dismiss="modal">Tutup Paparan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<?!= typeof include === 'function' ? include('ScriptProfilSekolah') : ''; ?>

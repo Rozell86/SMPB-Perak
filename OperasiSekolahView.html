@@ -1,0 +1,322 @@
+<style>
+
+  /* GAYA JADUAL BERSKROL & KORPORAT */
+  .table-card-scroll { border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-x: auto; }
+  .table-card-scroll table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
+  .table-card-scroll table thead th { position: sticky; top: 0; z-index: 2; background-color: #f8f5ff; border-bottom: 2px solid #e9d5ff; color: #4c1d95; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 14px 16px; text-align: left; }
+  .table-card-scroll table tbody td { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; color: #334155; font-size: 0.85rem; }
+  
+  /* GAYA TABS KORPORAT */
+  .nav-tabs-ungu { display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; flex-wrap: wrap; list-style: none; padding-left: 0; }
+  .btn-toggle-tab { background: #ffffff; color: #592A8E; border: 1px solid #e9d5ff; padding: 10px 20px; font-weight: 700; font-size: 0.9rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; transition: all 0.2s ease; text-decoration: none; }
+  .btn-toggle-tab.active { background: #592A8E !important; color: #ffffff !important; border-color: #592A8E !important; box-shadow: 0 4px 6px -1px rgba(89, 42, 142, 0.2) !important; }
+  .btn-toggle-tab:hover:not(.active) { background: #f8f5ff; }
+
+  /* GAYA INPUT & FORM MODEN */
+  .form-section-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #592A8E; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .form-section-title::after { content: ""; flex: 1; height: 1px; background: #e2e8f0; }
+  .input-moden { border: 1px solid #cbd5e1 !important; border-radius: 8px !important; padding: 8px 12px !important; font-size: 0.88rem !important; transition: all 0.2s ease-in-out !important; background-color: #ffffff !important; }
+  .input-moden:focus { border-color: #8845C9 !important; box-shadow: 0 0 0 3px rgba(136, 69, 201, 0.15) !important; outline: none !important; }
+  
+  /* GAYA MODAL KHAS */
+  .modal-backdrop-blur { background: rgba(15, 23, 42, 0.55) !important; backdrop-filter: blur(4px); }
+  .modal-content { border: none !important; border-radius: 16px !important; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2) !important; overflow: hidden; }
+
+  /* BUTANG UNGU KHAS & BUTANG BATAL (Warna Kebal Hex) */
+  .btn-ungu { background: #592A8E !important; color: white !important; border: none; font-weight: 600; padding: 8px 20px; border-radius: 50px; transition: 0.2s; }
+  .btn-ungu:hover { background: #3b1c5e !important; color: white !important; }
+  
+  .btn-batal { background-color: #ffffff !important; color: #64748b !important; border: 1px solid #cbd5e1 !important; font-weight: 600; transition: all 0.2s ease; }
+  .btn-batal:hover { background-color: #f1f5f9 !important; color: #334155 !important; border-color: #cbd5e1 !important; }
+
+  /* CSS KHAS UNTUK KUNCI DATA OPERASI (Ditambah oleh Sifu) */
+  body.mod-operasi-terkunci button[onclick^="bukaModalPengawas"],
+  body.mod-operasi-terkunci button[onclick^="padamRekodSistem"],
+  body.mod-operasi-terkunci button[onclick^="bukaFormEditCadanganKP"],
+  body.mod-operasi-terkunci #formCadanganKP button[type="submit"],
+  body.mod-operasi-terkunci #btnBatalEditKp,
+  body.mod-operasi-terkunci #btnTambahPengawas {
+    display: none !important;
+  }
+  body.mod-operasi-terkunci #formCadanganKP input,
+  body.mod-operasi-terkunci #formCadanganKP select,
+  body.mod-operasi-terkunci #formCadanganKP textarea {
+    pointer-events: none;
+    background-color: #f8f9fa !important;
+  }
+</style>
+
+<div id="modul-matriks-ungu" class="container-fluid animate__animated animate__fadeIn pb-4">
+  
+  <?!= include('StyleGlobal'); ?>
+
+  <!-- HEADER MAKLUMAT -->
+  <div class="card border-0 shadow-sm rounded-3 mb-4 bg-white p-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; background: #f8f5ff; color: #592A8E;">
+        <i class="fa-solid fa-clipboard-user fs-5"></i>
+      </div>
+      <div>
+        <h5 class="fw-bold mb-0" style="color: #4c1d95;">Operasi Matriks</h5>
+        <div class="text-muted small mt-1 fw-bold">
+          <i class="fa-regular fa-calendar-check me-1"></i>Sesi <span id="lblTahunOperasiSekolah" class="text-primary">Memuatkan...</span> &nbsp;|&nbsp; 
+          <i class="fa-solid fa-layer-group me-1"></i>Tahap: <span id="lblTahapOperasiSekolah" class="text-success">Memuatkan...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MENU TABS DISERAGAMKAN -->
+  <ul class="nav nav-pills nav-tabs-ungu" id="operasi-tab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link btn-toggle-tab active" id="tab-cadangan-kp-btn" data-bs-toggle="pill" data-bs-target="#tab-cadangan-kp" type="button" role="tab" onclick="tukarTabOperasiSekolah('cadangan-kp');">
+        <i class="fa-solid fa-user-tie me-2"></i>Cadangan Ketua Pengawas
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link btn-toggle-tab" id="tab-pengawas-btn" data-bs-toggle="pill" data-bs-target="#tab-pengawas" type="button" role="tab" onclick="tukarTabOperasiSekolah('pengawas');">
+        <i class="fa-solid fa-users me-2"></i>Senarai Pengawas
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="operasi-tabContent">
+    
+    <!-- ========================================== -->
+    <!-- TAB 1: CADANGAN KETUA PENGAWAS -->
+    <!-- ========================================== -->
+    <div class="tab-pane-operasi" id="pane-cadangan-kp" style="display: block;">
+      
+      <!-- KAD BORANG -->
+      <div class="card p-4 shadow-sm border-0 mb-4 bg-white" style="border-radius:15px;">
+        <div class="form-section-title mb-4 pb-2 border-bottom"><i class="fa-solid fa-user-tie"></i> Borang Cadangan Calon Ketua Pengawas</div>
+        
+        <form id="formCadanganKP" onsubmit="event.preventDefault(); hantarCadanganKP();">
+          <input type="hidden" id="kp_row_num">
+          <input type="hidden" id="kp_matrik_tahap">
+          
+          <div class="row g-3 mb-3">
+             <div class="col-md-12">
+              <label class="form-label small fw-bold text-muted mb-1">Sekolah Yang Dicadangkan (Tagging)</label>
+              <select id="kp_sek_cadangan" class="form-select input-moden" required>
+                <option value="">-- Sila Pilih Sekolah Cadangan --</option>
+              </select>
+              <small class="text-muted" style="font-size:11px;">*Pilihan terhad kepada sekolah dalam daerah yang sama sahaja.</small>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted mb-1">Nama Penuh Calon Guru</label>
+              <input type="text" id="kp_nama" class="form-control input-moden text-uppercase" required placeholder="NAMA PENUH GURU">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted mb-1">No. Kad Pengenalan</label>
+              <input type="text" id="kp_no_kp" class="form-control input-moden" maxlength="14" required placeholder="Contoh: 850101-08-5555">
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted mb-1">No. Telefon Bimbit</label>
+              <input type="text" id="kp_no_tel" class="form-control input-moden" required placeholder="Contoh: 012-3456789">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted mb-1">Alamat Emel Rasmi</label>
+              <input type="email" id="kp_emel" class="form-control input-moden" required placeholder="Contoh: g-123456@moe-dl.edu.my">
+            </div>
+          </div>
+          
+          <div class="row g-3 mb-3">
+            <div class="col-12">
+              <label class="form-label small fw-bold text-muted mb-1">Alamat Rumah Semasa Calon (Untuk Rujukan PPD)</label>
+              <textarea id="kp_alamat_rumah" class="form-control input-moden text-uppercase" rows="2" required placeholder="CONTOH: NO 12, JALAN MERU, 30020 IPOH, PERAK"></textarea>
+            </div>
+          </div>
+
+          <div class="text-end pt-3 border-top border-secondary border-opacity-25 mt-4">
+            <button type="button" class="btn btn-batal px-4 py-2 rounded-pill me-2 d-none" id="btnBatalEditKp" onclick="batalEditKP()">Batal Kemaskini</button>
+            <button type="submit" class="btn btn-ungu"><i class="fa-solid fa-paper-plane me-2"></i>Simpan Cadangan</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card p-4 shadow-sm border-0 mb-4 bg-white" style="border-radius:15px;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0" style="color: #4c1d95;"><i class="fa-solid fa-list-check me-2"></i>Senarai Cadangan Ketua Pengawas</h5>
+        </div>
+        <div class="table-card-scroll">
+          <table>
+            <thead>
+               <tr>
+                 <th>Tahap</th>
+                 <th>Nama Guru</th>
+                 <th>No. KP</th>
+                 <th>Sekolah Dicadang</th>
+                 <th>Status</th>
+                 <th class="text-center" style="white-space: nowrap;">Tindakan</th>
+               </tr>
+            </thead>
+            <tbody id="tbodySenaraiKP">
+              <tr><td colspan="6" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin me-2"></i>Memuatkan data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: SENARAI PENGAWAS (KUOTA) -->
+    <!-- ========================================== -->
+    <div class="tab-pane-operasi" id="pane-pengawas" style="display: none;">
+      
+      <!-- KAD INFO KUOTA -->
+      <div class="row mb-3">
+        <div class="col-md-12">
+          <div class="alert border-0 shadow-sm d-flex align-items-center justify-content-between" style="background: #f8f5ff; border-left: 4px solid #592A8E !important; border-radius: 8px; padding: 16px;">
+            <div>
+              <div class="fw-bold" style="color: #4c1d95; font-size: 0.95rem;">
+                <i class="fa-solid fa-chart-pie me-2"></i>Kuota Pengawas Peperiksaan Anda
+              </div>
+              <div class="small text-muted mt-1">
+                Berdasarkan nisbah 1 Pengawas bagi setiap 30 orang calon. Jumlah Calon: <b id="lblJumCalonSekolah" class="text-dark">0</b> orang.
+              </div>
+            </div>
+            <div class="text-end">
+              <div style="font-size: 1.8rem; font-weight: 800; color: #592A8E; line-height: 1;">
+                <span id="lblPengawasSemasa">0</span> <span style="font-size: 1rem; color: #64748b;">/ <span id="lblKuotaMaksimum">0</span></span>
+              </div>
+              <div class="small fw-bold text-success mt-1" id="lblStatusKuota">DALAM KUOTA</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KAD JADUAL PENGAWAS -->
+      <div class="card p-4 shadow-sm border-0 bg-white mb-4" style="border-radius:15px;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0" style="color: #4c1d95;"><i class="fa-solid fa-users-viewfinder me-2"></i>Senarai Pengawas Bertugas</h5>
+          <button class="btn btn-sm btn-ungu" id="btnTambahPengawas" onclick="bukaModalPengawas()">
+            <i class="fa-solid fa-plus me-1"></i>Tambah Pengawas
+          </button>
+        </div>
+
+        <div class="table-card-scroll">
+          <table>
+            <!-- 7 LAJUR DISUSUN DENGAN BETUL -->
+            <thead>
+              <tr>
+                <th class="text-center">Bil</th>
+                <th>Nama Penuh</th>
+                <th>No. KP</th>
+                <th class="text-center">Jantina</th>
+                <th>No. Telefon</th>
+                <th>Emel</th>
+                <th class="text-center" style="white-space: nowrap;">Tindakan</th>
+              </tr>
+            </thead>
+            <tbody id="tblPengawasBody">
+              <tr><td colspan="7" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin me-2"></i> Memuatkan data pengawas...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- KAD PENGESAHAN OPERASI (Ditambah oleh Sifu) -->
+      <div class="card p-4 shadow-sm border-0 bg-light mb-4 mt-2" style="border-radius:15px; border-left: 5px solid var(--purple-500) !important;">
+        <div class="d-flex align-items-start">
+          <div class="fs-2 me-3 pt-1" style="color: var(--purple-500);"><i class="fa-solid fa-clipboard-check"></i></div>
+          <div class="w-100">
+            <h5 class="fw-bold mb-1" style="color: var(--purple-900);">Pengesahan Pendaftaran Selesai</h5>
+            <p class="text-muted small mb-3">Tandakan butang di bawah apabila pihak sekolah telah mencadangkan Ketua Pengawas dan mendaftarkan senarai Pengawas yang mencukupi. Status ini akan digunakan oleh pihak JPN/PPD untuk pemantauan.</p>
+            
+            <div class="form-check form-switch fs-5 mb-0">
+              <input class="form-check-input" type="checkbox" id="chkPengesahanOperasiSelesai" onchange="ubahStatusPengesahanOperasi(this)" style="cursor: pointer;">
+              <label class="form-check-label fw-bold text-dark ms-2" for="chkPengesahanOperasiSelesai" style="font-size: 1rem; cursor: pointer;">
+                Saya mengesahkan maklumat Ketua Pengawas & Pengawas bagi pusat ini telah lengkap.
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: BORANG TAMBAH PENGAWAS (Tab 2) -->
+<div class="modal fade modal-backdrop-blur" id="modalPengawas" data-bs-backdrop="static" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form id="formPengawas" onsubmit="event.preventDefault(); simpanPengawas();" class="w-100">
+      <div class="modal-content shadow-lg border-0" style="border-radius: 16px; overflow: hidden;">
+        <div class="modal-header text-white border-0" style="background: #592A8E; padding: 18px 24px;">
+          <h5 class="modal-title fw-bold fs-6 mb-0"><i class="fa-solid fa-user-plus me-2"></i>Borang Maklumat Pengawas</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 bg-white text-dark">
+          <input type="hidden" id="txtPgwsRow">
+          
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted mb-1">Nama Penuh Pengawas</label>
+            <input type="text" id="txtPgwsNama" class="form-control input-moden text-uppercase" required>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted mb-1">No. Kad Pengenalan</label>
+            <input type="text" id="txtPgwsIC" class="form-control input-moden" maxlength="14" required onkeyup="autoKesanJantina(this.value, 'selPgwsJantina')">
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted mb-1">Jantina</label>
+            <select id="selPgwsJantina" class="form-select input-moden" required>
+              <option value="">-- Pilih Jantina --</option>
+              <option value="L">LELAKI</option>
+              <option value="P">PEREMPUAN</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted mb-1">No. Telefon Bimbit</label>
+            <input type="text" id="txtPgwsTel" class="form-control input-moden" required>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted mb-1">Emel (DELIMa/Peribadi)</label>
+            <input type="email" id="txtPgwsEmel" class="form-control input-moden" required>
+          </div>
+
+        </div>
+        <div class="modal-footer bg-light border-top px-4 py-3 d-flex justify-content-between">
+          <button type="button" class="btn btn-outline-danger btn-sm px-4 fw-bold rounded-pill d-none shadow-sm" id="btnPadamPgws" onclick="padamRekodSistem('tbp', $('#txtPgwsRow').val())"><i class="fa-solid fa-trash me-2"></i>Padam</button>
+          
+          <div class="ms-auto">
+            <button type="button" class="btn btn-batal btn-sm px-4 rounded-pill me-2" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-sm px-4 rounded-pill btn-ungu"><i class="fa-solid fa-floppy-disk me-2"></i>Simpan Data</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function tukarTabOperasiSekolah(tabName) {
+    document.querySelectorAll('.tab-pane-operasi').forEach(el => el.style.display = 'none');
+    document.getElementById('pane-' + tabName).style.display = 'block';
+    
+    document.querySelectorAll('.btn-toggle-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tabName + '-btn').classList.add('active');
+  }
+
+  function autoKesanJantina(icVal, selectId) {
+    var numOnly = icVal.replace(/[^0-9]/g, '');
+    if (numOnly.length >= 12) {
+      var digitAkhir = parseInt(numOnly.slice(-1), 10);
+      var jantina = (digitAkhir % 2 === 0) ? 'P' : 'L';
+      $('#' + selectId).val(jantina);
+    }
+  }
+</script>
+
+<?!= typeof include === 'function' ? include('ScriptOperasiSekolah') : ''; ?>

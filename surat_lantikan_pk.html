@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <title>Surat Pelantikan Peperiksaan - Penyelia Kawasan</title>
+    <style>
+        body {
+            background-color: #525659;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+
+        .a4-page {
+            background-color: white;
+            width: 210mm;
+            min-height: 297mm; 
+            padding: 12mm 20mm 15mm 20mm;
+            box-sizing: border-box;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            font-size: 12pt; /* SAIZ FONT KEKAL 12pt */
+            line-height: 1.15;
+            color: #000;
+            display: block; 
+            position: relative; /* PENTING: Supaya footer boleh 'dipaku' di bawah */
+        }
+
+        /* HEADER / KOP SURAT */
+        .kop-surat { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
+        .kop-surat td { vertical-align: middle; }
+        .kop-teks { font-family: 'Times New Roman', Times, serif; color: #666; }
+        .kop-teks-kementerian { font-size: 12pt; font-weight: bold; margin-bottom: 2px; }
+        .kop-teks-alamat { font-size: 10pt; line-height: 1.2; }
+        .kop-info { font-size: 9pt; color: #666; vertical-align: bottom !important; padding-bottom: 2px; }
+        .kop-info-table { width: 100%; border-collapse: collapse; }
+        .kop-info-label { white-space: nowrap; width: 65px; }
+        .kop-info-colon { width: 15px; }
+        .header-line { width: 100%; border-bottom: 1px solid #000 !important; margin-bottom: 15px; }
+
+        /* PERENGGAN & INDEN UTAMA */
+        .para-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+        .para-table td { vertical-align: top; padding: 0; text-align: justify; }
+        .col-num { width: 6%; } 
+        .col-text { width: 94%; }
+
+        /* JADUAL SUB-ITEM */
+        .sub-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+        .sub-table td { vertical-align: top; padding: 2px 0; text-align: justify !important; }
+        .sub-num { width: 6%; text-align: left !important; } 
+        .sub-label { width: 22%; text-align: left !important; }
+        .sub-colon { width: 3%; text-align: center !important; }
+        .sub-val { width: 69%; }
+
+        /* ELEMEN LAIN - DIKEMBALIKAN KE KANAN SEDIKIT (46%) */
+        .ref-date { margin-left: 46%; margin-top: 0; margin-bottom: 12px; }
+        .ref-date table { text-align: left; font-size: 12pt; }
+        .recipient { margin-bottom: 8px; }
+        .subject { font-weight: bold; text-transform: uppercase; margin-top: 10px; margin-bottom: 12px; }
+        .signature-block { margin-top: 20px; page-break-inside: avoid; }
+        .signature-space { display: none; } 
+
+        /* FOOTER DIPAKU (FIXED) DI BAHAGIAN BAWAH KERTAS */
+        .footer-container {
+            position: absolute;
+            bottom: 15mm; /* Sama dengan padding-bottom a4-page */
+            left: 20mm;   /* Sama dengan padding-left a4-page */
+            right: 20mm;  /* Sama dengan padding-right a4-page */
+        }
+        .slogan-perak {
+            text-align: center;
+            font-weight: bold;
+            font-style: italic;
+            margin-bottom: 6px;
+        }
+        .footer-line { width: 100%; border-top: 1px solid #000 !important; margin-bottom: 0;}
+
+        /* GAYA LAMPIRAN */
+        .jadual-lampiran { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 11.5pt; }
+        .jadual-lampiran th, .jadual-lampiran td {
+            border: 1px solid #000;
+            padding: 8px 10px;
+            text-align: left;
+            vertical-align: middle;
+        }
+        .jadual-lampiran th { background-color: #f2f2f2; font-weight: bold; text-align: center; }
+
+        @media print {
+            body { background: none; padding: 0; display: block; gap: 0; }
+            .a4-page { box-shadow: none; width: auto; min-height: 297mm; padding: 12mm 20mm 15mm 20mm; margin: 0; page-break-after: always; display: block; position: relative; }
+            .a4-page:last-child { page-break-after: auto; }
+            @page { size: A4; margin: 0; } 
+        }
+    </style>
+</head>
+<body>
+    <!-- MUKA SURAT 1: SURAT UTAMA -->
+    <div class="a4-page">
+        <!-- HEADER -->
+        <table class="kop-surat">
+            <tr>
+                <td style="width: 15%; text-align: left;">
+                    <img src="https://drive.google.com/uc?export=view&id=14zGZT0UygTFlAHoZmzxAxnds51mLC6VZ" alt="Logo KPM" style="width: 90px; height: auto;">
+                </td>
+                <td style="width: 50%;" class="kop-teks">
+                <div class="kop-teks-kementerian">KEMENTERIAN PENDIDIKAN</div>
+                <div class="kop-teks-alamat">
+                    Jabatan Pendidikan Negeri Perak<br>
+                    Persiaran Meru Utama, Bandar Meru Raya<br>
+                    30020 Ipoh, Perak Darul Ridzuan
+                </div>
+            </td>
+            <td style="width: 35%;" class="kop-info">
+                <table class="kop-info-table">
+                    <tr><td class="kop-info-label">Tel</td><td class="kop-info-colon">:</td><td>605 525 6000</td></tr>
+                    <tr><td class="kop-info-label">Laman Web</td><td class="kop-info-colon">:</td><td><i>http://jpnperak.moe.gov.my</i></td></tr>
+                </table>
+            </td>
+        </tr>
+        </table>
+        
+        <div class="header-line"></div> 
+
+        <!-- KANDUNGAN SURAT -->
+        <div class="ref-date">
+            <table border="0" cellpadding="0" cellspacing="0">
+                <tr><td style="width: 85px; vertical-align: top;">Ruj. Kami</td><td style="width: 15px; vertical-align: top;">:</td><td style="vertical-align: top;">{{RUJUKAN}}</td></tr>
+                <tr><td style="vertical-align: top;">Tarikh</td><td style="vertical-align: top;">:</td><td style="vertical-align: top;">{{TARIKH}}</td></tr>
+            </table>
+        </div>
+
+        <div class="recipient">
+            <b>{{NAMA}} ({{NO_KP}})</b><br>
+            Melalui:<br>
+            Pengetua/Guru Besar<br>
+            {{SEKOLAH_ASAL}}<br>
+            {{POSKOD}} {{BANDAR}}<br><br>
+            Tuan,
+        </div>
+
+        <div class="subject">
+            {{NAMA_SURAT}} TAHUN {{TAHUN}}<br>
+            PELANTIKAN SEBAGAI {{JAWATAN_BESAR}}
+        </div>
+
+        <p style="margin-top: 0; margin-bottom: 8px; text-align: justify;">Dengan hormatnya merujuk perkara di atas.</p>
+
+        <div style="text-align: justify; margin-bottom: 12px;">
+            <span style="display:inline-block; width: 6%;">2.</span>Sukacita dimaklumkan, tuan dilantik sebagai <b>{{JAWATAN_TITLE}}</b> bagi pentaksiran tersebut di atas yang akan dilaksanakan pada <b>{{TARIKH_UJIAN}}</b>. Senarai pusat pentaksiran dan Bilik Kebal di bawah seliaan tuan adalah seperti di <b>Lampiran A</b>.
+        </div>
+
+        <table class="para-table">
+            <tr>
+                <td class="col-num">3.</td>
+                <td class="col-text">
+                    Tuan layak dibayar elaun dengan kadar berikut:
+                    <table class="sub-table">
+                        <tr>
+                            <td class="sub-num">3.1</td>
+                            <td class="sub-label">Elaun Ikhtisas</td>
+                            <td class="sub-colon">:</td>
+                            <td class="sub-val"><b>RUJUK JADUAL KERJA</b></td>
+                        </tr>
+                        <tr>
+                            <td class="sub-num">3.2</td>
+                            <td class="sub-label">Elaun Perjalanan</td>
+                            <td class="sub-colon">:</td>
+                            <td class="sub-val">Berdasarkan kepada Arahan Perbendaharaan yang sedang berkuatkuasa.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <table class="para-table">
+            <tr>
+                <td class="col-num">4.</td>
+                <td class="col-text">
+                    Sehubungan dengan itu, tuan hendaklah mematuhi perkara-perkara berikut :
+                    <table class="sub-table">
+                        <tr>
+                            <td class="sub-num">4.1</td>
+                            <td colspan="3">Merahsiakan pelantikan dan segala urusan berkaitan peperiksaan yang diklasifikasikan <b>SULIT</b> yang termaktub di bawah Akta Rahsia Rasmi 1972.</td>
+                        </tr>
+                        <tr>
+                            <td class="sub-num">4.2</td>
+                            <td colspan="3">Pelantikan tuan adalah sah untuk peperiksaan ini sahaja dan boleh dibatalkan sekiranya tuan tidak mematuhi Prosedur Operasi Standard (SOP) Peperiksaan Awam.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <p style="margin-top: 5px; margin-bottom: 15px; text-align: justify;">Kerjasama tuan berhubung perkara ini amatlah dihargai.</p>
+        <p style="margin-top: 0; margin-bottom: 15px;">Sekian, terima kasih.</p>
+
+        <div style="font-weight: bold; margin-bottom: 15px;">
+            <div style="margin-bottom: 6px;">"MALAYSIA MADANI"</div>
+            <div>"BERKHIDMAT UNTUK NEGARA"</div>
+        </div>
+
+        <div class="signature-block">
+            <p style="margin-bottom: 0;">Saya yang menjalankan amanah,</p>
+            <div class="signature-space"></div>
+            <p style="line-height: 1.15; margin-top: 0;">
+                {{SAIN_PENGARAH}}<br>
+                <b>({{NAMA_PENGARAH}}{{PINGAT_PENGARAH}})</b><br>
+                {{JAWATAN_PENGARAH}}<br>
+                {{NAMA_JABATAN}}
+            </p>
+        </div>
+        
+        <!-- FOOTER (DIPAKU DI BAWAH KERTAS) -->
+        <div class="footer-container">
+            <div class="slogan-perak">"PERAK SEJAHTERA 2030"</div>
+            <div class="footer-line"></div>
+        </div>
+    </div>
+
+    <!-- MUKA SURAT 2: LAMPIRAN A (FOOTER DIBUANG) -->
+    <div class="a4-page">
+        <div style="text-align: right; font-weight: bold; font-size: 12pt; margin-bottom: 30px;">LAMPIRAN A</div>
+        
+        <div style="text-align: center; font-weight: bold; font-size: 12pt; margin-bottom: 30px; line-height: 1.4;">
+            SENARAI PUSAT PENTAKSIRAN DAN BILIK KEBAL<br>
+            DI BAWAH SELIAAN PENYELIA KAWASAN<br>
+            {{NAMA_SURAT}} TAHUN {{TAHUN}}
+        </div>
+
+        <table style="width: 100%; font-size: 12pt; margin-bottom: 20px;">
+            <tr>
+                <td style="width: 25%; font-weight: bold; padding: 5px 0;">NAMA PENYELIA</td>
+                <td style="width: 5%; text-align: center;">:</td>
+                <td style="width: 70%; font-weight: bold;">{{NAMA}}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold; padding: 5px 0;">NO. KAD PENGENALAN</td>
+                <td style="text-align: center;">:</td>
+                <td style="font-weight: bold;">{{NO_KP}}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold; padding: 5px 0;">BILIK KEBAL</td>
+                <td style="text-align: center;">:</td>
+                <td style="font-weight: bold;">{{BILIK_KEBAL}}</td>
+            </tr>
+        </table>
+
+        <table class="jadual-lampiran">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">BIL</th>
+                    <th style="width: 90%; text-align: left; padding-left: 15px;">KOD DAN NAMA PUSAT PENTAKSIRAN</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- TR akan dijana oleh Code.gs -->
+                {{TR_SEKOLAH_JAGAAN}}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
